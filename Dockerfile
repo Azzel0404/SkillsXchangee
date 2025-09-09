@@ -32,8 +32,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 RUN npm run build
 
-# Generate application key
+# Generate application key and run migrations
 RUN php artisan key:generate --force --no-interaction
+RUN php artisan migrate --force --no-interaction
 
 # Expose port
 EXPOSE $PORT
