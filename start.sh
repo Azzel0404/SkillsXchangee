@@ -8,6 +8,10 @@ sleep 10
 echo "Running database migrations..."
 php artisan migrate --force --no-interaction
 
+# Run database seeders
+echo "Running database seeders..."
+php artisan db:seed --force --no-interaction
+
 # Start the PHP server
 echo "Starting PHP server..."
 php -S 0.0.0.0:$PORT -t public
