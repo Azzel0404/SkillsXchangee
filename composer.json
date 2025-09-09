@@ -45,10 +45,10 @@
             "@php artisan key:generate --ansi"
         ],
         "heroku-post-build": [
-            "php artisan key:generate --force",
-            "php artisan config:cache",
-            "php artisan route:cache",
-            "php artisan view:cache"
+            "php artisan key:generate --force --no-interaction",
+            "php artisan config:cache --no-interaction",
+            "php artisan route:cache --no-interaction",
+            "php artisan view:cache --no-interaction"
         ]
     },
     "extra": {
