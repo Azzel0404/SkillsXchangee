@@ -21,6 +21,10 @@ Route::get('/test', function () {
     return 'Test route working!';
 });
 
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok', 'timestamp' => now()]);
+});
+
 Route::get('/test-auth', function () {
     if (auth()->check()) {
         return 'User is logged in: ' . auth()->user()->email;
