@@ -24,6 +24,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
+# Create .env file from .env.example
+RUN cp .env.example .env
+
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
@@ -33,7 +36,7 @@ RUN npm run build
 RUN php artisan key:generate --force --no-interaction
 
 # Expose port
-EXPOSE 8000
+EXPOSE $PORT
 
 # Start the application
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+CMD php -S 0.0.0.0:$PORT -t public
