@@ -32,12 +32,14 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 RUN npm run build
 
-# Generate application key and run migrations
+# Generate application key
 RUN php artisan key:generate --force --no-interaction
-RUN php artisan migrate --force --no-interaction
 
 # Expose port
 EXPOSE $PORT
 
+# Make start script executable
+RUN chmod +x start.sh
+
 # Start the application
-CMD php -S 0.0.0.0:$PORT -t public
+CMD ./start.sh
