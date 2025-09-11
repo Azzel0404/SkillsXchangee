@@ -4,6 +4,10 @@
 echo "Waiting for database to be ready..."
 sleep 10
 
+# Test database connection
+echo "Testing database connection..."
+php artisan tinker --execute="try { DB::connection()->getPdo(); echo 'Database connected successfully'; } catch(Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); exit(1); }"
+
 # Run migrations
 echo "Running migrations..."
 php artisan migrate --force --no-interaction
@@ -12,8 +16,12 @@ php artisan migrate --force --no-interaction
 echo "Running seeders..."
 php artisan db:seed --force --no-interaction
 
-# Cache configuration
+# Clear and cache configuration
 echo "Caching configuration..."
+php artisan config:clear --no-interaction
+php artisan route:clear --no-interaction
+php artisan view:clear --no-interaction
+php artisan cache:clear --no-interaction
 php artisan config:cache --no-interaction
 php artisan route:cache --no-interaction
 php artisan view:cache --no-interaction

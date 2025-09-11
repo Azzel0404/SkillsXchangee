@@ -18,7 +18,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: APP_NAME
-        value: SkillsXchange
+        value: SkillsXchangee
       - key: APP_ENV
         value: production
       - key: APP_KEY
@@ -32,25 +32,15 @@ services:
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        fromDatabase:
-          name: skillsxchangee-db
-          property: host
+        value: mysql.railway.internal
       - key: DB_PORT
-        fromDatabase:
-          name: skillsxchangee-db
-          property: port
+        value: 3306
       - key: DB_DATABASE
-        fromDatabase:
-          name: skillsxchangee-db
-          property: database
+        value: railway
       - key: DB_USERNAME
-        fromDatabase:
-          name: skillsxchangee-db
-          property: user
+        value: root
       - key: DB_PASSWORD
-        fromDatabase:
-          name: skillsxchangee-db
-          property: password
+        value: 1ncQUGzAqadIdRckNFrZLgrIlgpKJPOx
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
@@ -64,11 +54,3 @@ services:
       - key: FILESYSTEM_DISK
         value: public
 
-  - type: pserv
-    name: skillsxchangee-db
-    env: mysql
-    plan: free
-    disk:
-      name: skillsxchangee-db-disk
-      mountPath: /var/lib/mysql
-      sizeGB: 1
