@@ -13,13 +13,8 @@ services:
       php artisan view:clear --no-interaction
       php artisan cache:clear --no-interaction
       php artisan storage:link --force
-    startCommand: |
-      php artisan migrate --force --no-interaction
-      php artisan db:seed --force --no-interaction
-      php artisan config:cache --no-interaction
-      php artisan route:cache --no-interaction
-      php artisan view:cache --no-interaction
-      php -S 0.0.0.0:$PORT -t public
+      chmod +x deploy.sh
+    startCommand: ./deploy.sh
     healthCheckPath: /health
     envVars:
       - key: APP_NAME
