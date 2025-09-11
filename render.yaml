@@ -8,6 +8,10 @@ services:
       npm install
       npm run build
       php artisan key:generate --force --no-interaction
+      php artisan config:clear --no-interaction
+      php artisan route:clear --no-interaction
+      php artisan view:clear --no-interaction
+      php artisan cache:clear --no-interaction
       php artisan config:cache --no-interaction
       php artisan route:cache --no-interaction
       php artisan view:cache --no-interaction
