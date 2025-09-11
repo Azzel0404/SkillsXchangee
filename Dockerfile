@@ -24,8 +24,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create .env file from .env.example (or create a basic one if .env.example doesn't exist)
-RUN if [ -f .env.example ]; then cp .env.example .env; else echo "APP_NAME=Laravel\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost\nDB_CONNECTION=mysql\nDB_HOST=127.0.0.1\nDB_PORT=3306\nDB_DATABASE=laravel\nDB_USERNAME=root\nDB_PASSWORD=\nCACHE_DRIVER=file\nSESSION_DRIVER=file\nQUEUE_CONNECTION=sync" > .env; fi
+# Create .env file for production
+RUN echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=\nLOG_CHANNEL=stderr\nLOG_LEVEL=error\nDB_CONNECTION=mysql\nDB_HOST=\nDB_PORT=3306\nDB_DATABASE=\nDB_USERNAME=\nDB_PASSWORD=\nCACHE_DRIVER=file\nSESSION_DRIVER=file\nQUEUE_CONNECTION=sync" > .env
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
