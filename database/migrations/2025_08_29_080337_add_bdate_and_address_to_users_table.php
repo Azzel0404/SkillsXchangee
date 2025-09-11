@@ -14,7 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            if (!Schema::hasColumn('users', 'bdate')) {
+                $table->date('bdate')->nullable()->after('lastname');
+            }
+            if (!Schema::hasColumn('users', 'address')) {
+                $table->string('address', 255)->nullable()->after('bdate');
+            }
         });
     }
 
@@ -26,7 +31,12 @@ return new class extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('users', 'bdate')) {
+                $table->dropColumn('bdate');
+            }
+            if (Schema::hasColumn('users', 'address')) {
+                $table->dropColumn('address');
+            }
         });
     }
 };

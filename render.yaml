@@ -8,6 +8,8 @@ services:
       npm install
       npm run build
       php artisan key:generate --force --no-interaction
+      php artisan migrate --force --no-interaction
+      php artisan db:seed --force --no-interaction
       php artisan config:clear --no-interaction
       php artisan route:clear --no-interaction
       php artisan view:clear --no-interaction
@@ -19,14 +21,20 @@ services:
     startCommand: php -S 0.0.0.0:$PORT -t public
     healthCheckPath: /health
     envVars:
+      - key: APP_NAME
+        value: SkillsXchange
       - key: APP_ENV
         value: production
+      - key: APP_KEY
+        generateValue: true
       - key: APP_DEBUG
         value: false
+      - key: APP_URL
+        value: https://skillsxchangee.onrender.com
       - key: LOG_CHANNEL
         value: stderr
       - key: DB_CONNECTION
-        value: pgsql
+        value: mysql
       - key: DB_HOST
         fromDatabase:
           name: skillsxchangee-db
@@ -51,14 +59,20 @@ services:
         value: file
       - key: SESSION_DRIVER
         value: file
+      - key: SESSION_LIFETIME
+        value: 120
       - key: QUEUE_CONNECTION
         value: sync
+      - key: MAIL_MAILER
+        value: log
+      - key: FILESYSTEM_DISK
+        value: public
 
   - type: pserv
     name: skillsxchangee-db
-    env: postgresql
+    env: mysql
     plan: free
     disk:
       name: skillsxchangee-db-disk
-      mountPath: /var/lib/postgresql/data
+      mountPath: /var/lib/mysql
       sizeGB: 1
