@@ -32,6 +32,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 RUN npm run build
 
+# Copy public assets to ensure they're available
+RUN cp -r public/* /var/www/html/public/ || true
+
 # Generate application key
 RUN php artisan key:generate --force --no-interaction
 
