@@ -12,6 +12,7 @@ services:
       php artisan route:clear --no-interaction
       php artisan view:clear --no-interaction
       php artisan cache:clear --no-interaction
+      php artisan optimize:clear --no-interaction
       php artisan storage:link --force
       chmod +x deploy.sh
     startCommand: ./deploy.sh
