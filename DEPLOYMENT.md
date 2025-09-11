@@ -10,7 +10,7 @@ This guide covers deploying your Laravel application to Railway and Render platf
 
 ## Railway Deployment
 
-### 1. Connect to Railway
+### 1. Connect to Railwayasdasd
 
 1. Go to [Railway.app](https://railway.app)
 2. Sign up/Login with GitHub
