@@ -30,17 +30,17 @@ services:
       - key: LOG_CHANNEL
         value: stderr
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
-        value: mysql.railway.internal
+        value: dpg-d31ck93uibrs73afcftg-a
       - key: DB_PORT
-        value: 3306
+        value: 5432
       - key: DB_DATABASE
-        value: railway
+        value: skillsxchangee
       - key: DB_USERNAME
-        value: root
+        value: skillsxchangee_user
       - key: DB_PASSWORD
-        value: 1ncQUGzAqadIdRckNFrZLgrIlgpKJPOx
+        value: vd0ea08TTtFCWmtbZidWJpVDFRIOGeoi
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
@@ -54,3 +54,11 @@ services:
       - key: FILESYSTEM_DISK
         value: public
 
+  - type: pserv
+    name: skillsxchangee-db
+    env: postgresql
+    plan: free
+    disk:
+      name: skillsxchangee-db-disk
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1

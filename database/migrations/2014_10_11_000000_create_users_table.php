@@ -29,7 +29,7 @@ return new class extends Migration
             $table->enum('plan', ['free', 'premium'])->default('free');
             $table->integer('token_balance')->default(0);
 
-            $table->dateTime('date_created')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('date_created')->useCurrent();
             $table->rememberToken(); // ← for "Remember me"
 
             $table->foreign('skill_id')
