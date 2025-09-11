@@ -21,7 +21,7 @@ services:
       - key: LOG_CHANNEL
         value: stderr
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
@@ -31,9 +31,9 @@ services:
 
   - type: pserv
     name: skillsxchangee-db
-    env: mysql
+    env: postgresql
     plan: free
     disk:
       name: skillsxchangee-db-disk
-      mountPath: /var/lib/mysql
+      mountPath: /var/lib/postgresql/data
       sizeGB: 1
