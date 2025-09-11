@@ -23,6 +23,26 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: skillsxchangee-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: skillsxchangee-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: skillsxchangee-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: skillsxchangee-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: skillsxchangee-db
+          property: password
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
