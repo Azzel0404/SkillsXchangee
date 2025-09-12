@@ -4,6 +4,11 @@
 echo "Waiting for database to be ready..."
 sleep 10
 
+# Build assets for production
+echo "Building assets..."
+npm install
+npm run build
+
 # Clear ALL caches first to ensure fresh configuration
 echo "Clearing all caches..."
 php artisan config:clear --no-interaction

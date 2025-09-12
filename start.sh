@@ -4,6 +4,11 @@
 echo "Waiting for database to be ready..."
 sleep 10
 
+# Build assets for production
+echo "Building assets..."
+npm install
+npm run build
+
 # Run database migrations
 echo "Running database migrations..."
 php artisan migrate --force --no-interaction

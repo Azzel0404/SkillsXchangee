@@ -15,7 +15,7 @@ services:
       php artisan optimize:clear --no-interaction
       php artisan storage:link --force
       chmod +x deploy.sh
-    startCommand: ./deploy.sh
+    startCommand: ./start.sh
     healthCheckPath: /health
     envVars:
       - key: APP_NAME
