@@ -31,17 +31,17 @@ services:
       - key: LOG_CHANNEL
         value: stderr
       - key: DB_CONNECTION
-        value: pgsql
+        value: mysql
       - key: DB_HOST
-        value: dpg-d31ck93uibrs73afcftg-a
+        value: ${MYSQLHOST}
       - key: DB_PORT
-        value: 5432
+        value: ${MYSQLPORT}
       - key: DB_DATABASE
-        value: skillsxchangee
+        value: ${MYSQLDATABASE}
       - key: DB_USERNAME
-        value: skillsxchangee_user
+        value: ${MYSQLUSER}
       - key: DB_PASSWORD
-        value: vd0ea08TTtFCWmtbZidWJpVDFRIOGeoi
+        value: ${MYSQLPASSWORD}
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
@@ -57,9 +57,9 @@ services:
 
   - type: pserv
     name: skillsxchangee-db
-    env: postgresql
+    env: mysql
     plan: free
     disk:
       name: skillsxchangee-db-disk
-      mountPath: /var/lib/postgresql/data
+      mountPath: /var/lib/mysql
       sizeGB: 1

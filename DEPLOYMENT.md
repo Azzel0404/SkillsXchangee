@@ -92,7 +92,7 @@ Railway will automatically deploy when you push to your main branch. The deploym
 
 ### 3. Add Database
 
-1. In Render dashboard, click "New" → "PostgreSQL" (or MySQL if available)
+1. In Render dashboard, click "New" → "MySQL"
 2. Choose "Free" plan
 3. Note down the connection details
 
@@ -108,11 +108,11 @@ APP_URL=https://your-app-name.onrender.com
 
 # Database
 DB_CONNECTION=mysql
-DB_HOST=your-db-host
-DB_PORT=3306
-DB_DATABASE=your-db-name
-DB_USERNAME=your-db-user
-DB_PASSWORD=your-db-password
+DB_HOST=${MYSQLHOST}
+DB_PORT=${MYSQLPORT}
+DB_DATABASE=${MYSQLDATABASE}
+DB_USERNAME=${MYSQLUSER}
+DB_PASSWORD=${MYSQLPASSWORD}
 
 # Logging
 LOG_CHANNEL=stderr

@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,44 @@ Route::get('/test', function () {
 
 Route::get('/health', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()]);
+});
+
+Route::get('/test-db', function () {
+    try {
+        // Test database connection
+        $connection = DB::connection()->getPdo();
+        $dbName = DB::connection()->getDatabaseName();
+        
+        // Test if we can query users table
+        $userCount = \App\Models\User::count();
+        $testUser = \App\Models\User::where('email', 'test@example.com')->first();
+        
+        $result = [
+            'status' => 'success',
+            'message' => 'Database connection successful!',
+            'database' => $dbName,
+            'connection_type' => 'MySQL',
+            'user_count' => $userCount,
+            'test_user_exists' => $testUser ? 'YES' : 'NO',
+            'test_user_details' => $testUser ? [
+                'id' => $testUser->id,
+                'name' => $testUser->name,
+                'email' => $testUser->email,
+                'created_at' => $testUser->created_at
+            ] : null,
+            'timestamp' => now()
+        ];
+        
+        return response()->json($result, 200);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Database connection failed!',
+            'error' => $e->getMessage(),
+            'timestamp' => now()
+        ], 500);
+    }
 });
 
 Route::get('/test-auth', function () {
