@@ -24,6 +24,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
+# Create basic .env file for build process
+RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false" > .env
+
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
@@ -31,8 +34,7 @@ RUN npm install
 # Copy public assets to ensure they're available
 RUN cp -r public/* /var/www/html/public/ || true
 
-# Generate application key
-RUN php artisan key:generate --force --no-interaction
+# Application key will be generated at runtime in start.sh
 
 # Expose port
 EXPOSE $PORT

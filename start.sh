@@ -4,6 +4,10 @@
 echo "Waiting for database to be ready..."
 sleep 10
 
+# Generate application key (now that environment variables are available)
+echo "Generating application key..."
+php artisan key:generate --force --no-interaction
+
 # Build assets for production (now that environment variables are available)
 echo "Building assets for production..."
 npm run build
