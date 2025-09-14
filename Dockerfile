@@ -24,13 +24,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create .env file for production
-RUN echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=\nLOG_CHANNEL=stderr\nLOG_LEVEL=error\nDB_CONNECTION=mysql\nDB_HOST=\nDB_PORT=3306\nDB_DATABASE=\nDB_USERNAME=\nDB_PASSWORD=\nCACHE_DRIVER=file\nSESSION_DRIVER=file\nQUEUE_CONNECTION=sync" > .env
-
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
-RUN npm run build
 
 # Copy public assets to ensure they're available
 RUN cp -r public/* /var/www/html/public/ || true
