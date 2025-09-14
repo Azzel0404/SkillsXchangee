@@ -59,4 +59,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(\App\Models\Skill::class, 'skill_id', 'skill_id');
     }
+
+    /**
+     * Get the user's full name.
+     */
+    public function getNameAttribute()
+    {
+        return trim($this->firstname . ' ' . $this->lastname);
+    }
 }
