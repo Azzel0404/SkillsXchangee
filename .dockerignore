@@ -41,6 +41,8 @@ backend/test-mysql-connection.php
 backend/test-postgres-connection.php
 backend/vite.config.js
 backend/postcss.config.js
-backend/package.json
-backend/package-lock.json
 backend/.dockerignore
+
+# Ensure these essential files are NOT ignored
+!backend/composer.json
+!backend/package.json
