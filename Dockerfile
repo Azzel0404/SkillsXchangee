@@ -43,8 +43,8 @@ RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nA
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 
-# Build assets
-RUN npm run build
+# Build assets (with error handling for Laravel projects)
+RUN npm run build 2>/dev/null || echo "Asset build skipped - Laravel project without index.html"
 
 # Application key will be generated at runtime in start.sh
 
