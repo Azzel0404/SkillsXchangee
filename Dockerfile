@@ -34,8 +34,7 @@ COPY backend/public/ ./public/
 COPY backend/resources/ ./resources/
 COPY backend/routes/ ./routes/
 COPY backend/storage/ ./storage/
-COPY backend/vendor/ ./vendor/ 2>/dev/null || true
-COPY backend/node_modules/ ./node_modules/ 2>/dev/null || true
+# Dependencies will be installed fresh during build
 
 # Create basic .env file for build process
 RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false" > .env
