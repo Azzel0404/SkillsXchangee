@@ -40,6 +40,11 @@ Route::get('/health', function () {
     return response()->json(['status' => 'ok'], 200);
 });
 
+Route::get('/ping', function () {
+    // Even simpler - just return text
+    return 'pong';
+});
+
 Route::get('/health-detailed', function () {
     try {
         // Test database connection
