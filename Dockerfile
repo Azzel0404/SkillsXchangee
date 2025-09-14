@@ -34,6 +34,9 @@ COPY backend/public/ ./public/
 COPY backend/resources/ ./resources/
 COPY backend/routes/ ./routes/
 COPY backend/storage/ ./storage/
+COPY backend/vite.config.js ./
+COPY backend/tailwind.config.js ./
+COPY backend/postcss.config.js ./
 # Dependencies will be installed fresh during build
 
 # Create basic .env file for build process
@@ -43,8 +46,8 @@ RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nA
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 
-# Build assets (with error handling for Laravel projects)
-RUN npm run build 2>/dev/null || echo "Asset build skipped - Laravel project without index.html"
+# Build assets
+RUN npm run build
 
 # Application key will be generated at runtime in start.sh
 
