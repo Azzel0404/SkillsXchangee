@@ -23,7 +23,22 @@ Route::get('/test', function () {
 });
 
 Route::get('/health', function () {
-    return response()->json(['status' => 'ok', 'timestamp' => now()]);
+    try {
+        // Test database connection
+        DB::connection()->getPdo();
+        $dbStatus = 'connected';
+    } catch (\Exception $e) {
+        $dbStatus = 'failed: ' . $e->getMessage();
+    }
+    
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'database' => $dbStatus,
+        'app_env' => app()->environment(),
+        'app_debug' => config('app.debug'),
+        'app_key_set' => !empty(config('app.key'))
+    ]);
 });
 
 Route::get('/test-db', function () {
