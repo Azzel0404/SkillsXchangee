@@ -21,8 +21,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy backend application files
-COPY backend/ /var/www/html/
+# Copy application files
+COPY . /var/www/html
 
 # Create basic .env file for build process
 RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false" > .env

@@ -4,8 +4,8 @@ services:
     env: php
     plan: free
     buildCommand: |
-      cd backend && composer install --optimize-autoloader --no-dev && npm install && npm run build
-    startCommand: cd backend && ./start.sh
+      composer install --optimize-autoloader --no-dev && npm install && npm run build
+    startCommand: ./start.sh
     healthCheckPath: /
     envVars:
       - key: APP_NAME
