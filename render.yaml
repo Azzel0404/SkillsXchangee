@@ -12,7 +12,7 @@ services:
       php artisan route:cache --no-interaction
       php artisan view:cache --no-interaction
       php artisan storage:link --force
-    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    startCommand: ./start.sh
     healthCheckPath: /
     envVars:
       - key: APP_NAME
@@ -28,13 +28,13 @@ services:
       - key: LOG_CHANNEL
         value: stderr
 
-      # ✅ MySQL on Railway (public connection)
+      # ✅ MySQL on Railway (internal connection - faster and more secure)
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        value: shuttle.proxy.rlwy.net
+        value: mysql.railway.internal
       - key: DB_PORT
-        value: "14460"
+        value: "3306"
       - key: DB_DATABASE
         value: railway
       - key: DB_USERNAME

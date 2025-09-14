@@ -9,7 +9,7 @@ $host = 'shuttle.proxy.rlwy.net';  // From your Railway public connection
 $port = '14460';
 $database = 'railway';
 $username = 'root';
-$password = 'IncQUGzAqadIdRckNFrZLgrIlgpKJPOx';  // From your Railway variables
+$password = 'lncQUGzAqadIdRckNFrZLgrIlgpKJPOx';  // From your Railway variables
 
 echo "Testing MySQL Connection...\n";
 echo "Host: $host\n";
