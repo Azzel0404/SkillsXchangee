@@ -13,21 +13,28 @@ class TestUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create a test user for database connection testing
-        User::create([
-            'firstname' => 'Test',
-            'lastname' => 'User',
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-            'password' => Hash::make('password123'),
-            'bdate' => '1990-01-01',
-            'address' => 'Test Address, Test City',
-            'gender' => 'other',
-            'email_verified_at' => now(),
-            'is_verified' => true,
-        ]);
+        // Create or update a test user for database connection testing
+        $user = User::updateOrCreate(
+            ['username' => 'testuser'], // Find by username
+            [
+                'firstname' => 'Test',
+                'lastname' => 'User',
+                'email' => 'test@example.com',
+                'password' => Hash::make('password123'),
+                'bdate' => '1990-01-01',
+                'address' => 'Test Address, Test City',
+                'gender' => 'other',
+                'email_verified_at' => now(),
+                'is_verified' => true,
+            ]
+        );
 
-        $this->command->info('Test user created successfully!');
+        if ($user->wasRecentlyCreated) {
+            $this->command->info('Test user created successfully!');
+        } else {
+            $this->command->info('Test user updated successfully!');
+        }
+        
         $this->command->info('Email: test@example.com');
         $this->command->info('Password: password123');
     }

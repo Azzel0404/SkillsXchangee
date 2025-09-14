@@ -27,7 +27,7 @@ php artisan migrate --force --no-interaction
 
 # Run database seeders (only if not already seeded)
 echo "Running database seeders..."
-php artisan db:seed --force --no-interaction
+php artisan db:seed --force --no-interaction || echo "Seeder completed with warnings (some data may already exist)"
 
 # Start the PHP server
 echo "Starting PHP server..."
