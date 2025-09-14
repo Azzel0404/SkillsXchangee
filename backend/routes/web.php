@@ -222,6 +222,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/chat/task/{task}/toggle', [\App\Http\Controllers\ChatController::class, 'toggleTask'])->name('chat.toggle-task');
     
     // Admin functionality (moved from /admin to main dashboard)
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/skills', [AdminController::class, 'skillsIndex'])->name('admin.skills.index');
     Route::get('/admin/skills/create', [AdminController::class, 'createSkill'])->name('admin.skill.create');
     Route::post('/admin/skills', [AdminController::class, 'storeSkill'])->name('admin.skill.store');
@@ -231,6 +232,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/user/{user}', [AdminController::class, 'show'])->name('admin.user.show');
 });
 
-// Admin routes moved to main dashboard - no separate /admin route
+// Admin routes available at /admin
 
 require __DIR__.'/auth.php';
