@@ -21,19 +21,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory to backend
 WORKDIR /var/www/html
 
-# Copy only necessary backend files for Railway (API only)
-COPY backend/composer.json backend/composer.lock ./
-COPY backend/package.json backend/package-lock.json ./
-COPY backend/artisan ./
-COPY backend/start.sh ./
-COPY backend/app/ ./app/
-COPY backend/bootstrap/ ./bootstrap/
-COPY backend/config/ ./config/
-COPY backend/database/ ./database/
-COPY backend/public/ ./public/
-COPY backend/resources/ ./resources/
-COPY backend/routes/ ./routes/
-COPY backend/storage/ ./storage/
+# Copy Laravel application files
+COPY composer.json composer.lock ./
+COPY package.json package-lock.json ./
+COPY artisan ./
+COPY start.sh ./
+COPY app/ ./app/
+COPY bootstrap/ ./bootstrap/
+COPY config/ ./config/
+COPY database/ ./database/
+COPY public/ ./public/
+COPY resources/ ./resources/
+COPY routes/ ./routes/
+COPY storage/ ./storage/
 # Dependencies will be installed fresh during build
 
 # Create basic .env file for build process
