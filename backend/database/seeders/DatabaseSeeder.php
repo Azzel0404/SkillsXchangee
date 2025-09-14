@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
 
           $this->call([
               AdminUserSeeder::class,
-              SkillSeeder::class,
+              // SkillSeeder::class, // Disabled - skills will be managed manually
               TestUserSeeder::class,
           ]);
     }
