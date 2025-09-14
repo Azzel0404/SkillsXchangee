@@ -7,6 +7,30 @@ set -e
 echo "Waiting for database to be ready..."
 sleep 10
 
+# Ensure .env file exists with proper structure
+echo "Ensuring .env file exists..."
+if [ ! -f .env ]; then
+    echo "Creating .env file..."
+    cat > .env << EOF
+APP_NAME=SkillsXchangee
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://skillsxchangee.onrender.com
+LOG_CHANNEL=stderr
+DB_CONNECTION=mysql
+DB_HOST=mysql.railway.internal
+DB_PORT=3306
+DB_DATABASE=railway
+DB_USERNAME=root
+DB_PASSWORD=
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
+MAIL_MAILER=log
+EOF
+fi
+
 # Generate application key first
 echo "Generating application key..."
 php artisan key:generate --force --no-interaction

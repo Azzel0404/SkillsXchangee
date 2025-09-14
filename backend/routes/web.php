@@ -45,6 +45,17 @@ Route::get('/ping', function () {
     return 'pong';
 });
 
+Route::get('/test-laravel', function () {
+    // Test if Laravel is working
+    return response()->json([
+        'status' => 'ok',
+        'laravel' => 'working',
+        'timestamp' => now()->toISOString(),
+        'app_name' => config('app.name'),
+        'app_env' => app()->environment()
+    ]);
+});
+
 Route::get('/simple', function () {
     // Ultra-simple route that doesn't use any Laravel features
     return response('OK', 200);
