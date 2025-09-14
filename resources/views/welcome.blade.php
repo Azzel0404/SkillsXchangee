@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillsXchange</title>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  
+  {{-- Fallback for production if Vite fails --}}
+  @if(app()->environment('production'))
+    @php
+      $manifestPath = public_path('build/manifest.json');
+      if (file_exists($manifestPath)) {
+        $manifest = json_decode(file_get_contents($manifestPath), true);
+        $cssFile = $manifest['resources/css/app.css']['file'] ?? null;
+        $jsFile = $manifest['resources/js/app.js']['file'] ?? null;
+      }
+    @endphp
+    @if(isset($cssFile))
+      <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
+    @endif
+    @if(isset($jsFile))
+      <script src="{{ asset('build/' . $jsFile) }}"></script>
+    @endif
+  @endif
 </head>
 <body>
   <header>

@@ -64,6 +64,23 @@ Route::get('/test-db', function () {
     }
 });
 
+Route::get('/test-assets', function () {
+    $buildPath = public_path('build');
+    $manifestPath = $buildPath . '/manifest.json';
+    
+    $result = [
+        'build_directory_exists' => is_dir($buildPath) ? 'YES' : 'NO',
+        'manifest_exists' => file_exists($manifestPath) ? 'YES' : 'NO',
+        'build_directory_contents' => is_dir($buildPath) ? array_diff(scandir($buildPath), ['.', '..']) : [],
+        'manifest_content' => file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : null,
+        'app_env' => app()->environment(),
+        'app_debug' => config('app.debug'),
+        'vite_assets' => app()->environment('production') ? 'Production mode - using built assets' : 'Development mode - using Vite dev server'
+    ];
+    
+    return response()->json($result, 200);
+});
+
 Route::get('/test-auth', function () {
     if (auth()->check()) {
         return 'User is logged in: ' . auth()->user()->email;
