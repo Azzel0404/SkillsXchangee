@@ -34,12 +34,9 @@ backend/railway.toml
 backend/README.md
 backend/README_VIDEO_CHAT.md
 backend/render.yaml
-backend/tailwind.config.js
 backend/test-db.php
 backend/test-mysql-connection.php
 backend/test-postgres-connection.php
-backend/vite.config.js
-backend/postcss.config.js
 backend/.dockerignore
 
 # Ensure these essential files are NOT ignored
