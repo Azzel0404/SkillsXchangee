@@ -22,7 +22,25 @@ Route::get('/test', function () {
     return 'Test route working!';
 });
 
+Route::get('/debug', function () {
+    return response()->json([
+        'app_env' => app()->environment(),
+        'app_debug' => config('app.debug'),
+        'app_key_set' => !empty(config('app.key')),
+        'db_connection' => config('database.default'),
+        'db_host' => config('database.connections.mysql.host'),
+        'db_port' => config('database.connections.mysql.port'),
+        'db_database' => config('database.connections.mysql.database'),
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
 Route::get('/health', function () {
+    // Ultra-simple health check - just return 200 OK
+    return response()->json(['status' => 'ok'], 200);
+});
+
+Route::get('/health-detailed', function () {
     try {
         // Test database connection
         DB::connection()->getPdo();
@@ -33,7 +51,7 @@ Route::get('/health', function () {
     
     return response()->json([
         'status' => 'ok',
-        'timestamp' => now(),
+        'timestamp' => now()->toISOString(),
         'database' => $dbStatus,
         'app_env' => app()->environment(),
         'app_debug' => config('app.debug'),
