@@ -7,13 +7,17 @@ set -e
 echo "Waiting for database to be ready..."
 sleep 10
 
-# Test database connection (non-blocking)
-echo "Testing database connection..."
-php artisan tinker --execute="try { DB::connection()->getPdo(); echo 'Database connected successfully'; } catch(Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); }" || echo "Database connection test failed, but continuing..."
+# Generate application key first
+echo "Generating application key..."
+php artisan key:generate --force --no-interaction
 
 # Clear any cached config first
 echo "Clearing cached configuration..."
 php artisan config:clear --no-interaction
+
+# Test database connection (non-blocking)
+echo "Testing database connection..."
+php artisan tinker --execute="try { DB::connection()->getPdo(); echo 'Database connected successfully'; } catch(Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); }" || echo "Database connection test failed, but continuing..."
 
 # Cache configuration for production (after APP_KEY is available)
 echo "Caching configuration for production..."

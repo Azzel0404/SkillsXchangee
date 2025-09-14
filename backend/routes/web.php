@@ -45,6 +45,11 @@ Route::get('/ping', function () {
     return 'pong';
 });
 
+Route::get('/simple', function () {
+    // Ultra-simple route that doesn't use any Laravel features
+    return response('OK', 200);
+});
+
 Route::get('/health-detailed', function () {
     try {
         // Test database connection
