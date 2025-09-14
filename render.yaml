@@ -6,6 +6,7 @@ services:
     buildCommand: |
       cd backend && composer install --optimize-autoloader --no-dev && npm install && npm run build
     startCommand: cd backend && ./start.sh
+    rootDir: backend
     healthCheckPath: /
     envVars:
       - key: APP_NAME
