@@ -8,15 +8,12 @@ services:
       npm install
       npm run build
       php artisan key:generate --force --no-interaction
-      php artisan config:clear --no-interaction
-      php artisan route:clear --no-interaction
-      php artisan view:clear --no-interaction
-      php artisan cache:clear --no-interaction
-      php artisan optimize:clear --no-interaction
+      php artisan config:cache --no-interaction
+      php artisan route:cache --no-interaction
+      php artisan view:cache --no-interaction
       php artisan storage:link --force
-      chmod +x deploy.sh
-    startCommand: ./start.sh
-    healthCheckPath: /health
+    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
     envVars:
       - key: APP_NAME
         value: SkillsXchangee
@@ -30,36 +27,31 @@ services:
         value: https://skillsxchangee.onrender.com
       - key: LOG_CHANNEL
         value: stderr
+
+      # ✅ MySQL on Railway (public connection)
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        value: ${MYSQLHOST}
+        value: shuttle.proxy.rlwy.net
       - key: DB_PORT
-        value: ${MYSQLPORT}
+        value: "14460"
       - key: DB_DATABASE
-        value: ${MYSQLDATABASE}
+        value: railway
       - key: DB_USERNAME
-        value: ${MYSQLUSER}
+        value: root
       - key: DB_PASSWORD
-        value: ${MYSQLPASSWORD}
+        value: lncQUGzAqadIdRckNFrZLgrIlgpKJPOx
+
+      # ✅ Laravel-specific configs
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
         value: file
       - key: SESSION_LIFETIME
-        value: 120
+        value: "120"
       - key: QUEUE_CONNECTION
         value: sync
       - key: MAIL_MAILER
         value: log
       - key: FILESYSTEM_DISK
         value: public
-
-  - type: pserv
-    name: skillsxchangee-db
-    env: mysql
-    plan: free
-    disk:
-      name: skillsxchangee-db-disk
-      mountPath: /var/lib/mysql
-      sizeGB: 1
