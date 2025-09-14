@@ -34,7 +34,6 @@ backend/railway.toml
 backend/README.md
 backend/README_VIDEO_CHAT.md
 backend/render.yaml
-backend/start.sh
 backend/tailwind.config.js
 backend/test-db.php
 backend/test-mysql-connection.php
@@ -46,3 +45,4 @@ backend/.dockerignore
 # Ensure these essential files are NOT ignored
 !backend/composer.json
 !backend/package.json
+!backend/start.sh
