@@ -15,8 +15,24 @@ class SkillSeeder extends Seeder
      */
     public function run()
     {
-        Skill::create(['name' => 'Web Development', 'category' => 'IT']);
-        Skill::create(['name' => 'Graphic Design', 'category' => 'Design']);
-        Skill::create(['name' => 'Cooking', 'category' => 'Culinary']);
+        $skills = [
+            ['name' => 'Web Development', 'category' => 'IT'],
+            ['name' => 'Graphic Design', 'category' => 'Design'],
+            ['name' => 'Cooking', 'category' => 'Culinary'],
+            ['name' => 'Photography', 'category' => 'Arts'],
+            ['name' => 'Music Production', 'category' => 'Arts'],
+            ['name' => 'Language Learning', 'category' => 'Education'],
+            ['name' => 'Fitness Training', 'category' => 'Health'],
+            ['name' => 'Digital Marketing', 'category' => 'Business'],
+            ['name' => 'Video Editing', 'category' => 'Media'],
+            ['name' => 'Writing', 'category' => 'Communication'],
+        ];
+
+        foreach ($skills as $skill) {
+            Skill::firstOrCreate(
+                ['name' => $skill['name']],
+                ['category' => $skill['category']]
+            );
+        }
     }
 }
