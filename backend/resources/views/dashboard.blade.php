@@ -89,6 +89,7 @@
                 <div class="p-6">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @if(auth()->user()->role !== 'admin')
                         <a href="{{ route('trades.create') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                             <div class="flex-shrink-0">
                                 <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -116,6 +117,7 @@
                                 <p class="text-sm text-gray-500">Browse available trades</p>
                             </div>
                         </a>
+                        @endif
 
                         <a href="{{ route('profile.edit') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                             <div class="flex-shrink-0">

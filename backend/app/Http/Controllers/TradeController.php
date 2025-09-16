@@ -13,6 +13,12 @@ class TradeController extends Controller
     public function create()
     {
         $user = Auth::user();
+        
+        // Additional check to prevent admin users from accessing trade functionality
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Admin users cannot access user trading functionality.');
+        }
+        
         $skills = Skill::orderBy('category')->orderBy('name')->get();
         return view('trades.create', compact('user', 'skills'));
     }
@@ -20,6 +26,12 @@ class TradeController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+        
+        // Additional check to prevent admin users from creating trades
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Admin users cannot create trades.');
+        }
+        
         $validated = $request->validate([
             'offering_skill_id' => ['required', 'exists:skills,skill_id'],
             'looking_skill_id' => ['required', 'exists:skills,skill_id'],
@@ -47,6 +59,11 @@ class TradeController extends Controller
     public function matches()
     {
         $user = Auth::user();
+        
+        // Additional check to prevent admin users from accessing matches
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Admin users cannot access user trading functionality.');
+        }
         
         // Get user's skill
         $userSkill = $user->skill;

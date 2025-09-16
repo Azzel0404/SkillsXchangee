@@ -15,6 +15,7 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    @if(auth()->user()->role !== 'admin')
                     <x-nav-link :href="route('trades.create')" :active="request()->routeIs('trades.create')">
                         {{ __('Post Trade') }}
                     </x-nav-link>
@@ -38,6 +39,7 @@
                             </span>
                         @endif
                     </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -93,6 +95,7 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(auth()->user()->role !== 'admin')
             <x-responsive-nav-link :href="route('trades.create')" :active="request()->routeIs('trades.create')">
                 {{ __('Post Trade') }}
             </x-responsive-nav-link>
@@ -116,6 +119,7 @@
                     </span>
                 @endif
             </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

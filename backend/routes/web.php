@@ -199,37 +199,41 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Trades (user dashboard area)
-    Route::get('/trades/create', [\App\Http\Controllers\TradeController::class, 'create'])->name('trades.create');
-    Route::post('/trades', [\App\Http\Controllers\TradeController::class, 'store'])->name('trades.store');
-    Route::get('/trades/matches', [\App\Http\Controllers\TradeController::class, 'matches'])->name('trades.matches');
-    Route::get('/trades/requests', [\App\Http\Controllers\TradeController::class, 'requests'])->name('trades.requests');
-    Route::get('/trades/ongoing', [\App\Http\Controllers\TradeController::class, 'ongoing'])->name('trades.ongoing');
-    Route::get('/trades/notifications', [\App\Http\Controllers\TradeController::class, 'notify'])->name('trades.notifications');
+    // Trades (user dashboard area) - Restricted to regular users only
+    Route::middleware('user.only')->group(function () {
+        Route::get('/trades/create', [\App\Http\Controllers\TradeController::class, 'create'])->name('trades.create');
+        Route::post('/trades', [\App\Http\Controllers\TradeController::class, 'store'])->name('trades.store');
+        Route::get('/trades/matches', [\App\Http\Controllers\TradeController::class, 'matches'])->name('trades.matches');
+        Route::get('/trades/requests', [\App\Http\Controllers\TradeController::class, 'requests'])->name('trades.requests');
+        Route::get('/trades/ongoing', [\App\Http\Controllers\TradeController::class, 'ongoing'])->name('trades.ongoing');
+        Route::get('/trades/notifications', [\App\Http\Controllers\TradeController::class, 'notify'])->name('trades.notifications');
+        
+        // Trade request actions
+        Route::post('/trades/{trade}/request', [\App\Http\Controllers\TradeController::class, 'requestTrade'])->name('trades.request');
+        Route::post('/trade-requests/{tradeRequest}/respond', [\App\Http\Controllers\TradeController::class, 'respondToRequest'])->name('trades.respond');
+        
+        // Notification actions
+        Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\TradeController::class, 'markNotificationAsRead'])->name('trades.mark-read');
+        
+        // Chat routes
+        Route::get('/chat/{trade}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
+        Route::get('/chat/{trade}/messages', [\App\Http\Controllers\ChatController::class, 'getMessages'])->name('chat.messages');
+        Route::post('/chat/{trade}/message', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('chat.send-message');
+        Route::post('/chat/{trade}/task', [\App\Http\Controllers\ChatController::class, 'createTask'])->name('chat.create-task');
+        Route::patch('/chat/task/{task}/toggle', [\App\Http\Controllers\ChatController::class, 'toggleTask'])->name('chat.toggle-task');
+    });
     
-    // Trade request actions
-    Route::post('/trades/{trade}/request', [\App\Http\Controllers\TradeController::class, 'requestTrade'])->name('trades.request');
-    Route::post('/trade-requests/{tradeRequest}/respond', [\App\Http\Controllers\TradeController::class, 'respondToRequest'])->name('trades.respond');
-    
-    // Notification actions
-    Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\TradeController::class, 'markNotificationAsRead'])->name('trades.mark-read');
-    
-    // Chat routes
-    Route::get('/chat/{trade}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
-    Route::get('/chat/{trade}/messages', [\App\Http\Controllers\ChatController::class, 'getMessages'])->name('chat.messages');
-    Route::post('/chat/{trade}/message', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('chat.send-message');
-    Route::post('/chat/{trade}/task', [\App\Http\Controllers\ChatController::class, 'createTask'])->name('chat.create-task');
-    Route::patch('/chat/task/{task}/toggle', [\App\Http\Controllers\ChatController::class, 'toggleTask'])->name('chat.toggle-task');
-    
-    // Admin functionality (moved from /admin to main dashboard)
-    Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/skills', [AdminController::class, 'skillsIndex'])->name('admin.skills.index');
-    Route::get('/admin/skills/create', [AdminController::class, 'createSkill'])->name('admin.skill.create');
-    Route::post('/admin/skills', [AdminController::class, 'storeSkill'])->name('admin.skill.store');
-    Route::delete('/admin/skills/{skill}', [AdminController::class, 'deleteSkill'])->name('admin.skill.delete');
-    Route::patch('/admin/approve/{user}', [AdminController::class, 'approve'])->name('admin.approve');
-    Route::patch('/admin/reject/{user}', [AdminController::class, 'reject'])->name('admin.reject');
-    Route::get('/admin/user/{user}', [AdminController::class, 'show'])->name('admin.user.show');
+    // Admin functionality (moved from /admin to main dashboard) - Restricted to admin users only
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+        Route::get('/admin/skills', [AdminController::class, 'skillsIndex'])->name('admin.skills.index');
+        Route::get('/admin/skills/create', [AdminController::class, 'createSkill'])->name('admin.skill.create');
+        Route::post('/admin/skills', [AdminController::class, 'storeSkill'])->name('admin.skill.store');
+        Route::delete('/admin/skills/{skill}', [AdminController::class, 'deleteSkill'])->name('admin.skill.delete');
+        Route::patch('/admin/approve/{user}', [AdminController::class, 'approve'])->name('admin.approve');
+        Route::patch('/admin/reject/{user}', [AdminController::class, 'reject'])->name('admin.reject');
+        Route::get('/admin/user/{user}', [AdminController::class, 'show'])->name('admin.user.show');
+    });
 });
 
 // Admin routes available at /admin
