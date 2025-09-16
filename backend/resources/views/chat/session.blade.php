@@ -184,6 +184,15 @@
     background: #ef4444;
     color: white;
 }
+
+/* Emoji button hover effect */
+#emoji-button:hover {
+    background-color: #f3f4f6 !important;
+}
+
+#emoji-button:active {
+    background-color: #e5e7eb !important;
+}
 </style>
 
 <!-- Video Chat Modal -->
@@ -271,7 +280,7 @@
                     <div style="flex: 1; position: relative;">
                         <input type="text" id="message-input" placeholder="Type your message here..." 
                                style="width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
-                        <button type="button" id="emoji-button" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px;">😊</button>
+                        <button type="button" id="emoji-button" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s;" title="Add emoji">😊</button>
                     </div>
                     <button type="submit" id="send-button" style="background: #1e40af; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Send</button>
                 </form>
@@ -1145,6 +1154,11 @@ function resetVideoChat() {
 
 async function initializeVideoChat() {
     try {
+        // Check if media devices are supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Media devices not supported');
+        }
+        
         // Request camera and microphone access
         localStream = await navigator.mediaDevices.getUserMedia({
             video: true,
@@ -1164,7 +1178,19 @@ async function initializeVideoChat() {
         
     } catch (error) {
         console.error('Error accessing media devices:', error);
-        document.getElementById('video-status').textContent = 'Error: Could not access camera or microphone. Please check permissions.';
+        let errorMessage = 'Error: Could not access camera or microphone. ';
+        
+        if (error.name === 'NotAllowedError') {
+            errorMessage += 'Please allow camera and microphone access and refresh the page.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage += 'No camera or microphone found. Please check your devices.';
+        } else if (error.name === 'NotSupportedError') {
+            errorMessage += 'Your browser does not support video calls.';
+        } else {
+            errorMessage += 'Please check permissions and try again.';
+        }
+        
+        document.getElementById('video-status').textContent = errorMessage;
         document.getElementById('start-call-btn').disabled = true;
     }
 }
@@ -1180,7 +1206,17 @@ async function startVideoCall() {
     isInitiator = true;
     
     // Get the other user ID
-    otherUserId = {{ $trade->user_id === Auth::id() ? $trade->matched_user_id : $trade->user_id }};
+    @if($trade->user_id === Auth::id())
+        otherUserId = {{ $trade->matched_user_id ?? 'null' }};
+    @else
+        otherUserId = {{ $trade->user_id ?? 'null' }};
+    @endif
+    
+    if (!otherUserId || otherUserId === 'null') {
+        console.error('Unable to determine other user ID');
+        document.getElementById('video-status').textContent = 'Error: Unable to start call. Please refresh the page.';
+        return;
+    }
     
     // Initialize WebRTC peer connection
     await initializePeerConnection();
@@ -1547,6 +1583,11 @@ function initializeEmojiPicker() {
     const emojiButton = document.getElementById('emoji-button');
     const messageInput = document.getElementById('message-input');
     
+    if (!emojiButton || !messageInput) {
+        console.log('Emoji picker elements not found');
+        return;
+    }
+    
     // Create emoji picker modal
     const emojiModal = document.createElement('div');
     emojiModal.id = 'emoji-picker-modal';
@@ -1667,8 +1708,11 @@ function initializeEmojiPicker() {
     document.body.appendChild(emojiModal);
     
     // Show emoji picker when button is clicked
-    emojiButton.addEventListener('click', () => {
+    emojiButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         emojiModal.style.display = 'flex';
+        console.log('Emoji picker opened');
     });
     
     // Close emoji picker when clicking outside
@@ -1677,6 +1721,25 @@ function initializeEmojiPicker() {
             emojiModal.style.display = 'none';
         }
     });
+    
+    // Add keyboard support for better accessibility
+    emojiButton.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            emojiModal.style.display = 'flex';
+        }
+    });
+    
+    // Ensure emoji picker works on mobile devices
+    if ('ontouchstart' in window) {
+        // Mobile device - add touch support
+        emojiButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            emojiModal.style.display = 'flex';
+        });
+    }
+    
+    console.log('Emoji picker initialized successfully');
 }
 
 </script>
