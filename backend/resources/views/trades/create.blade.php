@@ -51,12 +51,23 @@
         </div>
 
         <div>
-            <label for="looking_skill_id" style="display:block; font-weight:600; margin-bottom:4px;">Looking for (What you want to learn)</label>
-            <select id="looking_skill_id" name="looking_skill_id" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-                <option value="">Select a skill you want to learn</option>
+            <label for="looking_skill_category" style="display:block; font-weight:600; margin-bottom:4px;">Skill Category (What you want to learn)</label>
+            <select id="looking_skill_category" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                <option value="">Select a category first</option>
+                @foreach($skills->groupBy('category') as $category => $group)
+                    <option value="{{ $category }}">{{ $category }}</option>
+                @endforeach
+            </select>
+            <small style="color:#6b7280; font-size:0.75rem;">Select a category to see available skills</small>
+        </div>
+
+        <div>
+            <label for="looking_skill_id" style="display:block; font-weight:600; margin-bottom:4px;">Skill Name (What you want to learn)</label>
+            <select id="looking_skill_id" name="looking_skill_id" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" disabled>
+                <option value="">Select a category first</option>
                 @foreach($skills as $s)
-                    <option value="{{ $s->skill_id }}" {{ $user->skill_id == $s->skill_id ? 'disabled' : '' }}>
-                        {{ $s->category }} - {{ $s->name }}
+                    <option value="{{ $s->skill_id }}" data-category="{{ $s->category }}" {{ $user->skill_id == $s->skill_id ? 'disabled' : '' }}>
+                        {{ $s->name }}
                     </option>
                 @endforeach
             </select>
@@ -141,6 +152,30 @@
     </form>
 
     <script>
+        // Skill category selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const categorySelect = document.getElementById('looking_skill_category');
+            const skillSelect = document.getElementById('looking_skill_id');
+            const allOptions = Array.from(skillSelect.options);
+
+            categorySelect.addEventListener('change', function() {
+                const selectedCategory = this.value;
+                skillSelect.innerHTML = '<option value="">Select a skill</option>';
+                
+                if (selectedCategory) {
+                    skillSelect.disabled = false;
+                    allOptions.forEach(option => {
+                        if (!option.value) return; // skip placeholder
+                        if (option.getAttribute('data-category') === selectedCategory) {
+                            skillSelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    skillSelect.disabled = true;
+                }
+            });
+        });
+
         // Location suggestions for Cebu
         const locationInput = document.getElementById('location');
         const locationSuggestions = document.getElementById('location-suggestions');

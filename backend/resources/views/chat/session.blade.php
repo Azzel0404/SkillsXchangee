@@ -268,8 +268,11 @@
             <!-- Message Input -->
             <div style="padding: 16px; background: white; border-top: 1px solid #e5e7eb;">
                 <form id="message-form" style="display: flex; gap: 8px;">
-                    <input type="text" id="message-input" placeholder="Type your message here..." 
-                           style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                    <div style="flex: 1; position: relative;">
+                        <input type="text" id="message-input" placeholder="Type your message here..." 
+                               style="width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                        <button type="button" id="emoji-button" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px;">😊</button>
+                    </div>
                     <button type="submit" id="send-button" style="background: #1e40af; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Send</button>
                 </form>
 
@@ -1536,7 +1539,145 @@ window.addEventListener('beforeunload', () => {
 // Initialize task count on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateTaskCount();
+    initializeEmojiPicker();
 });
+
+// ===== EMOJI PICKER FUNCTIONALITY =====
+function initializeEmojiPicker() {
+    const emojiButton = document.getElementById('emoji-button');
+    const messageInput = document.getElementById('message-input');
+    
+    // Create emoji picker modal
+    const emojiModal = document.createElement('div');
+    emojiModal.id = 'emoji-picker-modal';
+    emojiModal.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    const emojiContainer = document.createElement('div');
+    emojiContainer.style.cssText = `
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        width: 300px;
+        max-width: 90%;
+        max-height: 400px;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    `;
+    
+    const emojiGrid = document.createElement('div');
+    emojiGrid.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+    `;
+    
+    // Common emojis
+    const emojis = [
+        '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃',
+        '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜',
+        '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟',
+        '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠',
+        '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗',
+        '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧',
+        '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧',
+        '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕',
+        '👇', '☝️', '👋', '🤚', '🖐️', '✋', '🖖', '👏', '🙌', '👐', '🤲', '🤝',
+        '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃',
+        '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕',
+        '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️',
+        '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌',
+        '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️',
+        '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️',
+        '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌',
+        '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱',
+        '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️',
+        '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎',
+        '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿', '🅿️', '🈳', '🈂️', '🛂',
+        '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '🚻', '🚮', '🎦', '📶', '🈁', '🔣',
+        'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣',
+        '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'
+    ];
+    
+    emojis.forEach(emoji => {
+        const emojiButton = document.createElement('button');
+        emojiButton.textContent = emoji;
+        emojiButton.style.cssText = `
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        `;
+        
+        emojiButton.addEventListener('mouseenter', () => {
+            emojiButton.style.backgroundColor = '#f3f4f6';
+        });
+        
+        emojiButton.addEventListener('mouseleave', () => {
+            emojiButton.style.backgroundColor = 'transparent';
+        });
+        
+        emojiButton.addEventListener('click', () => {
+            const currentValue = messageInput.value;
+            const cursorPos = messageInput.selectionStart;
+            const newValue = currentValue.slice(0, cursorPos) + emoji + currentValue.slice(cursorPos);
+            messageInput.value = newValue;
+            messageInput.focus();
+            messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+            emojiModal.style.display = 'none';
+        });
+        
+        emojiGrid.appendChild(emojiButton);
+    });
+    
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.style.cssText = `
+        width: 100%;
+        padding: 8px;
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+    `;
+    
+    closeButton.addEventListener('click', () => {
+        emojiModal.style.display = 'none';
+    });
+    
+    emojiContainer.appendChild(emojiGrid);
+    emojiContainer.appendChild(closeButton);
+    emojiModal.appendChild(emojiContainer);
+    document.body.appendChild(emojiModal);
+    
+    // Show emoji picker when button is clicked
+    emojiButton.addEventListener('click', () => {
+        emojiModal.style.display = 'flex';
+    });
+    
+    // Close emoji picker when clicking outside
+    emojiModal.addEventListener('click', (e) => {
+        if (e.target === emojiModal) {
+            emojiModal.style.display = 'none';
+        }
+    });
+}
 
 </script>
 @endsection
