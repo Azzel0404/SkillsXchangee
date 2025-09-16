@@ -1159,7 +1159,7 @@ let currentTimeElement = document.getElementById('current-time');
 let sessionDurationElement = document.getElementById('session-duration');
 
 // Update current time every second
-setInterval(function() {
+let timeInterval = setInterval(function() {
     const now = new Date();
     currentTimeElement.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     
@@ -1415,11 +1415,35 @@ async function startVideoCall() {
         document.getElementById('call-timer').style.display = 'block';
         callTimer = setInterval(updateCallTimer, 1000);
         
+        // Set connection timeout (30 seconds)
+        let connectionTimeout = setTimeout(() => {
+            if (isCallActive && peerConnection && peerConnection.connectionState !== 'connected') {
+                console.warn('Connection timeout - ending call');
+                document.getElementById('video-status').textContent = 'Connection timeout. Please try again.';
+                endVideoCall();
+            }
+        }, 30000);
+        
+        // Clear timeout when connection is established
+        const originalOnConnectionStateChange = peerConnection.onconnectionstatechange;
+        peerConnection.onconnectionstatechange = () => {
+            if (originalOnConnectionStateChange) {
+                originalOnConnectionStateChange();
+            }
+            if (peerConnection.connectionState === 'connected') {
+                clearTimeout(connectionTimeout);
+            }
+        };
+        
         isCallActive = true;
         
     } catch (error) {
         console.error('Error creating offer:', error);
         document.getElementById('video-status').textContent = 'Error starting call. Please try again.';
+        // Clear timeout on error
+        if (typeof connectionTimeout !== 'undefined') {
+            clearTimeout(connectionTimeout);
+        }
     }
 }
 
@@ -1478,10 +1502,38 @@ async function initializePeerConnection() {
         } else if (peerConnection.connectionState === 'disconnected') {
             document.getElementById('remote-status').textContent = 'Disconnected';
             document.getElementById('remote-status').className = 'connection-status disconnected';
+            document.getElementById('video-status').textContent = 'Connection lost. Attempting to reconnect...';
         } else if (peerConnection.connectionState === 'failed') {
             document.getElementById('remote-status').textContent = 'Connection Failed';
             document.getElementById('remote-status').className = 'connection-status disconnected';
             document.getElementById('video-status').textContent = 'Connection failed. Please try again.';
+            // Auto-end call after failure
+            setTimeout(() => {
+                if (isCallActive) {
+                    endVideoCall();
+                }
+            }, 3000);
+        } else if (peerConnection.connectionState === 'connecting') {
+            document.getElementById('video-status').textContent = 'Connecting...';
+        }
+    };
+    
+    // Handle ICE gathering state changes
+    peerConnection.onicegatheringstatechange = () => {
+        console.log('ICE gathering state:', peerConnection.iceGatheringState);
+        if (peerConnection.iceGatheringState === 'complete') {
+            console.log('ICE gathering completed');
+        }
+    };
+    
+    // Handle ICE connection state changes
+    peerConnection.oniceconnectionstatechange = () => {
+        console.log('ICE connection state:', peerConnection.iceConnectionState);
+        if (peerConnection.iceConnectionState === 'failed') {
+            console.error('ICE connection failed');
+            document.getElementById('video-status').textContent = 'Connection failed. Please check your network and try again.';
+        } else if (peerConnection.iceConnectionState === 'connected') {
+            console.log('ICE connection established');
         }
     };
 }
@@ -1691,18 +1743,75 @@ async function handleVideoCallOffer(data) {
 async function handleVideoCallAnswer(data) {
     console.log('Handling video call answer');
     
-    if (peerConnection && peerConnection.remoteDescription === null) {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    try {
+        if (peerConnection && peerConnection.remoteDescription === null) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            console.log('Remote description set successfully');
+            
+            // Update UI to show connection is being established
+            document.getElementById('video-status').textContent = 'Connecting...';
+        } else {
+            console.warn('Cannot set remote description - peer connection not ready or already set');
+        }
+    } catch (error) {
+        console.error('Error handling video call answer:', error);
+        document.getElementById('video-status').textContent = 'Error establishing connection. Please try again.';
     }
 }
 
 async function handleIceCandidate(data) {
     console.log('Handling ICE candidate');
     
-    if (peerConnection) {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+    try {
+        if (peerConnection && data.candidate) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            console.log('ICE candidate added successfully');
+        } else {
+            console.warn('Cannot add ICE candidate - peer connection not ready or no candidate data');
+        }
+    } catch (error) {
+        console.error('Error handling ICE candidate:', error);
     }
 }
+
+// Debug function to check WebRTC connection status
+function debugWebRTCConnection() {
+    if (!peerConnection) {
+        console.log('❌ No peer connection');
+        return;
+    }
+    
+    console.log('🔍 WebRTC Debug Info:');
+    console.log('- Connection State:', peerConnection.connectionState);
+    console.log('- ICE Connection State:', peerConnection.iceConnectionState);
+    console.log('- ICE Gathering State:', peerConnection.iceGatheringState);
+    console.log('- Signaling State:', peerConnection.signalingState);
+    console.log('- Local Description:', peerConnection.localDescription);
+    console.log('- Remote Description:', peerConnection.remoteDescription);
+    console.log('- Current Call ID:', currentCallId);
+    console.log('- Other User ID:', otherUserId);
+    console.log('- Is Call Active:', isCallActive);
+    
+    // Check if we have local stream
+    if (localStream) {
+        console.log('- Local Stream Tracks:', localStream.getTracks().length);
+        localStream.getTracks().forEach((track, index) => {
+            console.log(`  Track ${index}:`, track.kind, track.enabled ? 'enabled' : 'disabled');
+        });
+    } else {
+        console.log('❌ No local stream');
+    }
+    
+    // Check if we have remote stream
+    if (remoteStream) {
+        console.log('- Remote Stream Tracks:', remoteStream.getTracks().length);
+    } else {
+        console.log('❌ No remote stream');
+    }
+}
+
+// Add debug function to window for console access
+window.debugWebRTC = debugWebRTCConnection;
 
 function handleVideoCallEnd(data) {
     console.log('Handling video call end');
@@ -1714,43 +1823,7 @@ function handleVideoCallEnd(data) {
     cleanupVideoCall();
 }
 
-function toggleAudio() {
-    if (localStream) {
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-            audioTrack.enabled = !audioTrack.enabled;
-            isAudioMuted = !audioTrack.enabled;
-            
-            const btn = document.getElementById('toggle-audio-btn');
-            if (isAudioMuted) {
-                btn.textContent = 'Unmute Audio';
-                btn.style.background = '#6b7280';
-            } else {
-                btn.textContent = 'Mute Audio';
-                btn.style.background = '#10b981';
-            }
-        }
-    }
-}
 
-function toggleVideo() {
-    if (localStream) {
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-            videoTrack.enabled = !videoTrack.enabled;
-            isVideoOff = !videoTrack.enabled;
-            
-            const btn = document.getElementById('toggle-video-btn');
-            if (isVideoOff) {
-                btn.textContent = 'Turn On Video';
-                btn.style.background = '#6b7280';
-            } else {
-                btn.textContent = 'Turn Off Video';
-                btn.style.background = '#10b981';
-            }
-        }
-    }
-}
 
 function toggleMirror() {
     const localVideo = document.getElementById('local-video');
@@ -2164,6 +2237,34 @@ function initializeEmojiPicker() {
     
     console.log('Emoji picker initialized successfully');
 }
+
+// Cleanup function to clear all intervals and timeouts
+function cleanupAllIntervals() {
+    if (timeInterval) {
+        clearInterval(timeInterval);
+        timeInterval = null;
+    }
+    if (callTimer) {
+        clearInterval(callTimer);
+        callTimer = null;
+    }
+    // Clean up any other intervals or timeouts
+    console.log('All intervals and timeouts cleaned up');
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', cleanupAllIntervals);
+
+// Cleanup on page visibility change (when user switches tabs)
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        // Page is hidden, could pause some operations
+        console.log('Page hidden - pausing non-essential operations');
+    } else {
+        // Page is visible again
+        console.log('Page visible - resuming operations');
+    }
+});
 
 </script>
 @endsection
