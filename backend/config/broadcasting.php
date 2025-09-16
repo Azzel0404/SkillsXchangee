@@ -40,8 +40,8 @@ return [
                 'host' => env('PUSHER_HOST') ?: 'api.pusherapp.com',
                 'port' => env('PUSHER_PORT', 443),
                 'scheme' => env('PUSHER_SCHEME', 'https'),
-                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
-                'encrypted' => true,
+                'useTLS' => env('PUSHER_USE_TLS', false),
+                'encrypted' => env('PUSHER_ENCRYPTED', false),
                 'timeout' => 5,
                 'keep_alive' => true,
                 'curl_options' => [

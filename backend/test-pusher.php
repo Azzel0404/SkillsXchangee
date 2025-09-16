@@ -19,7 +19,8 @@ $pusher = new Pusher(
     $_ENV['PUSHER_APP_ID'],
     [
         'cluster' => $_ENV['PUSHER_APP_CLUSTER'],
-        'useTLS' => true
+        'useTLS' => $_ENV['PUSHER_USE_TLS'] ?? false,
+        'encrypted' => $_ENV['PUSHER_ENCRYPTED'] ?? false
     ]
 );
 
