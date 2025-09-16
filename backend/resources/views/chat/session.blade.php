@@ -359,18 +359,19 @@
     </div>
 
     <!-- Footer -->
-    <div style="background: #f3f4f6; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb;">
-        <div style="font-size: 0.875rem; color: #6b7280;">
-            <div>Session started: {{ \Carbon\Carbon::parse($trade->start_date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($trade->start_date)->format('g:i A') }}</div>
-            <div>Current time: <span id="current-time">{{ now()->format('g:i A') }}</span> • Duration: <span id="session-duration">0 minutes</span></div>
+        <div style="background: #f3f4f6; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb;">
+            <div style="font-size: 0.875rem; color: #6b7280;">
+                <div>Session started: {{ \Carbon\Carbon::parse($trade->start_date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($trade->start_date)->format('g:i A') }}</div>
+                <div>Current time: <span id="current-time">{{ now()->format('g:i A') }}</span> • Duration: <span id="session-duration">0 minutes</span></div>
+                <div>Status: <span id="session-status" style="color: #10b981; font-weight: 600;">🟢 Active</span> • Tasks: <span id="task-count">0</span></div>
+            </div>
+            <button onclick="endSession()" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">End Session</button>
         </div>
-        <button onclick="endSession()" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">End Session</button>
-    </div>
 </div>
 
 <!-- Add Task Modal -->
-<div id="add-task-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 24px; border-radius: 8px; width: 400px; max-width: 90%;">
+<div id="add-task-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;" onclick="handleModalClick(event)">
+    <div style="background: white; padding: 24px; border-radius: 8px; width: 400px; max-width: 90%;" onclick="event.stopPropagation()">
         <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px;">Add Task for {{ $partner->firstname }}</h3>
         <form id="add-task-form">
             <div style="margin-bottom: 16px;">
@@ -882,15 +883,51 @@ function updateProgress() {
         partnerProgressBar.style.width = partnerProgress + '%';
         partnerProgressBar.parentElement.previousElementSibling.querySelector('span:last-child').textContent = Math.round(partnerProgress) + '%';
     }
+    
+    // Update task count in session info
+    updateTaskCount();
+}
+
+function updateTaskCount() {
+    const myTasks = document.querySelectorAll('#my-tasks .task-item').length;
+    const partnerTasks = document.querySelectorAll('#partner-tasks .task-item').length;
+    const totalTasks = myTasks + partnerTasks;
+    
+    const taskCountElement = document.getElementById('task-count');
+    if (taskCountElement) {
+        taskCountElement.textContent = totalTasks;
+        
+        // Update color based on task count
+        if (totalTasks === 0) {
+            taskCountElement.style.color = '#ef4444'; // Red for no tasks
+        } else if (totalTasks < 3) {
+            taskCountElement.style.color = '#f59e0b'; // Orange for few tasks
+        } else {
+            taskCountElement.style.color = '#10b981'; // Green for good task count
+        }
+    }
 }
 
 // Modal handling
 function showAddTaskModal() {
-    document.getElementById('add-task-modal').style.display = 'flex';
+    const modal = document.getElementById('add-task-modal');
+    modal.style.display = 'flex';
+    // Clear form when opening
+    document.getElementById('add-task-form').reset();
 }
 
 function hideAddTaskModal() {
-    document.getElementById('add-task-modal').style.display = 'none';
+    const modal = document.getElementById('add-task-modal');
+    modal.style.display = 'none';
+    // Clear form when closing
+    document.getElementById('add-task-form').reset();
+}
+
+function handleModalClick(event) {
+    // Close modal when clicking outside the content area
+    if (event.target.id === 'add-task-modal') {
+        hideAddTaskModal();
+    }
 }
 
 document.getElementById('add-task-form').addEventListener('submit', function(e) {
@@ -916,6 +953,7 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
         if (data.success) {
             hideAddTaskModal();
             addTaskToUI(data.task);
+            updateTaskCount(); // Update task count after adding task
             // Clear form
             document.getElementById('task-title').value = '';
             document.getElementById('task-description').value = '';
@@ -1010,7 +1048,27 @@ function checkForNewMessages() {
 }
 
 function endSession() {
-    if (confirm('Are you sure you want to end this session?')) {
+    // Check if there are any tasks before ending session
+    const myTasks = document.querySelectorAll('#my-tasks .task-item').length;
+    const partnerTasks = document.querySelectorAll('#partner-tasks .task-item').length;
+    const totalTasks = myTasks + partnerTasks;
+    
+    if (totalTasks === 0) {
+        const proceed = confirm('No tasks have been added to this session. Are you sure you want to end the session without any tasks?\n\nIt is recommended to add at least one task to track progress.');
+        if (!proceed) {
+            return;
+        }
+    } else {
+        const proceed = confirm(`Session has ${totalTasks} task(s). Are you sure you want to end this session?`);
+        if (!proceed) {
+            return;
+        }
+    }
+    
+    // End the session
+    if (confirm('Are you sure you want to end this session? This action cannot be undone.')) {
+        // Here you could add an API call to mark the session as ended
+        // For now, we'll just redirect
         window.location.href = '{{ route("trades.ongoing") }}';
     }
 }
@@ -1473,6 +1531,11 @@ window.addEventListener('beforeunload', () => {
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
     }
+});
+
+// Initialize task count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateTaskCount();
 });
 
 </script>
