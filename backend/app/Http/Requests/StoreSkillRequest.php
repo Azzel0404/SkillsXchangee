@@ -33,7 +33,7 @@ class StoreSkillRequest extends FormRequest
                     $existingSkill = Skill::byNormalizedName($value)->first();
                     
                     if ($existingSkill) {
-                        $fail('A skill with this name already exists.');
+                        $fail('A skill with this name already exists. Please choose a different name.');
                     }
                 },
             ],
@@ -64,11 +64,11 @@ class StoreSkillRequest extends FormRequest
     {
         return [
             'name.required' => 'Skill name is required.',
-            'name.string' => 'Skill name must be a string.',
+            'name.string' => 'Skill name must be a valid text.',
             'name.max' => 'Skill name cannot exceed 50 characters.',
             'name.min' => 'Skill name must be at least 2 characters.',
             'category.required' => 'Category is required.',
-            'category.string' => 'Category must be a string.',
+            'category.string' => 'Category must be a valid text.',
             'category.max' => 'Category cannot exceed 50 characters.',
             'category.min' => 'Category must be at least 2 characters.',
         ];

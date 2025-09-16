@@ -241,6 +241,10 @@
                     <span>💬</span>
                     <span>Session Chat</span>
                     <span id="new-message-indicator" style="display: none; background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; animation: pulse 2s infinite;">NEW</span>
+                    <div id="connection-status" style="margin-left: 12px; font-size: 0.7rem;">
+                        <span id="status-indicator" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; margin-right:4px;"></span>
+                        <span id="status-text">Connecting...</span>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <button id="video-call-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;" onclick="openVideoChat()">📷</button>
@@ -395,6 +399,24 @@
 
 // Listen for events using Laravel Echo
 if (window.Echo) {
+    console.log('Initializing Pusher connection for trade {{ $trade->id }}');
+    
+    // Connection status monitoring
+    window.Echo.connector.pusher.connection.bind('connected', function() {
+        console.log('Pusher connected successfully');
+        updateConnectionStatus('connected');
+    });
+    
+    window.Echo.connector.pusher.connection.bind('disconnected', function() {
+        console.log('Pusher disconnected');
+        updateConnectionStatus('disconnected');
+    });
+    
+    window.Echo.connector.pusher.connection.bind('error', function(error) {
+        console.error('Pusher connection error:', error);
+        updateConnectionStatus('error');
+    });
+
     // Listen for new messages
     window.Echo.channel('trade-{{ $trade->id }}')
         .listen('new-message', function(data) {
@@ -421,6 +443,35 @@ if (window.Echo) {
             updateTask(data.task);
             updateProgress();
         });
+} else {
+    console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
+    updateConnectionStatus('error');
+}
+
+// Connection status update function
+function updateConnectionStatus(status) {
+    const indicator = document.getElementById('status-indicator');
+    const text = document.getElementById('status-text');
+    
+    if (!indicator || !text) return;
+    
+    switch(status) {
+        case 'connected':
+            indicator.style.background = '#10b981';
+            text.textContent = 'Connected';
+            break;
+        case 'disconnected':
+            indicator.style.background = '#f59e0b';
+            text.textContent = 'Disconnected';
+            break;
+        case 'error':
+            indicator.style.background = '#ef4444';
+            text.textContent = 'Connection Error';
+            break;
+        default:
+            indicator.style.background = '#6b7280';
+            text.textContent = 'Connecting...';
+    }
 }
 
 // Message handling with debounce

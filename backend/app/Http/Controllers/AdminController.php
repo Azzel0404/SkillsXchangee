@@ -47,11 +47,30 @@ class AdminController extends Controller
 
     public function storeSkill(StoreSkillRequest $request)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        Skill::create($validated);
+            Skill::create($validated);
 
-        return redirect()->route('admin.skills.index')->with('success', 'Skill added successfully.');
+            return redirect()->route('admin.skills.index')->with('success', 'Skill added successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle database unique constraint violations
+            if ($e->getCode() == 23000) { // MySQL duplicate entry error code
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['name' => 'A skill with this name already exists. Please choose a different name.']);
+            }
+            
+            // Handle other database errors
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['name' => 'An error occurred while saving the skill. Please try again.']);
+        } catch (\Exception $e) {
+            // Handle any other unexpected errors
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['name' => 'An unexpected error occurred. Please try again.']);
+        }
     }
 
     public function deleteSkill(Skill $skill)
