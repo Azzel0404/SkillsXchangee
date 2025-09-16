@@ -398,12 +398,15 @@
 // Laravel Echo is already initialized in bootstrap.js
 // We'll use it to listen for events
 
-// Debug information
-console.log('=== CHAT DEBUG INFO ===');
-console.log('Trade ID:', {{ $trade->id }});
-console.log('User ID:', {{ Auth::id() }});
-console.log('Laravel Echo available:', !!window.Echo);
-console.log('Pusher available:', !!window.Pusher);
+        // Debug information
+        console.log('=== CHAT DEBUG INFO ===');
+        console.log('Trade ID:', {{ $trade->id }});
+        console.log('User ID:', {{ Auth::id() }});
+        console.log('Laravel Echo available:', !!window.Echo);
+        console.log('Pusher available:', !!window.Pusher);
+        console.log('Current URL:', window.location.href);
+        console.log('Base URL:', window.location.origin);
+        console.log('Generated message URL:', window.location.origin + '/chat/{{ $trade->id }}/message');
 
 // Listen for events using Laravel Echo
 if (window.Echo) {
@@ -521,17 +524,21 @@ function sendMessage(message) {
     const tempId = 'temp_' + Date.now();
     addMessageToChat(message, '{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}', new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), true, tempId);
     
-    const url = '{{ route("chat.send-message", $trade->id) }}';
+    // Generate absolute URL for production compatibility
+    const baseUrl = window.location.origin;
+    const url = baseUrl + '/chat/{{ $trade->id }}/message';
     console.log('📡 Sending to URL:', url);
     console.log('📡 CSRF Token:', '{{ csrf_token() }}');
+    console.log('📡 Base URL:', baseUrl);
     
     // Check if URL is valid
-    if (!url || url.includes('undefined')) {
+    if (!url || url.includes('undefined') || !url.includes('/chat/')) {
         console.error('❌ Invalid URL generated:', url);
         showError('Invalid chat URL. Please refresh the page.');
         return;
     }
     
+    // Add credentials for CORS
     fetch(url, {
         method: 'POST',
         headers: {
@@ -540,7 +547,8 @@ function sendMessage(message) {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({ message: message })
+        body: JSON.stringify({ message: message }),
+        credentials: 'same-origin' // Important for CORS
     })
     .then(response => {
         console.log('📨 Response status:', response.status);
@@ -579,6 +587,8 @@ function sendMessage(message) {
     })
     .catch(error => {
         console.error('🚨 Fetch error:', error);
+        console.error('🚨 Error type:', error.name);
+        console.error('🚨 Error message:', error.message);
         
         // Reset button state
         sendButton.textContent = originalText;
@@ -588,9 +598,13 @@ function sendMessage(message) {
         // Remove the temporary message if it failed
         removeMessageFromChat(tempId);
         
-        // Show specific error message
-        if (error.message.includes('Failed to fetch')) {
-            showError('Network error: Unable to connect to server. Please check your internet connection.');
+        // Show specific error messages based on error type
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            showError('Network error: Unable to connect to server. Please check your internet connection and try again.');
+        } else if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+            showError('Network error: Please check your internet connection.');
+        } else if (error.message.includes('CORS')) {
+            showError('CORS error: Cross-origin request blocked. Please refresh the page.');
         } else if (error.message.includes('HTTP error')) {
             showError('Server error: ' + error.message);
         } else {
