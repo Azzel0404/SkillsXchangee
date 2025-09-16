@@ -523,18 +523,33 @@ function sendMessage(message) {
     
     const url = '{{ route("chat.send-message", $trade->id) }}';
     console.log('📡 Sending to URL:', url);
+    console.log('📡 CSRF Token:', '{{ csrf_token() }}');
+    
+    // Check if URL is valid
+    if (!url || url.includes('undefined')) {
+        console.error('❌ Invalid URL generated:', url);
+        showError('Invalid chat URL. Please refresh the page.');
+        return;
+    }
     
     fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({ message: message })
     })
     .then(response => {
         console.log('📨 Response status:', response.status);
+        console.log('📨 Response headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         return response.json();
     })
     .then(data => {
@@ -572,7 +587,15 @@ function sendMessage(message) {
         
         // Remove the temporary message if it failed
         removeMessageFromChat(tempId);
-        showError('Failed to send message. Please try again.');
+        
+        // Show specific error message
+        if (error.message.includes('Failed to fetch')) {
+            showError('Network error: Unable to connect to server. Please check your internet connection.');
+        } else if (error.message.includes('HTTP error')) {
+            showError('Server error: ' + error.message);
+        } else {
+            showError('Failed to send message: ' + error.message);
+        }
     });
 }
 
@@ -679,6 +702,51 @@ function showNewMessageIndicator() {
         setTimeout(() => {
             indicator.style.display = 'none';
         }, 3000);
+    }
+}
+
+// Show error message function
+function showError(message) {
+    console.error('Error:', message);
+    
+    // Create error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ef4444;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    errorDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>⚠️</span>
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: auto;">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 5000);
+}
+
+// Remove message from chat function
+function removeMessageFromChat(tempId) {
+    const messageElement = document.querySelector(`[data-temp-id="${tempId}"]`);
+    if (messageElement) {
+        messageElement.remove();
     }
 }
 
