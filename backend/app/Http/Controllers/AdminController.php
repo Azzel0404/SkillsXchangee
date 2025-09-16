@@ -50,6 +50,16 @@ class AdminController extends Controller
         try {
             $validated = $request->validated();
 
+            // Double-check for duplicates before creating (extra safety)
+            $normalizedName = $this->normalizeSkillName($validated['name']);
+            $existingSkill = Skill::whereRaw('LOWER(TRIM(REGEXP_REPLACE(name, "\\s+", " ", "g"))) = ?', [strtolower($normalizedName)])->first();
+            
+            if ($existingSkill) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['name' => 'A skill with this name already exists. Please choose a different name.']);
+            }
+
             Skill::create($validated);
 
             return redirect()->route('admin.skills.index')->with('success', 'Skill added successfully.');
@@ -71,6 +81,26 @@ class AdminController extends Controller
                 ->withInput()
                 ->withErrors(['name' => 'An unexpected error occurred. Please try again.']);
         }
+    }
+
+    /**
+     * Normalize skill name by:
+     * - Trimming whitespace
+     * - Converting multiple spaces to single space
+     * - Converting to proper case (first letter of each word capitalized)
+     */
+    private function normalizeSkillName(string $name): string
+    {
+        // Trim whitespace
+        $name = trim($name);
+        
+        // Replace multiple spaces with single space
+        $name = preg_replace('/\s+/', ' ', $name);
+        
+        // Convert to proper case (Title Case)
+        $name = ucwords(strtolower($name));
+        
+        return $name;
     }
 
     public function deleteSkill(Skill $skill)

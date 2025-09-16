@@ -11,9 +11,10 @@
     @endif
 
     @if($errors->any())
-        <div style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:12px 16px; border-radius:6px; margin-bottom:16px;">
-            <div style="font-weight:600; margin-bottom:8px;">⚠️ Please fix the following errors:</div>
-            <ul style="margin:0; padding-left:20px;">
+        <div id="error-message" style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:12px 16px; border-radius:6px; margin-bottom:16px; position:relative;">
+            <button onclick="closeErrorMessage()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:#dc2626; font-size:18px; cursor:pointer; padding:0; width:20px; height:20px; display:flex; align-items:center; justify-content:center;">×</button>
+            <div style="font-weight:600; margin-bottom:8px; padding-right:20px;">⚠️ Please fix the following errors:</div>
+            <ul style="margin:0; padding-left:20px; padding-right:20px;">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -74,6 +75,16 @@
         </tbody>
     </table>
 </main>
+
+<script>
+function closeErrorMessage() {
+    const errorMessage = document.getElementById('error-message');
+    if (errorMessage) {
+        errorMessage.style.display = 'none';
+    }
+}
+</script>
+
 @endsection
 
 
