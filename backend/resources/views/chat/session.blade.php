@@ -92,6 +92,11 @@
     flex: 1;
 }
 
+/* Default state for local video - no mirroring by default */
+#local-video {
+    transform: scaleX(1);
+}
+
 .video-item.remote {
     border: 2px solid #3b82f6;
 }
@@ -360,6 +365,7 @@
             <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;" title="End Call">📞</button>
             <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;" title="Mute/Unmute">🎤</button>
             <button id="toggle-video-btn" class="video-btn success" onclick="toggleVideo()" style="display: none;" title="Turn Video On/Off">📹</button>
+            <button id="mirror-video-btn" class="video-btn secondary" onclick="toggleMirror()" style="display: none;" title="Mirror Video">🪞</button>
             <button id="screen-share-btn" class="video-btn secondary" onclick="toggleScreenShare()" style="display: none;" title="Share Screen">🖥️</button>
             <button id="maximize-btn" class="video-btn maximize" onclick="toggleMaximize()" style="display: none;" title="Maximize">⛶</button>
             <button id="chat-toggle-btn" class="video-btn secondary" onclick="toggleChat()" style="display: none;" title="Toggle Chat">💬</button>
@@ -1266,6 +1272,7 @@ function resetVideoChat() {
     document.getElementById('end-call-btn').style.display = 'none';
     document.getElementById('toggle-audio-btn').style.display = 'none';
     document.getElementById('toggle-video-btn').style.display = 'none';
+    document.getElementById('mirror-video-btn').style.display = 'none';
     document.getElementById('screen-share-btn').style.display = 'none';
     document.getElementById('maximize-btn').style.display = 'none';
     document.getElementById('chat-toggle-btn').style.display = 'none';
@@ -1398,6 +1405,7 @@ async function startVideoCall() {
         document.getElementById('end-call-btn').style.display = 'flex';
         document.getElementById('toggle-audio-btn').style.display = 'flex';
         document.getElementById('toggle-video-btn').style.display = 'flex';
+        document.getElementById('mirror-video-btn').style.display = 'flex';
         document.getElementById('screen-share-btn').style.display = 'flex';
         document.getElementById('maximize-btn').style.display = 'flex';
         document.getElementById('chat-toggle-btn').style.display = 'flex';
@@ -1444,9 +1452,19 @@ async function initializePeerConnection() {
     
     // Handle ICE candidates
     peerConnection.onicecandidate = async (event) => {
-        if (event.candidate && otherUserId) {
-            console.log('Sending ICE candidate');
-            await sendIceCandidate(event.candidate);
+        if (event.candidate) {
+            console.log('ICE candidate generated:', event.candidate.type, event.candidate.protocol);
+            // Only send ICE candidates if we have a valid call setup
+            if (currentCallId && otherUserId) {
+                await sendIceCandidate(event.candidate);
+            } else {
+                console.warn('Skipping ICE candidate - call not properly initialized', {
+                    currentCallId: currentCallId,
+                    otherUserId: otherUserId
+                });
+            }
+        } else {
+            console.log('ICE gathering completed');
         }
     };
     
@@ -1523,6 +1541,17 @@ async function sendVideoCallAnswer(answer) {
 
 async function sendIceCandidate(candidate) {
     try {
+        // Validate required variables before making the request
+        if (!otherUserId || !currentCallId) {
+            console.warn('Cannot send ICE candidate: missing otherUserId or currentCallId', {
+                otherUserId: otherUserId,
+                currentCallId: currentCallId
+            });
+            return;
+        }
+
+        console.log('Sending ICE candidate to user:', otherUserId, 'for call:', currentCallId);
+        
         const response = await fetch(`{{ route('video-call.ice-candidate', $trade->id) }}`, {
             method: 'POST',
             headers: {
@@ -1538,12 +1567,14 @@ async function sendIceCandidate(candidate) {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to send ICE candidate');
+            const errorText = await response.text();
+            throw new Error(`Failed to send ICE candidate: ${response.status} ${response.statusText} - ${errorText}`);
         }
         
         console.log('ICE candidate sent successfully');
     } catch (error) {
         console.error('Error sending ICE candidate:', error);
+        // Don't throw the error to prevent breaking the WebRTC connection process
     }
 }
 
@@ -1643,6 +1674,7 @@ async function handleVideoCallOffer(data) {
         document.getElementById('end-call-btn').style.display = 'flex';
         document.getElementById('toggle-audio-btn').style.display = 'flex';
         document.getElementById('toggle-video-btn').style.display = 'flex';
+        document.getElementById('mirror-video-btn').style.display = 'flex';
         document.getElementById('screen-share-btn').style.display = 'flex';
         document.getElementById('maximize-btn').style.display = 'flex';
         document.getElementById('chat-toggle-btn').style.display = 'flex';
@@ -1717,6 +1749,25 @@ function toggleVideo() {
                 btn.style.background = '#10b981';
             }
         }
+    }
+}
+
+function toggleMirror() {
+    const localVideo = document.getElementById('local-video');
+    const btn = document.getElementById('mirror-video-btn');
+    
+    if (localVideo.style.transform === 'scaleX(-1)') {
+        // Remove mirror effect
+        localVideo.style.transform = 'scaleX(1)';
+        btn.textContent = '🪞';
+        btn.title = 'Mirror Video';
+        btn.style.background = '#6b7280';
+    } else {
+        // Apply mirror effect
+        localVideo.style.transform = 'scaleX(-1)';
+        btn.textContent = '🪞';
+        btn.title = 'Unmirror Video';
+        btn.style.background = '#10b981';
     }
 }
 

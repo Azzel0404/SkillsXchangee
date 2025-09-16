@@ -109,6 +109,10 @@ class VideoCallController extends Controller
         
         // Verify user is part of this trade
         if (!$this->isUserInTrade($user, $trade)) {
+            Log::warning('Unauthorized ICE candidate attempt', [
+                'user_id' => $user->id,
+                'trade_id' => $trade->id
+            ]);
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         
@@ -119,6 +123,16 @@ class VideoCallController extends Controller
         ]);
         
         try {
+            // Verify the target user exists and is part of the trade
+            $targetUser = \App\Models\User::find($request->toUserId);
+            if (!$targetUser) {
+                Log::warning('ICE candidate target user not found', [
+                    'target_user_id' => $request->toUserId,
+                    'trade_id' => $trade->id
+                ]);
+                return response()->json(['error' => 'Target user not found'], 404);
+            }
+            
             // Broadcast the ICE candidate
             event(new VideoCallIceCandidate(
                 $trade->id,
@@ -127,10 +141,22 @@ class VideoCallController extends Controller
                 $request->callId
             ));
             
+            Log::info('ICE candidate sent successfully', [
+                'trade_id' => $trade->id,
+                'from_user_id' => $user->id,
+                'to_user_id' => $request->toUserId,
+                'call_id' => $request->callId
+            ]);
+            
             return response()->json(['success' => true]);
             
         } catch (\Exception $e) {
-            Log::error('Error sending ICE candidate: ' . $e->getMessage());
+            Log::error('Error sending ICE candidate: ' . $e->getMessage(), [
+                'trade_id' => $trade->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json(['error' => 'Failed to send ICE candidate'], 500);
         }
     }
