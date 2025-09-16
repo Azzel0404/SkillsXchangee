@@ -178,7 +178,9 @@ class VideoCallController extends Controller
      */
     private function isUserInTrade($user, $trade)
     {
-        return $user->id === $trade->user_id || $user->id === $trade->matched_user_id;
+        // User is either the trade owner or has an accepted request for this trade
+        return $user->id === $trade->user_id || 
+               $trade->requests()->where('requester_id', $user->id)->where('status', 'accepted')->exists();
     }
     
     /**
@@ -187,8 +189,11 @@ class VideoCallController extends Controller
     private function getOtherUserInTrade($user, $trade)
     {
         if ($user->id === $trade->user_id) {
-            return $trade->matchedUser;
+            // Current user is the trade owner, get the requester
+            $acceptedRequest = $trade->requests()->where('status', 'accepted')->first();
+            return $acceptedRequest ? $acceptedRequest->requester : null;
         } else {
+            // Current user is a requester, get the trade owner
             return $trade->user;
         }
     }

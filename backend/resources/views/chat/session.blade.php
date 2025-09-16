@@ -37,28 +37,37 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
     z-index: 9999;
     justify-content: center;
     align-items: center;
 }
 
 .video-chat-container {
-    background: white;
+    background: #1a1a1a;
     border-radius: 12px;
-    padding: 20px;
-    max-width: 800px;
-    width: 90%;
-    max-height: 90%;
+    padding: 0;
+    max-width: 95vw;
+    width: 95vw;
+    max-height: 95vh;
+    height: 95vh;
     overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .video-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 10px;
+    flex: 1;
+    padding: 10px;
+    min-height: 0;
+}
+
+.video-grid.maximized {
+    grid-template-columns: 1fr;
 }
 
 .video-item {
@@ -66,13 +75,21 @@
     background: #000;
     border-radius: 8px;
     overflow: hidden;
-    aspect-ratio: 16/9;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-item.maximized {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
 }
 
 .video-item video {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    flex: 1;
 }
 
 .video-item.remote {
@@ -83,20 +100,40 @@
     border: 2px solid #10b981;
 }
 
+.video-item.local.minimized {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 200px;
+    height: 150px;
+    z-index: 10;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .video-controls {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid #333;
 }
 
 .video-btn {
-    padding: 12px 24px;
+    padding: 12px;
     border: none;
-    border-radius: 6px;
+    border-radius: 50%;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 18px;
 }
 
 .video-btn.primary {
@@ -106,6 +143,7 @@
 
 .video-btn.primary:hover {
     background: #2563eb;
+    transform: scale(1.05);
 }
 
 .video-btn.danger {
@@ -115,6 +153,7 @@
 
 .video-btn.danger:hover {
     background: #dc2626;
+    transform: scale(1.05);
 }
 
 .video-btn.success {
@@ -124,33 +163,63 @@
 
 .video-btn.success:hover {
     background: #059669;
+    transform: scale(1.05);
+}
+
+.video-btn.secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.video-btn.secondary:hover {
+    background: #4b5563;
+    transform: scale(1.05);
+}
+
+.video-btn.muted {
+    background: #ef4444 !important;
 }
 
 .video-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none !important;
+}
+
+.video-btn.maximize {
+    background: #8b5cf6;
+    color: white;
+}
+
+.video-btn.maximize:hover {
+    background: #7c3aed;
+    transform: scale(1.05);
 }
 
 .video-status {
     text-align: center;
-    margin-bottom: 20px;
+    padding: 15px;
     font-weight: 600;
-    color: #374151;
+    color: #e5e7eb;
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid #333;
 }
 
 .call-timer {
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: #3b82f6;
-    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid #333;
 }
 
 .close-video {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     color: white;
     border: none;
     border-radius: 50%;
@@ -158,31 +227,91 @@
     height: 40px;
     cursor: pointer;
     font-size: 1.2rem;
+    z-index: 1000;
+    transition: all 0.2s;
+}
+
+.close-video:hover {
+    background: rgba(239, 68, 68, 0.8);
+    transform: scale(1.1);
 }
 
 .connection-status {
     position: absolute;
-    top: 15px;
-    left: 15px;
-    padding: 4px 8px;
-    border-radius: 4px;
+    top: 10px;
+    left: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
+    backdrop-filter: blur(10px);
+    z-index: 10;
 }
 
 .connection-status.connected {
-    background: #10b981;
+    background: rgba(16, 185, 129, 0.9);
     color: white;
 }
 
 .connection-status.connecting {
-    background: #f59e0b;
+    background: rgba(245, 158, 11, 0.9);
     color: white;
 }
 
 .connection-status.disconnected {
-    background: #ef4444;
+    background: rgba(239, 68, 68, 0.9);
     color: white;
+}
+
+.video-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+.user-name {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+.video-controls-overlay {
+    display: flex;
+    gap: 8px;
+}
+
+.control-btn {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+.control-btn.active {
+    background: rgba(239, 68, 68, 0.9);
 }
 
 /* Emoji button hover effect */
@@ -203,22 +332,37 @@
         <div class="video-status" id="video-status">Initializing video chat...</div>
         <div class="call-timer" id="call-timer" style="display: none;">00:00</div>
         
-        <div class="video-grid">
-            <div class="video-item local">
+        <div class="video-grid" id="video-grid">
+            <div class="video-item local" id="local-video-item">
                 <video id="local-video" autoplay muted playsinline></video>
                 <div class="connection-status" id="local-status">Local</div>
+                <div class="video-overlay">
+                    <div class="user-name">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</div>
+                    <div class="video-controls-overlay">
+                        <button class="control-btn" id="local-maximize-btn" onclick="maximizeVideo('local')" title="Maximize">⛶</button>
+                    </div>
+                </div>
             </div>
-            <div class="video-item remote">
+            <div class="video-item remote" id="remote-video-item">
                 <video id="remote-video" autoplay playsinline></video>
                 <div class="connection-status" id="remote-status">Waiting...</div>
+                <div class="video-overlay">
+                    <div class="user-name" id="remote-user-name">{{ $partner->firstname ?? 'Partner' }} {{ $partner->lastname ?? '' }}</div>
+                    <div class="video-controls-overlay">
+                        <button class="control-btn" id="remote-maximize-btn" onclick="maximizeVideo('remote')" title="Maximize">⛶</button>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="video-controls">
-            <button id="start-call-btn" class="video-btn primary" onclick="startVideoCall()">Start Call</button>
-            <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;">End Call</button>
-            <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;">Mute Audio</button>
-            <button id="toggle-video-btn" class="video-btn success" onclick="toggleVideo()" style="display: none;">Turn Off Video</button>
+            <button id="start-call-btn" class="video-btn primary" onclick="startVideoCall()" title="Start Call">📞</button>
+            <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;" title="End Call">📞</button>
+            <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;" title="Mute/Unmute">🎤</button>
+            <button id="toggle-video-btn" class="video-btn success" onclick="toggleVideo()" style="display: none;" title="Turn Video On/Off">📹</button>
+            <button id="screen-share-btn" class="video-btn secondary" onclick="toggleScreenShare()" style="display: none;" title="Share Screen">🖥️</button>
+            <button id="maximize-btn" class="video-btn maximize" onclick="toggleMaximize()" style="display: none;" title="Maximize">⛶</button>
+            <button id="chat-toggle-btn" class="video-btn secondary" onclick="toggleChat()" style="display: none;" title="Toggle Chat">💬</button>
         </div>
     </div>
 </div>
@@ -1118,10 +1262,29 @@ function resetVideoChat() {
     // Reset UI
     document.getElementById('video-status').textContent = 'Initializing video chat...';
     document.getElementById('call-timer').style.display = 'none';
-    document.getElementById('start-call-btn').style.display = 'inline-block';
+    document.getElementById('start-call-btn').style.display = 'flex';
     document.getElementById('end-call-btn').style.display = 'none';
     document.getElementById('toggle-audio-btn').style.display = 'none';
     document.getElementById('toggle-video-btn').style.display = 'none';
+    document.getElementById('screen-share-btn').style.display = 'none';
+    document.getElementById('maximize-btn').style.display = 'none';
+    document.getElementById('chat-toggle-btn').style.display = 'none';
+    
+    // Reset maximize state
+    const videoGrid = document.getElementById('video-grid');
+    const localVideoItem = document.getElementById('local-video-item');
+    const remoteVideoItem = document.getElementById('remote-video-item');
+    
+    videoGrid.classList.remove('maximized');
+    localVideoItem.classList.remove('maximized', 'minimized');
+    remoteVideoItem.classList.remove('maximized', 'minimized');
+    isMaximized = false;
+    maximizedVideo = null;
+    
+    // Stop screen sharing if active
+    if (isScreenSharing) {
+        stopScreenShare();
+    }
     
     // Reset status indicators
     document.getElementById('local-status').textContent = 'Local';
@@ -1205,15 +1368,15 @@ async function startVideoCall() {
     currentCallId = 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     isInitiator = true;
     
-    // Get the other user ID
-    @if($trade->user_id === Auth::id())
-        otherUserId = {{ $trade->matched_user_id ?? 'null' }};
-    @else
-        otherUserId = {{ $trade->user_id ?? 'null' }};
-    @endif
+    // Get the other user ID (partner)
+    otherUserId = {{ $partner->id ?? 'null' }};
+    
+    console.log('Debug - Partner ID:', {{ $partner->id ?? 'null' }});
+    console.log('Debug - Partner name:', '{{ $partner->firstname ?? 'Unknown' }} {{ $partner->lastname ?? 'User' }}');
     
     if (!otherUserId || otherUserId === 'null') {
         console.error('Unable to determine other user ID');
+        console.error('Partner ID:', {{ $partner->id ?? 'null' }});
         document.getElementById('video-status').textContent = 'Error: Unable to start call. Please refresh the page.';
         return;
     }
@@ -1232,9 +1395,12 @@ async function startVideoCall() {
         // Update UI
         document.getElementById('video-status').textContent = 'Calling...';
         document.getElementById('start-call-btn').style.display = 'none';
-        document.getElementById('end-call-btn').style.display = 'inline-block';
-        document.getElementById('toggle-audio-btn').style.display = 'inline-block';
-        document.getElementById('toggle-video-btn').style.display = 'inline-block';
+        document.getElementById('end-call-btn').style.display = 'flex';
+        document.getElementById('toggle-audio-btn').style.display = 'flex';
+        document.getElementById('toggle-video-btn').style.display = 'flex';
+        document.getElementById('screen-share-btn').style.display = 'flex';
+        document.getElementById('maximize-btn').style.display = 'flex';
+        document.getElementById('chat-toggle-btn').style.display = 'flex';
         
         // Start call timer
         callStartTime = new Date();
@@ -1474,9 +1640,12 @@ async function handleVideoCallOffer(data) {
         // Update UI
         document.getElementById('video-status').textContent = 'Call in progress...';
         document.getElementById('start-call-btn').style.display = 'none';
-        document.getElementById('end-call-btn').style.display = 'inline-block';
-        document.getElementById('toggle-audio-btn').style.display = 'inline-block';
-        document.getElementById('toggle-video-btn').style.display = 'inline-block';
+        document.getElementById('end-call-btn').style.display = 'flex';
+        document.getElementById('toggle-audio-btn').style.display = 'flex';
+        document.getElementById('toggle-video-btn').style.display = 'flex';
+        document.getElementById('screen-share-btn').style.display = 'flex';
+        document.getElementById('maximize-btn').style.display = 'flex';
+        document.getElementById('chat-toggle-btn').style.display = 'flex';
         
         // Start call timer
         callStartTime = new Date();
@@ -1559,6 +1728,209 @@ function updateCallTimer() {
         const seconds = diff % 60;
         document.getElementById('call-timer').textContent = 
             `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+// ===== ENHANCED VIDEO CALL FEATURES =====
+
+let isMaximized = false;
+let maximizedVideo = null;
+let isScreenSharing = false;
+let screenStream = null;
+
+function maximizeVideo(videoType) {
+    const videoGrid = document.getElementById('video-grid');
+    const localVideoItem = document.getElementById('local-video-item');
+    const remoteVideoItem = document.getElementById('remote-video-item');
+    
+    if (isMaximized && maximizedVideo === videoType) {
+        // Restore normal view
+        videoGrid.classList.remove('maximized');
+        localVideoItem.classList.remove('maximized');
+        remoteVideoItem.classList.remove('maximized');
+        localVideoItem.classList.remove('minimized');
+        remoteVideoItem.classList.remove('minimized');
+        isMaximized = false;
+        maximizedVideo = null;
+    } else {
+        // Maximize selected video
+        videoGrid.classList.add('maximized');
+        
+        if (videoType === 'local') {
+            localVideoItem.classList.add('maximized');
+            remoteVideoItem.classList.add('minimized');
+            maximizedVideo = 'local';
+        } else {
+            remoteVideoItem.classList.add('maximized');
+            localVideoItem.classList.add('minimized');
+            maximizedVideo = 'remote';
+        }
+        
+        isMaximized = true;
+    }
+}
+
+function toggleMaximize() {
+    // Toggle between normal and maximized view
+    if (isMaximized) {
+        const videoGrid = document.getElementById('video-grid');
+        const localVideoItem = document.getElementById('local-video-item');
+        const remoteVideoItem = document.getElementById('remote-video-item');
+        
+        videoGrid.classList.remove('maximized');
+        localVideoItem.classList.remove('maximized', 'minimized');
+        remoteVideoItem.classList.remove('maximized', 'minimized');
+        isMaximized = false;
+        maximizedVideo = null;
+    } else {
+        // Maximize remote video by default
+        maximizeVideo('remote');
+    }
+}
+
+async function toggleScreenShare() {
+    const screenShareBtn = document.getElementById('screen-share-btn');
+    
+    try {
+        if (!isScreenSharing) {
+            // Start screen sharing
+            screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            });
+            
+            // Replace local video stream with screen share
+            const localVideo = document.getElementById('local-video');
+            localVideo.srcObject = screenStream;
+            
+            // Update peer connection with screen stream
+            if (peerConnection) {
+                const videoTrack = screenStream.getVideoTracks()[0];
+                const audioTrack = screenStream.getAudioTracks()[0];
+                
+                // Remove old tracks and add new ones
+                const sender = peerConnection.getSenders().find(s => 
+                    s.track && s.track.kind === 'video'
+                );
+                if (sender) {
+                    await sender.replaceTrack(videoTrack);
+                }
+                
+                if (audioTrack) {
+                    const audioSender = peerConnection.getSenders().find(s => 
+                        s.track && s.track.kind === 'audio'
+                    );
+                    if (audioSender) {
+                        await audioSender.replaceTrack(audioTrack);
+                    }
+                }
+            }
+            
+            isScreenSharing = true;
+            screenShareBtn.classList.add('active');
+            screenShareBtn.title = 'Stop Screen Share';
+            
+            // Handle screen share end
+            screenStream.getVideoTracks()[0].onended = () => {
+                stopScreenShare();
+            };
+            
+        } else {
+            // Stop screen sharing
+            stopScreenShare();
+        }
+    } catch (error) {
+        console.error('Error toggling screen share:', error);
+        showError('Failed to start screen sharing. Please try again.');
+    }
+}
+
+function stopScreenShare() {
+    if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+    }
+    
+    // Restore local video stream
+    if (localStream) {
+        const localVideo = document.getElementById('local-video');
+        localVideo.srcObject = localStream;
+        
+        // Update peer connection with original stream
+        if (peerConnection) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            const audioTrack = localStream.getAudioTracks()[0];
+            
+            const sender = peerConnection.getSenders().find(s => 
+                s.track && s.track.kind === 'video'
+            );
+            if (sender) {
+                sender.replaceTrack(videoTrack);
+            }
+            
+            if (audioTrack) {
+                const audioSender = peerConnection.getSenders().find(s => 
+                    s.track && s.track.kind === 'audio'
+                );
+                if (audioSender) {
+                    audioSender.replaceTrack(audioTrack);
+                }
+            }
+        }
+    }
+    
+    isScreenSharing = false;
+    const screenShareBtn = document.getElementById('screen-share-btn');
+    screenShareBtn.classList.remove('active');
+    screenShareBtn.title = 'Share Screen';
+}
+
+function toggleChat() {
+    // This could open a side chat panel in the video call
+    // For now, we'll just show a notification
+    showError('Chat feature in video call coming soon!');
+}
+
+// Enhanced toggle functions with better visual feedback
+function toggleAudio() {
+    if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+            audioTrack.enabled = !audioTrack.enabled;
+            isAudioMuted = !audioTrack.enabled;
+            
+            const btn = document.getElementById('toggle-audio-btn');
+            if (isAudioMuted) {
+                btn.textContent = '🎤';
+                btn.classList.add('muted');
+                btn.title = 'Unmute Audio';
+            } else {
+                btn.textContent = '🎤';
+                btn.classList.remove('muted');
+                btn.title = 'Mute Audio';
+            }
+        }
+    }
+}
+
+function toggleVideo() {
+    if (localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+            videoTrack.enabled = !videoTrack.enabled;
+            isVideoOff = !videoTrack.enabled;
+            
+            const btn = document.getElementById('toggle-video-btn');
+            if (isVideoOff) {
+                btn.textContent = '📹';
+                btn.classList.add('muted');
+                btn.title = 'Turn On Video';
+            } else {
+                btn.textContent = '📹';
+                btn.classList.remove('muted');
+                btn.title = 'Turn Off Video';
+            }
+        }
     }
 }
 
