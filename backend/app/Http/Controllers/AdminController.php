@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Skill;
+use App\Http\Requests\StoreSkillRequest;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -44,16 +45,13 @@ class AdminController extends Controller
         return view('admin.skills.create');
     }
 
-    public function storeSkill(Request $request)
+    public function storeSkill(StoreSkillRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'category' => ['required', 'string', 'max:100'],
-        ]);
+        $validated = $request->validated();
 
         Skill::create($validated);
 
-        return redirect()->route('admin.skills.index')->with('success', 'Skill added.');
+        return redirect()->route('admin.skills.index')->with('success', 'Skill added successfully.');
     }
 
     public function deleteSkill(Skill $skill)

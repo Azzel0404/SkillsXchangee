@@ -11,17 +11,22 @@
     @endif
 
     <div style="background:#fff; padding:16px; border-radius:8px; box-shadow:0 2px 8px #eee; margin-bottom:24px;">
+        <div style="background:#f0f9ff; border:1px solid #0ea5e9; border-radius:6px; padding:12px; margin-bottom:16px;">
+            <p style="margin:0; color:#0c4a6e; font-size:0.875rem;">
+                <strong>Note:</strong> Skill names will be automatically formatted (proper case, single spaces). Duplicate skills are not allowed.
+            </p>
+        </div>
         <form method="POST" action="{{ route('admin.skill.store') }}" style="display:flex; gap:12px; flex-wrap:wrap;">
             @csrf
             <div style="flex:1 1 240px;">
                 <label for="name" style="display:block; font-weight:600; margin-bottom:4px;">Skill Name</label>
-                <input id="name" name="name" type="text" value="{{ old('name') }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
-                @error('name')<div style="color:#e53e3e; font-size:0.875rem;">{{ $message }}</div>@enderror
+                <input id="name" name="name" type="text" value="{{ old('name') }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" placeholder="e.g., Web Development" />
+                @error('name')<div style="color:#e53e3e; font-size:0.875rem; margin-top:4px;">{{ $message }}</div>@enderror
             </div>
             <div style="flex:1 1 240px;">
                 <label for="category" style="display:block; font-weight:600; margin-bottom:4px;">Category</label>
-                <input id="category" name="category" type="text" value="{{ old('category') }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
-                @error('category')<div style="color:#e53e3e; font-size:0.875rem;">{{ $message }}</div>@enderror
+                <input id="category" name="category" type="text" value="{{ old('category') }}" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" placeholder="e.g., IT" />
+                @error('category')<div style="color:#e53e3e; font-size:0.875rem; margin-top:4px;">{{ $message }}</div>@enderror
             </div>
             <div style="align-self:end;">
                 <button type="submit" style="padding:10px 16px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;">Add Skill</button>
