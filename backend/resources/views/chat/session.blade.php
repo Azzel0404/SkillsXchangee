@@ -460,6 +460,39 @@ if (window.Echo) {
             updateTask(data.task);
             updateProgress();
         });
+
+    // Listen for video call events
+    window.Echo.channel('trade-{{ $trade->id }}')
+        .listen('video-call-offer', async function(data) {
+            console.log('Received video call offer:', data);
+            if (data.fromUserId !== {{ Auth::id() }}) {
+                await handleVideoCallOffer(data);
+            }
+        });
+
+    window.Echo.channel('trade-{{ $trade->id }}')
+        .listen('video-call-answer', async function(data) {
+            console.log('Received video call answer:', data);
+            if (data.toUserId === {{ Auth::id() }}) {
+                await handleVideoCallAnswer(data);
+            }
+        });
+
+    window.Echo.channel('trade-{{ $trade->id }}')
+        .listen('video-call-ice-candidate', async function(data) {
+            console.log('Received ICE candidate:', data);
+            if (data.toUserId === {{ Auth::id() }}) {
+                await handleIceCandidate(data);
+            }
+        });
+
+    window.Echo.channel('trade-{{ $trade->id }}')
+        .listen('video-call-end', function(data) {
+            console.log('Received video call end:', data);
+            if (data.fromUserId !== {{ Auth::id() }}) {
+                handleVideoCallEnd(data);
+            }
+        });
 } else {
     console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
     updateConnectionStatus('error');
@@ -993,6 +1026,9 @@ let callStartTime = null;
 let callTimer = null;
 let isAudioMuted = false;
 let isVideoOff = false;
+let currentCallId = null;
+let isInitiator = false;
+let otherUserId = null;
 
 // Video chat modal functions
 function openVideoChat() {
@@ -1036,6 +1072,9 @@ function resetVideoChat() {
     isCallActive = false;
     isAudioMuted = false;
     isVideoOff = false;
+    currentCallId = null;
+    isInitiator = false;
+    otherUserId = null;
     
     if (callTimer) {
         clearInterval(callTimer);
@@ -1069,41 +1108,57 @@ async function initializeVideoChat() {
     }
 }
 
-function startVideoCall() {
+async function startVideoCall() {
     if (!localStream) {
         alert('Please wait for camera and microphone to initialize.');
         return;
     }
     
+    // Generate unique call ID
+    currentCallId = 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    isInitiator = true;
+    
+    // Get the other user ID
+    otherUserId = {{ $trade->user_id === Auth::id() ? $trade->matched_user_id : $trade->user_id }};
+    
     // Initialize WebRTC peer connection
-    initializePeerConnection();
+    await initializePeerConnection();
     
-    // Update UI
-    document.getElementById('video-status').textContent = 'Call in progress...';
-    document.getElementById('start-call-btn').style.display = 'none';
-    document.getElementById('end-call-btn').style.display = 'inline-block';
-    document.getElementById('toggle-audio-btn').style.display = 'inline-block';
-    document.getElementById('toggle-video-btn').style.display = 'inline-block';
-    
-    // Start call timer
-    callStartTime = new Date();
-    document.getElementById('call-timer').style.display = 'block';
-    callTimer = setInterval(updateCallTimer, 1000);
-    
-    isCallActive = true;
-    
-    // Simulate remote connection (in real implementation, this would connect to the other user)
-    setTimeout(() => {
-        simulateRemoteConnection();
-    }, 2000);
+    // Create and send offer
+    try {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        
+        // Send offer to other user
+        await sendVideoCallOffer(offer);
+        
+        // Update UI
+        document.getElementById('video-status').textContent = 'Calling...';
+        document.getElementById('start-call-btn').style.display = 'none';
+        document.getElementById('end-call-btn').style.display = 'inline-block';
+        document.getElementById('toggle-audio-btn').style.display = 'inline-block';
+        document.getElementById('toggle-video-btn').style.display = 'inline-block';
+        
+        // Start call timer
+        callStartTime = new Date();
+        document.getElementById('call-timer').style.display = 'block';
+        callTimer = setInterval(updateCallTimer, 1000);
+        
+        isCallActive = true;
+        
+    } catch (error) {
+        console.error('Error creating offer:', error);
+        document.getElementById('video-status').textContent = 'Error starting call. Please try again.';
+    }
 }
 
-function initializePeerConnection() {
+async function initializePeerConnection() {
     // Create RTCPeerConnection with STUN servers for NAT traversal
     const configuration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
         ]
     };
     
@@ -1116,10 +1171,20 @@ function initializePeerConnection() {
     
     // Handle incoming tracks
     peerConnection.ontrack = (event) => {
+        console.log('Received remote stream');
         remoteStream = event.streams[0];
         document.getElementById('remote-video').srcObject = remoteStream;
         document.getElementById('remote-status').textContent = 'Connected';
         document.getElementById('remote-status').className = 'connection-status connected';
+        document.getElementById('video-status').textContent = 'Call connected! You can now see and hear each other.';
+    };
+    
+    // Handle ICE candidates
+    peerConnection.onicecandidate = async (event) => {
+        if (event.candidate && otherUserId) {
+            console.log('Sending ICE candidate');
+            await sendIceCandidate(event.candidate);
+        }
     };
     
     // Handle connection state changes
@@ -1128,21 +1193,121 @@ function initializePeerConnection() {
         if (peerConnection.connectionState === 'connected') {
             document.getElementById('remote-status').textContent = 'Connected';
             document.getElementById('remote-status').className = 'connection-status connected';
+            document.getElementById('video-status').textContent = 'Call connected! You can now see and hear each other.';
         } else if (peerConnection.connectionState === 'disconnected') {
             document.getElementById('remote-status').textContent = 'Disconnected';
             document.getElementById('remote-status').className = 'connection-status disconnected';
+        } else if (peerConnection.connectionState === 'failed') {
+            document.getElementById('remote-status').textContent = 'Connection Failed';
+            document.getElementById('remote-status').className = 'connection-status disconnected';
+            document.getElementById('video-status').textContent = 'Connection failed. Please try again.';
         }
     };
 }
 
-function simulateRemoteConnection() {
-    // This is a simulation - in a real app, you'd connect to the actual other user
-    document.getElementById('remote-status').textContent = 'Connected (Demo)';
-    document.getElementById('remote-status').className = 'connection-status connected';
-    document.getElementById('video-status').textContent = 'Call connected! You can now see and hear each other.';
+// Signaling functions
+async function sendVideoCallOffer(offer) {
+    try {
+        const response = await fetch(`{{ route('video-call.offer', $trade->id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                offer: offer,
+                callId: currentCallId
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to send offer');
+        }
+        
+        console.log('Offer sent successfully');
+    } catch (error) {
+        console.error('Error sending offer:', error);
+        document.getElementById('video-status').textContent = 'Error sending call. Please try again.';
+    }
 }
 
-function endVideoCall() {
+async function sendVideoCallAnswer(answer) {
+    try {
+        const response = await fetch(`{{ route('video-call.answer', $trade->id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                answer: answer,
+                callId: currentCallId,
+                toUserId: otherUserId
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to send answer');
+        }
+        
+        console.log('Answer sent successfully');
+    } catch (error) {
+        console.error('Error sending answer:', error);
+    }
+}
+
+async function sendIceCandidate(candidate) {
+    try {
+        const response = await fetch(`{{ route('video-call.ice-candidate', $trade->id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                candidate: candidate,
+                callId: currentCallId,
+                toUserId: otherUserId
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to send ICE candidate');
+        }
+        
+        console.log('ICE candidate sent successfully');
+    } catch (error) {
+        console.error('Error sending ICE candidate:', error);
+    }
+}
+
+async function endVideoCall() {
+    if (currentCallId) {
+        try {
+            await fetch(`{{ route('video-call.end', $trade->id) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    callId: currentCallId
+                })
+            });
+        } catch (error) {
+            console.error('Error ending call:', error);
+        }
+    }
+    
+    // Clean up local resources
+    cleanupVideoCall();
+}
+
+function cleanupVideoCall() {
     isCallActive = false;
     
     // Close peer connection
@@ -1168,6 +1333,87 @@ function endVideoCall() {
             document.getElementById('video-status').textContent = 'Camera and microphone ready. Click "Start Call" to begin.';
         }
     }, 2000);
+}
+
+// Video call event handlers
+async function handleVideoCallOffer(data) {
+    console.log('Handling video call offer from:', data.fromUserName);
+    
+    // Set up for incoming call
+    currentCallId = data.callId;
+    otherUserId = data.fromUserId;
+    isInitiator = false;
+    
+    // Show incoming call notification
+    const acceptCall = confirm(`${data.fromUserName} is calling you. Do you want to accept?`);
+    
+    if (acceptCall) {
+        // Initialize video chat if not already open
+        if (document.getElementById('video-chat-modal').style.display === 'none') {
+            openVideoChat();
+        }
+        
+        // Wait for camera to be ready
+        await new Promise(resolve => {
+            const checkCamera = setInterval(() => {
+                if (localStream) {
+                    clearInterval(checkCamera);
+                    resolve();
+                }
+            }, 100);
+        });
+        
+        // Initialize peer connection
+        await initializePeerConnection();
+        
+        // Set remote description
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        
+        // Create and send answer
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        await sendVideoCallAnswer(answer);
+        
+        // Update UI
+        document.getElementById('video-status').textContent = 'Call in progress...';
+        document.getElementById('start-call-btn').style.display = 'none';
+        document.getElementById('end-call-btn').style.display = 'inline-block';
+        document.getElementById('toggle-audio-btn').style.display = 'inline-block';
+        document.getElementById('toggle-video-btn').style.display = 'inline-block';
+        
+        // Start call timer
+        callStartTime = new Date();
+        document.getElementById('call-timer').style.display = 'block';
+        callTimer = setInterval(updateCallTimer, 1000);
+        
+        isCallActive = true;
+    }
+}
+
+async function handleVideoCallAnswer(data) {
+    console.log('Handling video call answer');
+    
+    if (peerConnection && peerConnection.remoteDescription === null) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    }
+}
+
+async function handleIceCandidate(data) {
+    console.log('Handling ICE candidate');
+    
+    if (peerConnection) {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+}
+
+function handleVideoCallEnd(data) {
+    console.log('Handling video call end');
+    
+    // Show notification
+    alert('The other person has ended the call.');
+    
+    // Clean up
+    cleanupVideoCall();
 }
 
 function toggleAudio() {

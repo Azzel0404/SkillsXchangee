@@ -221,6 +221,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/chat/{trade}/message', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('chat.send-message');
         Route::post('/chat/{trade}/task', [\App\Http\Controllers\ChatController::class, 'createTask'])->name('chat.create-task');
         Route::patch('/chat/task/{task}/toggle', [\App\Http\Controllers\ChatController::class, 'toggleTask'])->name('chat.toggle-task');
+        
+        // Video call routes
+        Route::post('/chat/{trade}/video-call/offer', [\App\Http\Controllers\VideoCallController::class, 'sendOffer'])->name('video-call.offer');
+        Route::post('/chat/{trade}/video-call/answer', [\App\Http\Controllers\VideoCallController::class, 'sendAnswer'])->name('video-call.answer');
+        Route::post('/chat/{trade}/video-call/ice-candidate', [\App\Http\Controllers\VideoCallController::class, 'sendIceCandidate'])->name('video-call.ice-candidate');
+        Route::post('/chat/{trade}/video-call/end', [\App\Http\Controllers\VideoCallController::class, 'endCall'])->name('video-call.end');
     });
     
     // Admin functionality (moved from /admin to main dashboard) - Restricted to admin users only
