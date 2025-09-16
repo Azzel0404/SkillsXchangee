@@ -397,24 +397,37 @@
 // Laravel Echo is already initialized in bootstrap.js
 // We'll use it to listen for events
 
+// Debug information
+console.log('=== CHAT DEBUG INFO ===');
+console.log('Trade ID:', {{ $trade->id }});
+console.log('User ID:', {{ Auth::id() }});
+console.log('Laravel Echo available:', !!window.Echo);
+console.log('Pusher available:', !!window.Pusher);
+
 // Listen for events using Laravel Echo
 if (window.Echo) {
     console.log('Initializing Pusher connection for trade {{ $trade->id }}');
     
     // Connection status monitoring
     window.Echo.connector.pusher.connection.bind('connected', function() {
-        console.log('Pusher connected successfully');
+        console.log('✅ Pusher connected successfully');
         updateConnectionStatus('connected');
     });
     
     window.Echo.connector.pusher.connection.bind('disconnected', function() {
-        console.log('Pusher disconnected');
+        console.log('❌ Pusher disconnected');
         updateConnectionStatus('disconnected');
     });
     
     window.Echo.connector.pusher.connection.bind('error', function(error) {
-        console.error('Pusher connection error:', error);
+        console.error('🚨 Pusher connection error:', error);
         updateConnectionStatus('error');
+    });
+    
+    // Additional debugging
+    window.Echo.connector.pusher.connection.bind('connecting', function() {
+        console.log('🔄 Pusher connecting...');
+        updateConnectionStatus('connecting');
     });
 
     // Listen for new messages
@@ -494,6 +507,8 @@ document.getElementById('message-form').addEventListener('submit', function(e) {
 });
 
 function sendMessage(message) {
+    console.log('📤 Sending message:', message);
+    
     // Show loading state
     const sendButton = document.getElementById('send-button');
     const originalText = sendButton.textContent;
@@ -505,7 +520,10 @@ function sendMessage(message) {
     const tempId = 'temp_' + Date.now();
     addMessageToChat(message, '{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}', new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), true, tempId);
     
-    fetch('{{ route("chat.send-message", $trade->id) }}', {
+    const url = '{{ route("chat.send-message", $trade->id) }}';
+    console.log('📡 Sending to URL:', url);
+    
+    fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -514,14 +532,20 @@ function sendMessage(message) {
         },
         body: JSON.stringify({ message: message })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📨 Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('📨 Response data:', data);
+        
         // Reset button state
         sendButton.textContent = originalText;
         sendButton.disabled = false;
         sendButton.style.background = '#1e40af';
         
         if (data.success) {
+            console.log('✅ Message sent successfully');
             // Update the temporary message with the real one and mark it as confirmed
             updateMessageInChat(tempId, data.message);
             // Mark this message as confirmed to prevent duplicate Echo events
@@ -531,12 +555,15 @@ function sendMessage(message) {
                 messageElement.removeAttribute('data-temp-id');
             }
         } else {
+            console.error('❌ Message send failed:', data.error);
             // Remove the temporary message if it failed
             removeMessageFromChat(tempId);
             showError('Failed to send message: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
+        console.error('🚨 Fetch error:', error);
+        
         // Reset button state
         sendButton.textContent = originalText;
         sendButton.disabled = false;

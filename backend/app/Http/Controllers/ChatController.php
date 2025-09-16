@@ -52,9 +52,19 @@ class ChatController extends Controller
         try {
             $user = Auth::user();
             
+            Log::info('Chat message attempt', [
+                'user_id' => $user->id,
+                'trade_id' => $trade->id,
+                'message' => $request->message
+            ]);
+            
             // Check if user is part of this trade
             if ($trade->user_id !== $user->id && 
                 !$trade->requests()->where('requester_id', $user->id)->where('status', 'accepted')->exists()) {
+                Log::warning('Unauthorized chat access attempt', [
+                    'user_id' => $user->id,
+                    'trade_id' => $trade->id
+                ]);
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -68,12 +78,28 @@ class ChatController extends Controller
             ]);
 
             $message->load('sender');
+            
+            Log::info('Message created successfully', [
+                'message_id' => $message->id,
+                'trade_id' => $trade->id
+            ]);
 
             // Broadcast message using Laravel events
             try {
+                Log::info('Attempting to broadcast message', [
+                    'message_id' => $message->id,
+                    'trade_id' => $trade->id
+                ]);
+                
                 event(new MessageSent($message, $trade->id));
+                
+                Log::info('Message broadcasted successfully');
             } catch (\Exception $e) {
-                Log::error('Broadcasting failed: ' . $e->getMessage());
+                Log::error('Broadcasting failed: ' . $e->getMessage(), [
+                    'message_id' => $message->id,
+                    'trade_id' => $trade->id,
+                    'error' => $e->getMessage()
+                ]);
                 // Continue even if broadcasting fails
             }
 
@@ -82,7 +108,11 @@ class ChatController extends Controller
                 'message' => $message
             ]);
         } catch (\Exception $e) {
-            Log::error('Message send error: ' . $e->getMessage());
+            Log::error('Message send error: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'trade_id' => $trade->id,
+                'error' => $e->getMessage()
+            ]);
             return response()->json([
                 'error' => 'Failed to send message: ' . $e->getMessage()
             ], 500);
