@@ -65,14 +65,21 @@
 
         <fieldset style="border:1px solid #eee; border-radius:8px; padding:12px;">
             <legend style="padding:0 8px; color:#374151;">Schedule Preferences</legend>
+            <div style="background:#f0f9ff; border:1px solid #0ea5e9; border-radius:6px; padding:12px; margin-bottom:16px;">
+                <p style="margin:0; color:#0c4a6e; font-size:0.875rem;">
+                    <strong>📅 Scheduling Rules:</strong> You can only schedule trades for today or future dates. Past dates are not allowed to ensure realistic scheduling.
+                </p>
+            </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <div>
                     <label style="display:block; font-weight:600; margin-bottom:4px;">Start Date</label>
-                    <input type="date" name="start_date" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
+                    <input type="date" name="start_date" required min="{{ date('Y-m-d') }}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
+                    <small style="color:#6b7280; font-size:0.75rem;">Only today or future dates are allowed</small>
                 </div>
                 <div>
                     <label style="display:block; font-weight:600; margin-bottom:4px;">End Date (optional)</label>
-                    <input type="date" name="end_date" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
+                    <input type="date" name="end_date" min="{{ date('Y-m-d') }}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" />
+                    <small style="color:#6b7280; font-size:0.75rem;">Must be today or later</small>
                 </div>
                 <div>
                     <label style="display:block; font-weight:600; margin-bottom:4px;">Available From</label>

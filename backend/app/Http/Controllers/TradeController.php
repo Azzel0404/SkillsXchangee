@@ -35,8 +35,8 @@ class TradeController extends Controller
         $validated = $request->validate([
             'offering_skill_id' => ['required', 'exists:skills,skill_id'],
             'looking_skill_id' => ['required', 'exists:skills,skill_id'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date','after_or_equal:start_date'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'available_from' => ['nullable'],
             'available_to' => ['nullable'],
             'preferred_days' => ['nullable','array'],

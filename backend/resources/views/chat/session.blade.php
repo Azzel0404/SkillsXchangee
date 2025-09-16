@@ -361,7 +361,8 @@
     <!-- Footer -->
     <div style="background: #f3f4f6; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb;">
         <div style="font-size: 0.875rem; color: #6b7280;">
-            Session started: Today at {{ now()->format('g:i A') }} • Duration: <span id="session-duration">0 minutes</span>
+            <div>Session started: {{ \Carbon\Carbon::parse($trade->start_date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($trade->start_date)->format('g:i A') }}</div>
+            <div>Current time: <span id="current-time">{{ now()->format('g:i A') }}</span> • Duration: <span id="session-duration">0 minutes</span></div>
         </div>
         <button onclick="endSession()" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">End Session</button>
     </div>
@@ -837,13 +838,28 @@ function addTaskToUI(task) {
     partnerTasksContainer.appendChild(taskDiv);
 }
 
-// Session duration timer
-let sessionStart = new Date();
+// Real-time clock and session duration timer
+let sessionStart = new Date('{{ $trade->start_date }}');
+let currentTimeElement = document.getElementById('current-time');
+let sessionDurationElement = document.getElementById('session-duration');
+
+// Update current time every second
 setInterval(function() {
     const now = new Date();
+    currentTimeElement.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    // Calculate session duration
     const diff = Math.floor((now - sessionStart) / 60000);
-    document.getElementById('session-duration').textContent = diff + ' minutes';
-}, 60000);
+    if (diff < 0) {
+        sessionDurationElement.textContent = 'Not started yet';
+    } else if (diff < 60) {
+        sessionDurationElement.textContent = diff + ' minutes';
+    } else {
+        const hours = Math.floor(diff / 60);
+        const minutes = diff % 60;
+        sessionDurationElement.textContent = hours + 'h ' + minutes + 'm';
+    }
+}, 1000);
 
 // Keep track of the last message count
 let lastMessageCount = {{ $messages->count() }};
