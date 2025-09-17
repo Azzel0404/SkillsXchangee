@@ -152,34 +152,135 @@
             </select>
         </div>
 
-        <!-- Skill Name (this is submitted) -->
+        <!-- Skills Selection (multiple skills) -->
         <div class="form-group">
-            <label for="skill_id" class="form-label">Skill Name</label>
-            <select id="skill_id" name="skill_id" class="form-input" required>
-                <option value="">Select a skill</option>
-                @foreach($skills as $skill)
-                    <option value="{{ $skill->skill_id }}" data-category="{{ $skill->category }}">{{ $skill->name }}</option>
-                @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('skill_id')" class="mt-2" />
+            <label class="form-label">Select Your Skills</label>
+            <div id="skills-container" class="skills-container">
+                <p class="text-gray-500 text-sm">Please select a category first to choose skills.</p>
+            </div>
+            <input type="hidden" name="selected_skills" id="selected_skills" value="">
+            <x-input-error :messages="$errors->get('selected_skills')" class="mt-2" />
         </div>
+
+        <!-- Skills data for JavaScript -->
+        <script type="application/json" id="skills-data">{{ json_encode($skills->toArray()) }}</script>
 
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             const categorySelect = document.getElementById('skill_category');
-            const skillSelect = document.getElementById('skill_id');
-            const allOptions = Array.from(skillSelect.options);
+            const skillsContainer = document.getElementById('skills-container');
+            const selectedSkillsInput = document.getElementById('selected_skills');
+            
+            // Get skills data from the data attribute
+            const skillsDataElement = document.getElementById('skills-data');
+            const allSkills = JSON.parse(skillsDataElement.textContent);
+            let selectedSkills = [];
 
             categorySelect.addEventListener('change', function() {
                 const selectedCategory = this.value;
-                skillSelect.innerHTML = '<option value="">Select a skill</option>';
-                allOptions.forEach(option => {
-                    if (!option.value) return; // skip placeholder
-                    if (option.getAttribute('data-category') === selectedCategory) {
-                        skillSelect.appendChild(option.cloneNode(true));
-                    }
+                
+                if (!selectedCategory) {
+                    skillsContainer.innerHTML = '<p class="text-gray-500 text-sm">Please select a category first to choose skills.</p>';
+                    selectedSkills = [];
+                    updateSelectedSkillsInput();
+                    return;
+                }
+
+                // Filter skills by category
+                const categorySkills = allSkills.filter(skill => skill.category === selectedCategory);
+                
+                // Create skill selection interface
+                let skillsHTML = '<div class="space-y-2">';
+                skillsHTML += '<p class="text-sm font-medium text-gray-700">Select your skills from ' + selectedCategory + ':</p>';
+                
+                categorySkills.forEach(skill => {
+                    skillsHTML += `
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input type="checkbox" 
+                                   class="skill-checkbox" 
+                                   value="${skill.skill_id}" 
+                                   data-skill-name="${skill.name}"
+                                   onchange="toggleSkill(this)">
+                            <span class="text-sm">${skill.name}</span>
+                        </label>
+                    `;
                 });
+                
+                skillsHTML += '</div>';
+                skillsContainer.innerHTML = skillsHTML;
             });
+
+            // Global function to toggle skill selection
+            window.toggleSkill = function(checkbox) {
+                const skillId = checkbox.value;
+                const skillName = checkbox.getAttribute('data-skill-name');
+                
+                if (checkbox.checked) {
+                    if (!selectedSkills.find(skill => skill.id === skillId)) {
+                        selectedSkills.push({ id: skillId, name: skillName });
+                    }
+                } else {
+                    selectedSkills = selectedSkills.filter(skill => skill.id !== skillId);
+                }
+                
+                updateSelectedSkillsInput();
+                updateSkillsDisplay();
+            };
+
+            function updateSelectedSkillsInput() {
+                selectedSkillsInput.value = JSON.stringify(selectedSkills);
+            }
+
+            function updateSkillsDisplay() {
+                if (selectedSkills.length > 0) {
+                    const displayHTML = `
+                        <div class="mt-2">
+                            <p class="text-sm font-medium text-gray-700 mb-2">Selected Skills:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${selectedSkills.map(skill => `
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        ${skill.name}
+                                        <button type="button" 
+                                                onclick="removeSkill('${skill.id}')" 
+                                                class="ml-1 text-blue-600 hover:text-blue-800">
+                                            ×
+                                        </button>
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add to skills container
+                    const existingDisplay = skillsContainer.querySelector('.selected-skills-display');
+                    if (existingDisplay) {
+                        existingDisplay.remove();
+                    }
+                    
+                    const displayDiv = document.createElement('div');
+                    displayDiv.className = 'selected-skills-display';
+                    displayDiv.innerHTML = displayHTML;
+                    skillsContainer.appendChild(displayDiv);
+                } else {
+                    const existingDisplay = skillsContainer.querySelector('.selected-skills-display');
+                    if (existingDisplay) {
+                        existingDisplay.remove();
+                    }
+                }
+            }
+
+            // Global function to remove skill
+            window.removeSkill = function(skillId) {
+                selectedSkills = selectedSkills.filter(skill => skill.id !== skillId);
+                updateSelectedSkillsInput();
+                updateSkillsDisplay();
+                
+                // Uncheck the corresponding checkbox
+                const checkbox = document.querySelector(`input[value="${skillId}"]`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            };
 
             // Address suggestions (Cebu only)
             const addressInput = document.getElementById('address');
@@ -218,6 +319,13 @@
             // Simple form validation
             const form = document.getElementById('registerForm');
             form.addEventListener('submit', function(e) {
+                // Validate skills selection
+                if (selectedSkills.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one skill.');
+                    return false;
+                }
+                
                 // Show loading state
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;

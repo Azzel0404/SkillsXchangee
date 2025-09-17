@@ -42,12 +42,31 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'photo' => ['nullable', 'image', 'max:2048'],
-            'skill_id' => ['required', 'exists:skills,skill_id'],
+            'selected_skills' => ['required', 'string'],
         ]);
 
         $photoPath = null;
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('photos', 'public');
+        }
+
+        // Parse selected skills
+        $selectedSkills = json_decode($request->selected_skills, true);
+        
+        if (!$selectedSkills || !is_array($selectedSkills) || empty($selectedSkills)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['selected_skills' => 'Please select at least one skill.']);
+        }
+
+        // Validate that all skill IDs exist
+        $skillIds = array_column($selectedSkills, 'id');
+        $existingSkills = Skill::whereIn('skill_id', $skillIds)->pluck('skill_id')->toArray();
+        
+        if (count($skillIds) !== count($existingSkills)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['selected_skills' => 'One or more selected skills are invalid.']);
         }
 
         $user = User::create([
@@ -61,12 +80,15 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'photo' => $photoPath,
-            'skill_id' => $request->skill_id,
+            'skill_id' => $skillIds[0], // Keep the first skill as primary for backward compatibility
             'is_verified' => false, // stays false until admin approves
             'role' => 'user',
             'plan' => 'free',
             'token_balance' => 0,
         ]);
+
+        // Attach all selected skills to the user
+        $user->skills()->attach($skillIds);
 
         event(new Registered($user));
 

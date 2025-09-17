@@ -9,80 +9,157 @@
                 <p class="text-gray-600">Here's what's happening with your skill trades today.</p>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="dashboard-grid">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                    </svg>
+            @if(auth()->user()->role === 'admin')
+                <!-- Admin Stats Cards -->
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                        </svg>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Users</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ \App\Models\User::count() }}</p>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Total Users</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['totalUsers'] }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                                    </svg>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                                        </svg>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Verified Users</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ \App\Models\User::where('is_verified', true)->count() }}</p>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Verified Users</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['verifiedUsers'] }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Pending Users</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ $stats['pendingUsers'] }}</p>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Pending Users</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['pendingUsers'] }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6z"></path>
-                                    </svg>
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6z"></path>
+                                        </svg>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Trades</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ $stats['totalTrades'] }}</p>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Total Trades</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['totalTrades'] }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @else
+                <!-- User Stats Cards -->
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Completed Sessions</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $userStats['completedSessions'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Ongoing Sessions</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $userStats['ongoingSessions'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Pending Requests</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $userStats['pendingRequests'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Declined Requests</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ $userStats['declinedRequests'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Quick Actions -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
@@ -135,6 +212,189 @@
                     </div>
                 </div>
             </div>
+
+            @if(auth()->user()->role !== 'admin')
+                <!-- User Sessions and Requests -->
+                
+                <!-- Completed Sessions -->
+                @if($completedSessions->count() > 0)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Completed Sessions</h2>
+                        <div class="space-y-4">
+                            @foreach($completedSessions->take(5) as $session)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-medium text-gray-900">
+                                            {{ $session->offeringSkill->name }} ↔ {{ $session->lookingSkill->name }}
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            @if($session->user_id === auth()->id())
+                                                You offered {{ $session->offeringSkill->name }} and learned {{ $session->lookingSkill->name }}
+                                            @else
+                                                You learned {{ $session->offeringSkill->name }} and offered {{ $session->lookingSkill->name }}
+                                            @endif
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            Completed on {{ $session->updated_at->format('M d, Y') }}
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Completed
+                                    </span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Ongoing Sessions -->
+                @if($ongoingSessions->count() > 0)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Ongoing Sessions</h2>
+                        <div class="space-y-4">
+                            @foreach($ongoingSessions->take(5) as $session)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-medium text-gray-900">
+                                            {{ $session->offeringSkill->name }} ↔ {{ $session->lookingSkill->name }}
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            @if($session->user_id === auth()->id())
+                                                You're offering {{ $session->offeringSkill->name }} and learning {{ $session->lookingSkill->name }}
+                                            @else
+                                                You're learning {{ $session->offeringSkill->name }} and offering {{ $session->lookingSkill->name }}
+                                            @endif
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            Started on {{ $session->start_date->format('M d, Y') }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Active
+                                        </span>
+                                        <a href="{{ route('chat.session', $session->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                            View Chat
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Pending Requests -->
+                @if($pendingRequests->count() > 0)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Your Pending Requests</h2>
+                        <div class="space-y-4">
+                            @foreach($pendingRequests->take(5) as $request)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-medium text-gray-900">
+                                            Request to {{ $request->trade->user->firstname }} {{ $request->trade->user->lastname }}
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            You want to learn {{ $request->trade->offeringSkill->name }} and offer {{ $request->trade->lookingSkill->name }}
+                                        </p>
+                                        @if($request->message)
+                                        <p class="text-sm text-gray-600 mt-2 italic">"{{ $request->message }}"</p>
+                                        @endif
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            Sent on {{ $request->created_at->format('M d, Y') }}
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Pending
+                                    </span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Declined Requests -->
+                @if($declinedRequests->count() > 0)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Declined Requests</h2>
+                        <div class="space-y-4">
+                            @foreach($declinedRequests->take(5) as $request)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-medium text-gray-900">
+                                            Request to {{ $request->trade->user->firstname }} {{ $request->trade->user->lastname }}
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            You wanted to learn {{ $request->trade->offeringSkill->name }} and offer {{ $request->trade->lookingSkill->name }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            Declined on {{ $request->responded_at->format('M d, Y') }}
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Declined
+                                    </span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Requests to Your Trades -->
+                @if($pendingRequestsToMe->count() > 0)
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Requests to Your Trades</h2>
+                        <div class="space-y-4">
+                            @foreach($pendingRequestsToMe->take(5) as $request)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-medium text-gray-900">
+                                            Request from {{ $request->requester->firstname }} {{ $request->requester->lastname }}
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            Wants to learn {{ $request->trade->offeringSkill->name }} and offer {{ $request->trade->lookingSkill->name }}
+                                        </p>
+                                        @if($request->message)
+                                        <p class="text-sm text-gray-600 mt-2 italic">"{{ $request->message }}"</p>
+                                        @endif
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            Received on {{ $request->created_at->format('M d, Y') }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Pending
+                                        </span>
+                                        <a href="{{ route('trades.show', $request->trade->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                            Review
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+            @endif
 
             <!-- Admin Section (if admin) -->
             @if(auth()->user()->role === 'admin')

@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\Skill::class, 'skill_id', 'skill_id');
     }
 
+    public function skills()
+    {
+        return $this->belongsToMany(\App\Models\Skill::class, 'user_skills', 'user_id', 'skill_id', 'id', 'skill_id');
+    }
+
     /**
      * Get the user's full name.
      */

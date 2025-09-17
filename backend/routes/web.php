@@ -178,22 +178,75 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        Log::info('Dashboard route hit!');
-        $pendingUsers = \App\Models\User::where('is_verified', false)->get();
+        $user = auth()->user();
         
-        // Get real stats from the database
-        $stats = [
-            'activeTrades' => \App\Models\Trade::where('status', 'active')->count(),
-            'completedTrades' => \App\Models\Trade::where('status', 'completed')->count(),
-            'pendingTrades' => \App\Models\Trade::where('status', 'pending')->count(),
-            'pendingUsers' => $pendingUsers->count(),
-            'totalTrades' => \App\Models\Trade::count(),
-            'myTrades' => \App\Models\Trade::where('user_id', auth()->id())->count(),
-            'myRequests' => \App\Models\TradeRequest::where('requester_id', auth()->id())->count(),
-        ];
-        
-        Log::info('Found ' . $pendingUsers->count() . ' pending users');
-        return view('dashboard', compact('pendingUsers', 'stats'));
+        if ($user->role === 'admin') {
+            // Admin dashboard
+            $pendingUsers = \App\Models\User::where('is_verified', false)->get();
+            
+            $stats = [
+                'activeTrades' => \App\Models\Trade::where('status', 'active')->count(),
+                'completedTrades' => \App\Models\Trade::where('status', 'completed')->count(),
+                'pendingTrades' => \App\Models\Trade::where('status', 'pending')->count(),
+                'pendingUsers' => $pendingUsers->count(),
+                'totalTrades' => \App\Models\Trade::count(),
+                'totalUsers' => \App\Models\User::count(),
+                'verifiedUsers' => \App\Models\User::where('is_verified', true)->count(),
+            ];
+            
+            return view('dashboard', compact('pendingUsers', 'stats'));
+        } else {
+            // User dashboard
+            $userId = $user->id;
+            
+            // Get user's trades (both posted and participated in)
+            $myTrades = \App\Models\Trade::where('user_id', $userId)->get();
+            $participatedTrades = \App\Models\Trade::whereHas('requests', function($query) use ($userId) {
+                $query->where('requester_id', $userId)->where('status', 'accepted');
+            })->get();
+            
+            // Get all trades user is involved in
+            $allUserTrades = $myTrades->merge($participatedTrades)->unique('id');
+            
+            // Categorize trades
+            $completedSessions = $allUserTrades->where('status', 'completed');
+            $ongoingSessions = $allUserTrades->where('status', 'active');
+            
+            // Get requests (exclude accepted ones from pending/declined lists)
+            $myRequests = \App\Models\TradeRequest::where('requester_id', $userId)
+                ->whereIn('status', ['pending', 'declined'])
+                ->with(['trade.user', 'trade.offeringSkill', 'trade.lookingSkill'])
+                ->get();
+            
+            $pendingRequests = $myRequests->where('status', 'pending');
+            $declinedRequests = $myRequests->where('status', 'declined');
+            
+            // Get requests to user's trades (only pending ones)
+            $requestsToMyTrades = \App\Models\TradeRequest::whereHas('trade', function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })->where('status', 'pending')
+            ->with(['requester', 'trade.offeringSkill', 'trade.lookingSkill'])
+            ->get();
+            
+            $pendingRequestsToMe = $requestsToMyTrades;
+            
+            $userStats = [
+                'completedSessions' => $completedSessions->count(),
+                'ongoingSessions' => $ongoingSessions->count(),
+                'pendingRequests' => $pendingRequests->count(),
+                'declinedRequests' => $declinedRequests->count(),
+                'pendingRequestsToMe' => $pendingRequestsToMe->count(),
+            ];
+            
+            return view('dashboard', compact(
+                'completedSessions', 
+                'ongoingSessions', 
+                'pendingRequests', 
+                'declinedRequests', 
+                'pendingRequestsToMe',
+                'userStats'
+            ));
+        }
     })->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
