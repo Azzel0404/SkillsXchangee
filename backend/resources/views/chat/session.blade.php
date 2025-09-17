@@ -1,6 +1,9 @@
 @extends('layouts.chat')
 
 @section('content')
+<script>
+    window.currentUserId = {{ auth()->id() }};
+</script>
 <style>
 @keyframes pulse {
     0% { transform: scale(1); }
@@ -327,6 +330,50 @@
 #emoji-button:active {
     background-color: #e5e7eb !important;
 }
+
+/* Message styles */
+.message-container {
+    margin-bottom: 16px;
+    display: flex;
+}
+
+.message-container[data-sender="{{ Auth::id() }}"] {
+    justify-content: flex-end;
+}
+
+.message-container:not([data-sender="{{ Auth::id() }}"]) {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 12px;
+    border-radius: 12px;
+    position: relative;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.message-bubble[data-sender="{{ Auth::id() }}"] {
+    background: #3b82f6;
+    color: white;
+}
+
+.message-bubble:not([data-sender="{{ Auth::id() }}"]) {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.message-content {
+    margin-bottom: 4px;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
 </style>
 
 <!-- Video Chat Modal -->
@@ -361,6 +408,8 @@
         </div>
         
         <div class="video-controls">
+            <button id="auto-call-toggle" class="video-btn secondary" onclick="toggleAutoCall()" title="Toggle Auto-call" style="background: #10b981;">🔗 Auto-call ON</button>
+            <div id="presence-status" style="color: #6b7280; font-size: 0.875rem; margin: 0 8px; display: flex; align-items: center;">🔴 Partner is offline</div>
             <button id="start-call-btn" class="video-btn primary" onclick="startVideoCall()" title="Start Call">📞</button>
             <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;" title="End Call">📞</button>
             <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;" title="Mute/Unmute">🎤</button>
@@ -415,10 +464,10 @@
             <!-- Chat Messages -->
             <div id="chat-messages" style="flex: 1; padding: 16px; overflow-y: auto; background: #f9fafb;">
                 @foreach($messages as $message)
-                    <div style="margin-bottom: 16px; display: flex; {{ $message->sender_id === Auth::id() ? 'justify-content: flex-end' : 'justify-content: flex-start' }};">
-                        <div style="max-width: 70%; {{ $message->sender_id === Auth::id() ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;' }} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
-                            <div style="margin-bottom: 4px; word-break: break-word; line-height: 1.4;">{{ $message->message }}</div>
-                            <div style="font-size: 0.75rem; opacity: 0.8;">{{ $message->created_at->format('g:i A') }}</div>
+                    <div class="message-container" data-sender="{{ $message->sender_id }}" data-auth="{{ Auth::id() }}">
+                        <div class="message-bubble" data-sender="{{ $message->sender_id }}" data-auth="{{ Auth::id() }}">
+                            <div class="message-content">{{ $message->message }}</div>
+                            <div class="message-time">{{ $message->created_at->format('g:i A') }}</div>
                         </div>
                     </div>
                 @endforeach
@@ -473,10 +522,10 @@
                     <div style="margin-top: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 0.875rem; color: #6b7280;">Progress</span>
-                            <span style="font-size: 0.875rem; font-weight: 600;">{{ round($myProgress) }}%</span>
+                            <span id="my-progress-text" style="font-size: 0.875rem; font-weight: 600;" data-progress="{{ round($myProgress) }}">{{ round($myProgress) }}%</span>
                         </div>
                         <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div style="background: #10b981; height: 100%; width: {{ $myProgress }}%; transition: width 0.3s ease;"></div>
+                            <div id="my-progress-bar" style="background: #10b981; height: 100%; transition: width 0.3s ease;" data-progress="{{ $myProgress }}"></div>
                         </div>
                     </div>
                 </div>
@@ -514,11 +563,11 @@
                                 <!-- Verification Actions -->
                                 @if($task->completed && !$task->verified && $task->created_by == auth()->id())
                                     <div style="margin-top: 8px; margin-left: 24px;">
-                                        <button onclick="showVerificationModal({{ $task->id }}, '{{ $task->title }}')" 
+                                        <button class="verify-btn" data-task-id="{{ $task->id }}" data-task-title="{{ $task->title }}" data-verify="true"
                                                 style="background: #10b981; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 8px;">
                                             ✓ Verify
                                         </button>
-                                        <button onclick="showVerificationModal({{ $task->id }}, '{{ $task->title }}', false)" 
+                                        <button class="verify-btn" data-task-id="{{ $task->id }}" data-task-title="{{ $task->title }}" data-verify="false"
                                                 style="background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
                                             ✗ Reject
                                         </button>
@@ -534,10 +583,10 @@
                     <div style="margin-top: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 0.875rem; color: #6b7280;">Progress</span>
-                            <span style="font-size: 0.875rem; font-weight: 600;">{{ round($partnerProgress) }}%</span>
+                            <span id="partner-progress-text" style="font-size: 0.875rem; font-weight: 600;" data-progress="{{ round($partnerProgress) }}">{{ round($partnerProgress) }}%</span>
                         </div>
                         <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div style="background: #3b82f6; height: 100%; width: {{ $partnerProgress }}%; transition: width 0.3s ease;"></div>
+                            <div id="partner-progress-bar" style="background: #3b82f6; height: 100%; transition: width 0.3s ease;" data-progress="{{ $partnerProgress }}"></div>
                         </div>
                     </div>
                 </div>
@@ -724,6 +773,19 @@ if (window.Echo) {
             if (data.fromUserId !== {{ Auth::id() }}) {
                 handleVideoCallEnd(data);
             }
+        });
+
+    // Listen for user presence events
+    window.Echo.channel('trade-{{ $trade->id }}')
+        .listen('user-joined', function(data) {
+            console.log('User joined:', data);
+            handleUserJoined(data);
+        });
+
+    window.Echo.channel('trade-{{ $trade->id }}')
+        .listen('user-left', function(data) {
+            console.log('User left:', data);
+            handleUserLeft(data);
         });
 } else {
     console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
@@ -1390,15 +1452,15 @@ function updateTaskInUI(task) {
     }
     
     // Add verification actions if completed, not verified, and user is creator
-    if (task.completed && !task.verified && task.created_by == {{ auth()->id() }}) {
+    if (task.completed && !task.verified && task.created_by == window.currentUserId) {
         const actionsDiv = document.createElement('div');
         actionsDiv.style.cssText = 'margin-top: 8px; margin-left: 24px;';
         actionsDiv.innerHTML = `
-            <button onclick="showVerificationModal(${task.id}, '${task.title}')" 
+            <button class="verify-btn" data-task-id="${task.id}" data-task-title="${task.title}" data-verify="true"
                     style="background: #10b981; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 8px;">
                 ✓ Verify
             </button>
-            <button onclick="showVerificationModal(${task.id}, '${task.title}', false)" 
+            <button class="verify-btn" data-task-id="${task.id}" data-task-title="${task.title}" data-verify="false"
                     style="background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
                 ✗ Reject
             </button>
@@ -1684,7 +1746,11 @@ function closeVideoChat() {
 
 function resetVideoChat() {
     // Reset UI
-    document.getElementById('video-status').textContent = 'Initializing video chat...';
+    if (isAutoCallEnabled) {
+        document.getElementById('video-status').textContent = 'Camera and microphone ready. Auto-connecting when partner joins...';
+    } else {
+        document.getElementById('video-status').textContent = 'Initializing video chat...';
+    }
     document.getElementById('call-timer').style.display = 'none';
     document.getElementById('start-call-btn').style.display = 'flex';
     document.getElementById('end-call-btn').style.display = 'none';
@@ -1759,7 +1825,7 @@ async function initializeVideoChat() {
         document.getElementById('local-status').className = 'connection-status connected';
         
         // Update status
-        document.getElementById('video-status').textContent = 'Camera and microphone ready. Click "Start Call" to begin.';
+        document.getElementById('video-status').textContent = 'Camera and microphone ready. Auto-connecting when partner joins...';
         
         // Show start call button
         document.getElementById('start-call-btn').disabled = false;
@@ -2110,7 +2176,11 @@ function cleanupVideoCall() {
     setTimeout(() => {
         if (document.getElementById('video-chat-modal').style.display !== 'none') {
             resetVideoChat();
-            document.getElementById('video-status').textContent = 'Camera and microphone ready. Click "Start Call" to begin.';
+            if (isAutoCallEnabled) {
+                document.getElementById('video-status').textContent = 'Camera and microphone ready. Auto-connecting when partner joins...';
+            } else {
+                document.getElementById('video-status').textContent = 'Camera and microphone ready. Click "Start Call" to begin.';
+            }
         }
     }, 2000);
 }
@@ -2124,8 +2194,15 @@ async function handleVideoCallOffer(data) {
     otherUserId = data.fromUserId;
     isInitiator = false;
     
-    // Show incoming call notification
-    const acceptCall = confirm(`${data.fromUserName} is calling you. Do you want to accept?`);
+    // Auto-accept if auto-call is enabled, otherwise show confirmation
+    let acceptCall = false;
+    
+    if (isAutoCallEnabled) {
+        acceptCall = true;
+        console.log('Auto-accepting video call from:', data.fromUserName);
+    } else {
+        acceptCall = confirm(`${data.fromUserName} is calling you. Do you want to accept?`);
+    }
     
     if (acceptCall) {
         // Initialize video chat if not already open
@@ -2155,7 +2232,11 @@ async function handleVideoCallOffer(data) {
         await sendVideoCallAnswer(answer);
         
         // Update UI
-        document.getElementById('video-status').textContent = 'Call in progress...';
+        if (isAutoCallEnabled) {
+            document.getElementById('video-status').textContent = 'Auto-connected! Call in progress...';
+        } else {
+            document.getElementById('video-status').textContent = 'Call in progress...';
+        }
         document.getElementById('start-call-btn').style.display = 'none';
         document.getElementById('end-call-btn').style.display = 'flex';
         document.getElementById('toggle-audio-btn').style.display = 'flex';
@@ -2492,6 +2573,106 @@ function toggleVideo() {
     }
 }
 
+// ===== AUTOMATIC VIDEO CALL FUNCTIONALITY =====
+let isAutoCallEnabled = true;
+let otherUserOnline = false;
+let autoCallAttempted = false;
+let presenceCheckInterval = null;
+
+// User presence handlers
+function handleUserJoined(data) {
+    if (data.userId !== window.currentUserId) {
+        otherUserOnline = true;
+        updatePresenceStatus('online');
+        
+        // Auto-start video call if both users are online and auto-call is enabled
+        if (isAutoCallEnabled && !isCallActive && !autoCallAttempted) {
+            setTimeout(() => {
+                startAutomaticVideoCall();
+            }, 2000); // Wait 2 seconds for both users to be ready
+        }
+    }
+}
+
+function handleUserLeft(data) {
+    if (data.userId !== window.currentUserId) {
+        otherUserOnline = false;
+        updatePresenceStatus('offline');
+        
+        // End call if other user leaves
+        if (isCallActive) {
+            endVideoCall();
+        }
+    }
+}
+
+function updatePresenceStatus(status) {
+    const statusElement = document.getElementById('presence-status');
+    if (statusElement) {
+        if (status === 'online') {
+            statusElement.textContent = '🟢 Partner is online';
+            statusElement.style.color = '#10b981';
+        } else {
+            statusElement.textContent = '🔴 Partner is offline';
+            statusElement.style.color = '#ef4444';
+        }
+    }
+}
+
+async function startAutomaticVideoCall() {
+    if (autoCallAttempted || isCallActive || !otherUserOnline) {
+        return;
+    }
+    
+    autoCallAttempted = true;
+    console.log('Starting automatic video call...');
+    
+    try {
+        // Initialize video chat if not already done
+        if (!localStream) {
+            await initializeVideoChat();
+        }
+        
+        // Start the call
+        await startVideoCall();
+        
+        // Update status
+        document.getElementById('video-status').textContent = 'Auto-connecting to video call...';
+        
+    } catch (error) {
+        console.error('Error starting automatic video call:', error);
+        document.getElementById('video-status').textContent = 'Auto-connection failed. You can start manually.';
+        autoCallAttempted = false; // Allow retry
+    }
+}
+
+function toggleAutoCall() {
+    isAutoCallEnabled = !isAutoCallEnabled;
+    const toggleBtn = document.getElementById('auto-call-toggle');
+    if (toggleBtn) {
+        if (isAutoCallEnabled) {
+            toggleBtn.textContent = '🔗 Auto-call ON';
+            toggleBtn.style.background = '#10b981';
+        } else {
+            toggleBtn.textContent = '🔗 Auto-call OFF';
+            toggleBtn.style.background = '#6b7280';
+        }
+    }
+}
+
+// Send presence signal when page loads
+function sendPresenceSignal() {
+    if (window.Echo) {
+        // Broadcast that this user joined the chat
+        window.Echo.channel('trade-{{ $trade->id }}')
+            .whisper('user-joined', {
+                userId: window.currentUserId,
+                userName: '{{ Auth::user()->firstname }}',
+                timestamp: new Date().toISOString()
+            });
+    }
+}
+
 // Handle page unload to clean up video chat
 window.addEventListener('beforeunload', () => {
     if (isCallActive) {
@@ -2500,6 +2681,16 @@ window.addEventListener('beforeunload', () => {
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
     }
+    
+    // Send user left signal
+    if (window.Echo) {
+        window.Echo.channel('trade-{{ $trade->id }}')
+            .whisper('user-left', {
+                userId: window.currentUserId,
+                userName: '{{ Auth::user()->firstname }}',
+                timestamp: new Date().toISOString()
+            });
+    }
 });
 
 // Initialize task count on page load
@@ -2507,7 +2698,54 @@ document.addEventListener('DOMContentLoaded', function() {
     updateTaskCount();
     initializeEmojiPicker();
     loadSkillLearningStatus();
+    initializeProgressBars();
+    initializeVerificationButtons();
+    initializeAutoVideoCall();
 });
+
+function initializeAutoVideoCall() {
+    // Send presence signal when page loads
+    setTimeout(() => {
+        sendPresenceSignal();
+    }, 1000);
+    
+    // Initialize video chat automatically
+    setTimeout(() => {
+        initializeVideoChat();
+    }, 2000);
+}
+
+function initializeVerificationButtons() {
+    // Add event listeners to verification buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('verify-btn')) {
+            const taskId = e.target.getAttribute('data-task-id');
+            const taskTitle = e.target.getAttribute('data-task-title');
+            const verify = e.target.getAttribute('data-verify') === 'true';
+            showVerificationModal(taskId, taskTitle, verify);
+        }
+    });
+}
+
+function initializeProgressBars() {
+    // Initialize my progress bar
+    const myProgressBar = document.getElementById('my-progress-bar');
+    const myProgressText = document.getElementById('my-progress-text');
+    if (myProgressBar && myProgressText) {
+        const progress = parseFloat(myProgressBar.getAttribute('data-progress'));
+        myProgressBar.style.width = progress + '%';
+        myProgressText.textContent = Math.round(progress) + '%';
+    }
+    
+    // Initialize partner progress bar
+    const partnerProgressBar = document.getElementById('partner-progress-bar');
+    const partnerProgressText = document.getElementById('partner-progress-text');
+    if (partnerProgressBar && partnerProgressText) {
+        const progress = parseFloat(partnerProgressBar.getAttribute('data-progress'));
+        partnerProgressBar.style.width = progress + '%';
+        partnerProgressText.textContent = Math.round(progress) + '%';
+    }
+}
 
 // ===== EMOJI PICKER FUNCTIONALITY =====
 function initializeEmojiPicker() {
