@@ -165,6 +165,34 @@
         <!-- Skills data for JavaScript -->
         <script type="application/json" id="skills-data">{{ json_encode($skills->toArray()) }}</script>
 
+        <style>
+        .skill-checkbox {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .skills-container label {
+            transition: background-color 0.2s ease;
+        }
+        
+        .skills-container label:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .skills-container label:has(input:checked) {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        /* Fallback for browsers that don't support :has() */
+        .skills-container label.checked {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        </style>
+
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             const categorySelect = document.getElementById('skill_category');
@@ -189,19 +217,28 @@
                 // Filter skills by category
                 const categorySkills = allSkills.filter(skill => skill.category === selectedCategory);
                 
+                // Debug: Log the filtered skills
+                console.log('Selected category:', selectedCategory);
+                console.log('Filtered skills:', categorySkills);
+                
+                if (categorySkills.length === 0) {
+                    skillsContainer.innerHTML = '<p class="text-gray-500 text-sm">No skills found for this category.</p>';
+                    return;
+                }
+                
                 // Create skill selection interface
                 let skillsHTML = '<div class="space-y-2">';
                 skillsHTML += '<p class="text-sm font-medium text-gray-700">Select your skills from ' + selectedCategory + ':</p>';
                 
                 categorySkills.forEach(skill => {
                     skillsHTML += `
-                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded border border-gray-200">
                             <input type="checkbox" 
                                    class="skill-checkbox" 
                                    value="${skill.skill_id}" 
                                    data-skill-name="${skill.name}"
                                    onchange="toggleSkill(this)">
-                            <span class="text-sm">${skill.name}</span>
+                            <span class="text-sm text-gray-700">${skill.name}</span>
                         </label>
                     `;
                 });
@@ -214,13 +251,16 @@
             window.toggleSkill = function(checkbox) {
                 const skillId = checkbox.value;
                 const skillName = checkbox.getAttribute('data-skill-name');
+                const label = checkbox.closest('label');
                 
                 if (checkbox.checked) {
                     if (!selectedSkills.find(skill => skill.id === skillId)) {
                         selectedSkills.push({ id: skillId, name: skillName });
                     }
+                    label.classList.add('checked');
                 } else {
                     selectedSkills = selectedSkills.filter(skill => skill.id !== skillId);
+                    label.classList.remove('checked');
                 }
                 
                 updateSelectedSkillsInput();
@@ -275,12 +315,21 @@
                 updateSelectedSkillsInput();
                 updateSkillsDisplay();
                 
-                // Uncheck the corresponding checkbox
+                // Uncheck the corresponding checkbox and remove visual feedback
                 const checkbox = document.querySelector(`input[value="${skillId}"]`);
                 if (checkbox) {
                     checkbox.checked = false;
+                    const label = checkbox.closest('label');
+                    if (label) {
+                        label.classList.remove('checked');
+                    }
                 }
             };
+
+            // Trigger change event on page load if a category is already selected
+            if (categorySelect.value) {
+                categorySelect.dispatchEvent(new Event('change'));
+            }
 
             // Address suggestions (Cebu only)
             const addressInput = document.getElementById('address');

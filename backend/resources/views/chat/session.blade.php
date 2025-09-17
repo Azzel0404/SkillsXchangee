@@ -490,9 +490,39 @@
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                     <input type="checkbox" {{ $task->completed ? 'checked' : '' }} disabled style="width: 16px; height: 16px;">
                                     <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
+                                    
+                                    <!-- Verification Status Badge -->
+                                    @if($task->completed)
+                                        @if($task->verified)
+                                            <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">✓ Verified</span>
+                                        @else
+                                            <span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">⏳ Pending Verification</span>
+                                        @endif
+                                    @endif
                                 </div>
                                 @if($task->description)
                                     <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description }}</div>
+                                @endif
+                                
+                                <!-- Verification Notes -->
+                                @if($task->verified && $task->verification_notes)
+                                    <div style="font-size: 0.875rem; color: #059669; margin-left: 24px; margin-top: 4px; font-style: italic;">
+                                        <strong>Verification:</strong> {{ $task->verification_notes }}
+                                    </div>
+                                @endif
+                                
+                                <!-- Verification Actions -->
+                                @if($task->completed && !$task->verified && $task->created_by == auth()->id())
+                                    <div style="margin-top: 8px; margin-left: 24px;">
+                                        <button onclick="showVerificationModal({{ $task->id }}, '{{ $task->title }}')" 
+                                                style="background: #10b981; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 8px;">
+                                            ✓ Verify
+                                        </button>
+                                        <button onclick="showVerificationModal({{ $task->id }}, '{{ $task->title }}', false)" 
+                                                style="background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                                            ✗ Reject
+                                        </button>
+                                    </div>
                                 @endif
                             </div>
                         @empty
@@ -509,6 +539,22 @@
                         <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
                             <div style="background: #3b82f6; height: 100%; width: {{ $partnerProgress }}%; transition: width 0.3s ease;"></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Skill Learning Status -->
+                <div style="margin-bottom: 24px; padding: 16px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px;">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #0c4a6e;">🎓 Skill Learning Progress</h3>
+                    <div id="skill-learning-status">
+                        <div style="text-align: center; color: #6b7280; font-size: 0.875rem;">
+                            Loading skill learning status...
+                        </div>
+                    </div>
+                    <div id="complete-session-section" style="margin-top: 16px; display: none;">
+                        <button onclick="completeSession()" id="complete-session-btn" 
+                                style="width: 100%; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            ✅ Complete Session & Learn Skills
+                        </button>
                     </div>
                 </div>
 
@@ -547,6 +593,29 @@
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" onclick="hideAddTaskModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
                 <button type="submit" style="padding: 8px 16px; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Task Verification Modal -->
+<div id="verification-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;" onclick="handleVerificationModalClick(event)">
+    <div style="background: white; border-radius: 8px; padding: 24px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #374151;" id="verification-modal-title">Verify Task</h3>
+        <form id="verification-form">
+            <input type="hidden" id="verification-task-id" name="task_id">
+            <input type="hidden" id="verification-verified" name="verified">
+            
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 8px;">Verification Notes (Optional)</label>
+                <textarea id="verification-notes" name="verification_notes" 
+                          style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.875rem; resize: vertical; min-height: 80px;"
+                          placeholder="Add any feedback or notes about the task completion..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="hideVerificationModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="submit" id="verification-submit-btn" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: 500;">Verify Task</button>
             </div>
         </form>
     </div>
@@ -952,6 +1021,44 @@ function showError(message) {
     }, 5000);
 }
 
+// Show success message function
+function showSuccess(message) {
+    console.log('Success:', message);
+    
+    // Create success notification
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    
+    successDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>✅</span>
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: auto;">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(successDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (successDiv.parentNode) {
+            successDiv.remove();
+        }
+    }, 3000);
+}
+
 // Remove message from chat function
 function removeMessageFromChat(tempId) {
     const messageElement = document.querySelector(`[data-temp-id="${tempId}"]`);
@@ -1000,6 +1107,8 @@ function toggleTask(taskId) {
         if (data.success) {
             updateTask(data.task);
             updateProgress();
+            // Refresh skill learning status
+            loadSkillLearningStatus();
         }
     })
     .catch(error => console.error('Error:', error));
@@ -1092,6 +1201,42 @@ function handleModalClick(event) {
     }
 }
 
+// Verification modal functions
+function showVerificationModal(taskId, taskTitle, verified = true) {
+    const modal = document.getElementById('verification-modal');
+    const title = document.getElementById('verification-modal-title');
+    const submitBtn = document.getElementById('verification-submit-btn');
+    const verifiedInput = document.getElementById('verification-verified');
+    
+    document.getElementById('verification-task-id').value = taskId;
+    verifiedInput.value = verified ? '1' : '0';
+    
+    if (verified) {
+        title.textContent = `Verify Task: ${taskTitle}`;
+        submitBtn.textContent = 'Verify Task';
+        submitBtn.style.background = '#10b981';
+    } else {
+        title.textContent = `Reject Task: ${taskTitle}`;
+        submitBtn.textContent = 'Reject Task';
+        submitBtn.style.background = '#ef4444';
+    }
+    
+    modal.style.display = 'flex';
+    document.getElementById('verification-notes').value = '';
+}
+
+function hideVerificationModal() {
+    const modal = document.getElementById('verification-modal');
+    modal.style.display = 'none';
+    document.getElementById('verification-form').reset();
+}
+
+function handleVerificationModalClick(event) {
+    if (event.target.id === 'verification-modal') {
+        hideVerificationModal();
+    }
+}
+
 document.getElementById('add-task-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -1129,6 +1274,45 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
     });
 });
 
+// Verification form handler
+document.getElementById('verification-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const taskId = document.getElementById('verification-task-id').value;
+    const verified = document.getElementById('verification-verified').value === '1';
+    const verificationNotes = document.getElementById('verification-notes').value;
+    
+    fetch(`{{ url('/chat/task') }}/${taskId}/verify`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            verified: verified,
+            verification_notes: verificationNotes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideVerificationModal();
+            // Update the task in the UI
+            updateTaskInUI(data.task);
+            showSuccess(verified ? 'Task verified successfully!' : 'Task rejected successfully!');
+            
+            // Refresh skill learning status
+            loadSkillLearningStatus();
+        } else {
+            showError('Failed to verify task: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Failed to verify task. Please try again.');
+    });
+});
+
 function addTaskToUI(task) {
     const partnerTasksContainer = document.getElementById('partner-tasks');
     const taskDiv = document.createElement('div');
@@ -1151,6 +1335,240 @@ function addTaskToUI(task) {
     }
     
     partnerTasksContainer.appendChild(taskDiv);
+}
+
+function updateTaskInUI(task) {
+    const taskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+    if (!taskElement) return;
+    
+    // Update the task content with verification status
+    const titleSpan = taskElement.querySelector('span[style*="font-weight: 500"]');
+    const checkbox = taskElement.querySelector('input[type="checkbox"]');
+    
+    // Update checkbox state
+    checkbox.checked = task.completed;
+    
+    // Update title styling
+    if (task.completed) {
+        titleSpan.style.textDecoration = 'line-through';
+        titleSpan.style.color = '#6b7280';
+    } else {
+        titleSpan.style.textDecoration = 'none';
+        titleSpan.style.color = '';
+    }
+    
+    // Remove existing verification badge and actions
+    const existingBadge = taskElement.querySelector('span[style*="background: #10b981"], span[style*="background: #f59e0b"]');
+    const existingActions = taskElement.querySelector('div[style*="margin-top: 8px; margin-left: 24px"]');
+    const existingNotes = taskElement.querySelector('div[style*="color: #059669"]');
+    
+    if (existingBadge) existingBadge.remove();
+    if (existingActions) existingActions.remove();
+    if (existingNotes) existingNotes.remove();
+    
+    // Add verification badge if completed
+    if (task.completed) {
+        const badge = document.createElement('span');
+        if (task.verified) {
+            badge.style.cssText = 'background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;';
+            badge.textContent = '✓ Verified';
+        } else {
+            badge.style.cssText = 'background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;';
+            badge.textContent = '⏳ Pending Verification';
+        }
+        
+        const titleContainer = taskElement.querySelector('div[style*="display: flex; align-items: center"]');
+        titleContainer.appendChild(badge);
+    }
+    
+    // Add verification notes if verified and has notes
+    if (task.verified && task.verification_notes) {
+        const notesDiv = document.createElement('div');
+        notesDiv.style.cssText = 'font-size: 0.875rem; color: #059669; margin-left: 24px; margin-top: 4px; font-style: italic;';
+        notesDiv.innerHTML = `<strong>Verification:</strong> ${task.verification_notes}`;
+        taskElement.appendChild(notesDiv);
+    }
+    
+    // Add verification actions if completed, not verified, and user is creator
+    if (task.completed && !task.verified && task.created_by == {{ auth()->id() }}) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.style.cssText = 'margin-top: 8px; margin-left: 24px;';
+        actionsDiv.innerHTML = `
+            <button onclick="showVerificationModal(${task.id}, '${task.title}')" 
+                    style="background: #10b981; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 8px;">
+                ✓ Verify
+            </button>
+            <button onclick="showVerificationModal(${task.id}, '${task.title}', false)" 
+                    style="background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                ✗ Reject
+            </button>
+        `;
+        taskElement.appendChild(actionsDiv);
+    }
+}
+
+// Skill Learning Functions
+async function loadSkillLearningStatus() {
+    try {
+        const response = await fetch('{{ route("chat.skill-learning-status", $trade->id) }}', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load skill learning status');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            updateSkillLearningStatusUI(data.summary);
+        } else {
+            throw new Error(data.error || 'Unknown error');
+        }
+    } catch (error) {
+        console.error('Error loading skill learning status:', error);
+        document.getElementById('skill-learning-status').innerHTML = `
+            <div style="text-align: center; color: #ef4444; font-size: 0.875rem;">
+                Error loading skill learning status
+            </div>
+        `;
+    }
+}
+
+function updateSkillLearningStatusUI(summary) {
+    const statusContainer = document.getElementById('skill-learning-status');
+    const completeSection = document.getElementById('complete-session-section');
+    
+    if (!summary.ready_for_processing) {
+        statusContainer.innerHTML = `
+            <div style="text-align: center; color: #6b7280; font-size: 0.875rem;">
+                ${summary.message || 'Session not ready for completion'}
+            </div>
+        `;
+        completeSection.style.display = 'none';
+        return;
+    }
+
+    const tradeOwner = summary.trade_owner;
+    const requester = summary.requester;
+    
+    let statusHTML = `
+        <div style="space-y: 12px;">
+            <div style="padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                    ${tradeOwner.user.firstname} ${tradeOwner.user.lastname}
+                </div>
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">
+                    Learning: <strong>${tradeOwner.skill_to_learn.name}</strong>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px;">
+                        <div style="background: ${tradeOwner.completion_rate >= 100 ? '#10b981' : '#f59e0b'}; height: 100%; width: ${Math.min(tradeOwner.completion_rate, 100)}%; border-radius: 4px; transition: width 0.3s ease;"></div>
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: ${tradeOwner.completion_rate >= 100 ? '#10b981' : '#f59e0b'};">
+                        ${tradeOwner.completion_rate}%
+                    </span>
+                </div>
+                <div style="font-size: 0.75rem; color: ${tradeOwner.will_receive_skill ? '#10b981' : '#6b7280'}; margin-top: 4px;">
+                    ${tradeOwner.will_receive_skill ? '✅ Will receive skill' : '❌ Will not receive skill'}
+                </div>
+            </div>
+            
+            <div style="padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                    ${requester.user.firstname} ${requester.user.lastname}
+                </div>
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">
+                    Learning: <strong>${requester.skill_to_learn.name}</strong>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px;">
+                        <div style="background: ${requester.completion_rate >= 100 ? '#10b981' : '#f59e0b'}; height: 100%; width: ${Math.min(requester.completion_rate, 100)}%; border-radius: 4px; transition: width 0.3s ease;"></div>
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: ${requester.completion_rate >= 100 ? '#10b981' : '#f59e0b'};">
+                        ${requester.completion_rate}%
+                    </span>
+                </div>
+                <div style="font-size: 0.75rem; color: ${requester.will_receive_skill ? '#10b981' : '#6b7280'}; margin-top: 4px;">
+                    ${requester.will_receive_skill ? '✅ Will receive skill' : '❌ Will not receive skill'}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    statusContainer.innerHTML = statusHTML;
+    
+    // Show complete session button if both users have 100% completion or if any user has 100%
+    const canComplete = tradeOwner.completion_rate >= 100 || requester.completion_rate >= 100;
+    completeSection.style.display = canComplete ? 'block' : 'none';
+    
+    if (canComplete) {
+        const completeBtn = document.getElementById('complete-session-btn');
+        if (tradeOwner.completion_rate >= 100 && requester.completion_rate >= 100) {
+            completeBtn.textContent = '✅ Complete Session & Learn Skills (Both Ready)';
+            completeBtn.style.background = '#10b981';
+        } else if (tradeOwner.completion_rate >= 100) {
+            completeBtn.textContent = '✅ Complete Session (You\'re Ready)';
+            completeBtn.style.background = '#f59e0b';
+        } else {
+            completeBtn.textContent = '✅ Complete Session (Partner Ready)';
+            completeBtn.style.background = '#f59e0b';
+        }
+    }
+}
+
+async function completeSession() {
+    const completeBtn = document.getElementById('complete-session-btn');
+    const originalText = completeBtn.textContent;
+    
+    try {
+        completeBtn.disabled = true;
+        completeBtn.textContent = 'Processing...';
+        
+        const response = await fetch('{{ route("chat.complete-session", $trade->id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Session completed successfully! Skills have been added to profiles.');
+            
+            // Update the skill learning status
+            await loadSkillLearningStatus();
+            
+            // Update session status
+            document.getElementById('session-status').textContent = '✅ Completed';
+            document.getElementById('session-status').style.color = '#10b981';
+            
+            // Hide the complete session button
+            document.getElementById('complete-session-section').style.display = 'none';
+            
+            // Show skill learning results
+            if (data.skill_learning_results && data.skill_learning_results.messages) {
+                data.skill_learning_results.messages.forEach(message => {
+                    showSuccess(message);
+                });
+            }
+        } else {
+            showError(data.error || 'Failed to complete session');
+            completeBtn.disabled = false;
+            completeBtn.textContent = originalText;
+        }
+    } catch (error) {
+        console.error('Error completing session:', error);
+        showError('Failed to complete session. Please try again.');
+        completeBtn.disabled = false;
+        completeBtn.textContent = originalText;
+    }
 }
 
 // Real-time clock and session duration timer
@@ -1591,7 +2009,10 @@ async function sendVideoCallAnswer(answer) {
     }
 }
 
-async function sendIceCandidate(candidate) {
+async function sendIceCandidate(candidate, retryCount = 0) {
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1 second
+    
     try {
         // Validate required variables before making the request
         if (!otherUserId || !currentCallId) {
@@ -1620,13 +2041,26 @@ async function sendIceCandidate(candidate) {
         
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to send ICE candidate: ${response.status} ${response.statusText} - ${errorText}`);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
         console.log('ICE candidate sent successfully');
+        return true;
+        
     } catch (error) {
         console.error('Error sending ICE candidate:', error);
+        
+        // Retry logic for network errors
+        if (retryCount < maxRetries && (error.name === 'TypeError' || error.message.includes('Failed to fetch'))) {
+            console.log(`Retrying ICE candidate send (attempt ${retryCount + 1}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+            return sendIceCandidate(candidate, retryCount + 1);
+        }
+        
         // Don't throw the error to prevent breaking the WebRTC connection process
+        // ICE candidates are not critical for connection establishment
+        console.warn('ICE candidate sending failed after retries, continuing with connection...');
+        return false;
     }
 }
 
@@ -2072,6 +2506,7 @@ window.addEventListener('beforeunload', () => {
 document.addEventListener('DOMContentLoaded', function() {
     updateTaskCount();
     initializeEmojiPicker();
+    loadSkillLearningStatus();
 });
 
 // ===== EMOJI PICKER FUNCTIONALITY =====

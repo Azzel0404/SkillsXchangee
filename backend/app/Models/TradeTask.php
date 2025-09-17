@@ -16,12 +16,18 @@ class TradeTask extends Model
         'title',
         'description',
         'completed',
-        'completed_at'
+        'completed_at',
+        'verified',
+        'verified_at',
+        'verified_by',
+        'verification_notes'
     ];
 
     protected $casts = [
         'completed' => 'boolean',
-        'completed_at' => 'datetime'
+        'completed_at' => 'datetime',
+        'verified' => 'boolean',
+        'verified_at' => 'datetime'
     ];
 
     public function trade()
@@ -37,5 +43,10 @@ class TradeTask extends Model
     public function assignee()
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 }

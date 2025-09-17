@@ -7,6 +7,7 @@ use App\Models\TradeMessage;
 use App\Models\TradeTask;
 use App\Events\MessageSent;
 use App\Events\TaskUpdated;
+use App\Services\SkillLearningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -203,10 +204,14 @@ class ChatController extends Controller
 
             $task->update([
                 'completed' => !$task->completed,
-                'completed_at' => !$task->completed ? now() : null
+                'completed_at' => !$task->completed ? now() : null,
+                // Reset verification when task is marked as incomplete
+                'verified' => $task->completed ? false : $task->verified,
+                'verified_at' => $task->completed ? null : $task->verified_at,
+                'verified_by' => $task->completed ? null : $task->verified_by
             ]);
 
-            $task->load(['creator', 'assignee']);
+            $task->load(['creator', 'assignee', 'verifier']);
 
             // Broadcast task update using Laravel events
             try {
@@ -224,6 +229,123 @@ class ChatController extends Controller
             Log::error('Task toggle error: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to update task: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function verifyTask(Request $request, TradeTask $task)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Check if user is the creator of this task (only the creator can verify)
+            if ($task->created_by !== $user->id) {
+                return response()->json(['error' => 'Only the task creator can verify completion'], 403);
+            }
+
+            // Check if task is completed
+            if (!$task->completed) {
+                return response()->json(['error' => 'Task must be completed before verification'], 400);
+            }
+
+            $request->validate([
+                'verified' => 'required|boolean',
+                'verification_notes' => 'nullable|string|max:1000'
+            ]);
+
+            $task->update([
+                'verified' => $request->verified,
+                'verified_at' => $request->verified ? now() : null,
+                'verified_by' => $request->verified ? $user->id : null,
+                'verification_notes' => $request->verification_notes
+            ]);
+
+            $task->load(['creator', 'assignee', 'verifier']);
+
+            // Broadcast task update using Laravel events
+            try {
+                event(new TaskUpdated($task, $task->trade_id));
+            } catch (\Exception $e) {
+                Log::error('Broadcasting failed: ' . $e->getMessage());
+                // Continue even if broadcasting fails
+            }
+
+            return response()->json([
+                'success' => true,
+                'task' => $task
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Task verification error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to verify task: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function completeSession(Request $request, Trade $trade)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Check if user is part of this trade
+            if ($trade->user_id !== $user->id && 
+                !$trade->requests()->where('requester_id', $user->id)->where('status', 'accepted')->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $skillLearningService = new SkillLearningService();
+            
+            // Check if trade is ready for skill learning processing
+            if (!$skillLearningService->isTradeReadyForSkillLearning($trade)) {
+                return response()->json([
+                    'error' => 'Session is not ready for completion. Please ensure all completed tasks are verified.',
+                    'ready_for_processing' => false
+                ], 400);
+            }
+
+            // Process skill learning
+            $results = $skillLearningService->processSkillLearning($trade);
+            
+            // Update trade status to completed
+            $trade->update(['status' => 'completed']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session completed successfully!',
+                'skill_learning_results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error completing session: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to complete session: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getSkillLearningStatus(Trade $trade)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Check if user is part of this trade
+            if ($trade->user_id !== $user->id && 
+                !$trade->requests()->where('requester_id', $user->id)->where('status', 'accepted')->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $skillLearningService = new SkillLearningService();
+            $summary = $skillLearningService->getSkillLearningSummary($trade);
+
+            return response()->json([
+                'success' => true,
+                'summary' => $summary
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error getting skill learning status: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to get skill learning status: ' . $e->getMessage()
             ], 500);
         }
     }
