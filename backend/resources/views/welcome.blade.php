@@ -21,31 +21,193 @@
     @if(isset($cssFile))
       <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
     @else
-      {{-- Ultimate fallback - inline critical CSS --}}
+      {{-- Clean minimalist CSS matching the image design --}}
       <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        header h3 { color: #007bff; margin: 0; font-size: 1.5rem; font-weight: 700; }
-        header nav { display: flex; gap: 1rem; }
-        header nav a { text-decoration: none; color: #333; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.375rem; }
-        header nav a.signup { background: #007bff; color: #fff; }
-        .hero { text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 6rem 1rem; min-height: 70vh; display: flex; flex-direction: column; justify-content: center; position: relative; }
-        .hero-content { position: relative; z-index: 2; max-width: 800px; }
-        .hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; margin: 0 0 1.5rem 0; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .hero p { margin: 0 0 3rem 0; font-size: clamp(1.125rem, 2.5vw, 1.5rem); color: rgba(255, 255, 255, 0.9); max-width: 600px; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .hero button { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: #fff; border: none; padding: 1rem 2.5rem; border-radius: 50px; font-size: 1.125rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4); text-transform: uppercase; letter-spacing: 0.5px; }
-        .how-it-works { text-align: center; padding: 6rem 1rem; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); position: relative; }
-        .how-it-works-content { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; }
-        .how-it-works h2 { margin-bottom: 4rem; font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; color: #1a202c; position: relative; }
-        .how-it-works h2::after { content: ''; position: absolute; bottom: -1rem; left: 50%; transform: translateX(-50%); width: 80px; height: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 2px; }
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; max-width: 1200px; margin: 0 auto; }
-        .feature { padding: 3rem 2rem; border-radius: 1.5rem; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        .feature::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .feature-icon { width: 80px; height: 80px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+        * { box-sizing: border-box; }
+        body { 
+          margin: 0; 
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+          line-height: 1.6; 
+          background: #f8f9fa;
+        }
+        
+        /* Clean Header */
+        header { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          padding: 1rem 2rem; 
+          background: #fff; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        header h3 { 
+          color: #007bff; 
+          margin: 0; 
+          font-size: 1.5rem; 
+          font-weight: 700; 
+          text-decoration: none;
+        }
+        header nav { display: flex; gap: 1rem; align-items: center; }
+        header nav a { 
+          text-decoration: none; 
+          color: #007bff; 
+          font-weight: 500; 
+          padding: 0.5rem 1rem; 
+          border-radius: 0.375rem; 
+          transition: all 0.2s ease;
+        }
+        header nav a:hover { background-color: #f8f9fa; }
+        header nav a.signup { 
+          background: #007bff; 
+          color: #fff; 
+        }
+        header nav a.signup:hover { 
+          background: #0056b3;
+        }
+        
+        /* Clean Hero Section */
+        .hero { 
+          text-align: center; 
+          background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); 
+          padding: 6rem 1rem; 
+          min-height: 70vh; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center; 
+          align-items: center;
+        }
+        .hero-content { 
+          max-width: 800px; 
+          margin: 0 auto;
+        }
+        .hero h1 { 
+          font-size: clamp(2.5rem, 5vw, 4rem); 
+          font-weight: 800; 
+          margin: 0 0 1.5rem 0; 
+          color: #333; 
+          line-height: 1.1;
+        }
+        .hero p { 
+          margin: 0 0 3rem 0; 
+          font-size: clamp(1.125rem, 2.5vw, 1.5rem); 
+          color: #666; 
+          max-width: 600px; 
+          margin-left: auto;
+          margin-right: auto;
+          line-height: 1.6;
+        }
+        .hero button { 
+          background: #007bff; 
+          color: #fff; 
+          border: none; 
+          padding: 1rem 2.5rem; 
+          border-radius: 0.375rem; 
+          font-size: 1.125rem; 
+          font-weight: 600; 
+          cursor: pointer; 
+          transition: all 0.2s ease;
+        }
+        .hero button:hover { 
+          background: #0056b3;
+          transform: translateY(-2px);
+        }
+        
+        /* Clean How It Works Section */
+        .how-it-works { 
+          text-align: center; 
+          padding: 6rem 1rem; 
+          background: #fff; 
+        }
+        .how-it-works-content { 
+          max-width: 1200px; 
+          margin: 0 auto; 
+        }
+        .how-it-works h2 { 
+          margin-bottom: 4rem; 
+          font-size: clamp(2rem, 4vw, 3rem); 
+          font-weight: 800; 
+          color: #333; 
+        }
+        .features { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+          gap: 3rem; 
+          max-width: 1200px; 
+          margin: 0 auto; 
+        }
+        .feature { 
+          padding: 3rem 2rem; 
+          border-radius: 1rem; 
+          background: #fff; 
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+          transition: all 0.3s ease;
+        }
+        .feature:hover { 
+          transform: translateY(-5px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12); 
+        }
+        .feature-icon { 
+          width: 80px; 
+          height: 80px; 
+          margin: 0 auto 2rem; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          border-radius: 50%; 
+          background: #007bff; 
+          box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); 
+        }
         .feature-icon svg { width: 40px; height: 40px; color: white; }
-        .feature h3 { margin: 0 0 1.5rem 0; font-size: 1.5rem; font-weight: 700; color: #1a202c; }
-        .feature p { font-size: 1.125rem; color: #4a5568; line-height: 1.7; margin: 0; }
-        @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+        .feature h3 { 
+          margin: 0 0 1.5rem 0; 
+          font-size: 1.5rem; 
+          font-weight: 700; 
+          color: #333; 
+        }
+        .feature p { 
+          font-size: 1.125rem; 
+          color: #666; 
+          line-height: 1.7; 
+          margin: 0; 
+        }
+        
+        /* Clean Footer */
+        footer {
+          text-align: center;
+          padding: 2rem 1rem;
+          background: #f8f9fa;
+          border-top: 1px solid #e9ecef;
+          color: #666;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+          header { padding: 1rem; }
+          header h3 { font-size: 1.25rem; }
+          header nav { gap: 0.5rem; }
+          header nav a { padding: 0.375rem 0.75rem; font-size: 0.875rem; }
+          .hero { padding: 4rem 1rem; min-height: 60vh; }
+          .hero h1 { margin-bottom: 1rem; }
+          .hero p { margin-bottom: 2rem; }
+          .hero button { padding: 0.875rem 2rem; font-size: 1rem; }
+          .how-it-works { padding: 4rem 1rem; }
+          .how-it-works h2 { margin-bottom: 3rem; }
+          .features { grid-template-columns: 1fr; gap: 2rem; }
+          .feature { padding: 2rem 1.5rem; }
+          .feature-icon { width: 70px; height: 70px; }
+          .feature-icon svg { width: 35px; height: 35px; }
+          .feature h3 { font-size: 1.25rem; }
+          .feature p { font-size: 1rem; }
+        }
+        
+        @media (max-width: 480px) {
+          header { flex-wrap: wrap; }
+          header nav { width: 100%; justify-content: center; margin-top: 0.5rem; }
+          .hero { padding: 3rem 1rem; }
+          .hero button { padding: 0.75rem 1.5rem; font-size: 0.875rem; }
+          .how-it-works { padding: 3rem 1rem; }
+          .feature { padding: 1.5rem 1rem; }
+        }
       </style>
     @endif
     @if(isset($jsFile))
@@ -55,7 +217,9 @@
 </head>
 <body>
   <header>
-    <h3>SkillsXchange</h3>
+    <a href="/" style="text-decoration: none;">
+      <h3>SkillsXchange</h3>
+    </a>
     <nav>
       <a href="{{ route('login') }}">Login</a>
       <a href="{{ route('register') }}" class="signup">Sign Up</a>
@@ -66,7 +230,7 @@
     <div class="hero-content">
       <h1>Trade Your Skills. Learn from Others.</h1>
       <p>A student-to-student platform to share and grow your skills together.</p>
-      <button onclick="window.location.href='{{ route('register') }}'">Get Started</button>
+      <button id="getStartedBtn">Get Started</button>
     </div>
   </section>
 
@@ -81,7 +245,7 @@
             </svg>
           </div>
           <h3>Find a Skill</h3>
-          <p>Browse through the list of skills offered by other students and discover what you want to learn.</p>
+          <p>Browse through the list of skills offered by other students.</p>
         </div>
         <div class="feature">
           <div class="feature-icon">
@@ -90,7 +254,7 @@
             </svg>
           </div>
           <h3>Match and Trade</h3>
-          <p>Send a trade request and match based on availability and mutual interest in skill exchange.</p>
+          <p>Send a trade request and match based on availability and interest.</p>
         </div>
         <div class="feature">
           <div class="feature-icon">
@@ -99,7 +263,7 @@
             </svg>
           </div>
           <h3>Rate and Review</h3>
-          <p>Leave feedback and build a trustworthy skill-sharing community with honest reviews.</p>
+          <p>Leave feedback and build a trustworthy skill-sharing community.</p>
         </div>
       </div>
     </div>
@@ -108,5 +272,16 @@
   <footer>
     <p>&copy; {{ date('Y') }} SkillsXchange. All rights reserved.</p>
   </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const getStartedBtn = document.getElementById('getStartedBtn');
+      if (getStartedBtn) {
+        getStartedBtn.addEventListener('click', function() {
+          window.location.href = '/register';
+        });
+      }
+    });
+  </script>
 </body>
 </html>
