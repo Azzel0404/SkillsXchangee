@@ -1,6 +1,7 @@
 <x-guest-layout>
     <!-- Error Popup Modal -->
-    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    @if($errors->any())
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div class="flex items-center mb-4">
                 <div class="flex-shrink-0">
@@ -13,7 +14,11 @@
                 </div>
             </div>
             <div class="mb-4">
-                <p id="errorMessage" class="text-sm text-gray-600"></p>
+                <ul class="text-sm text-gray-600">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
             <div class="flex justify-end">
                 <button type="button" onclick="closeErrorModal()" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
@@ -22,9 +27,11 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Success Popup Modal -->
-    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    @if(session('status'))
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div class="flex items-center mb-4">
                 <div class="flex-shrink-0">
@@ -37,7 +44,7 @@
                 </div>
             </div>
             <div class="mb-4">
-                <p class="text-sm text-gray-600">Your registration is pending approval by an admin. You will be notified once approved.</p>
+                <p class="text-sm text-gray-600">{{ session('status') }}</p>
             </div>
             <div class="flex justify-end">
                 <button type="button" onclick="closeSuccessModal()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
@@ -46,6 +53,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" id="registerForm">
         @csrf
@@ -207,54 +215,20 @@
             // Preload some suggestions initially
             fetchSuggestions('');
 
-            // Form submission with error handling
+            // Simple form validation
             const form = document.getElementById('registerForm');
             form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
                 // Show loading state
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
                 submitBtn.textContent = 'Registering...';
                 submitBtn.disabled = true;
-
-                // Create FormData
-                const formData = new FormData(form);
-
-                // Submit form via fetch
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.text();
-                    } else {
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Registration failed');
-                        });
-                    }
-                })
-                .then(data => {
-                    // Check if response contains error messages
-                    if (data.includes('error') || data.includes('Error')) {
-                        showErrorModal('Registration failed. Please check your information and try again.');
-                    } else {
-                        showSuccessModal();
-                    }
-                })
-                .catch(error => {
-                    showErrorModal(error.message || 'An error occurred during registration. Please try again.');
-                })
-                .finally(() => {
-                    // Reset button state
+                
+                // Re-enable button after a short delay (in case of validation errors)
+                setTimeout(() => {
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
-                });
+                }, 2000);
             });
 
             // Real-time validation
@@ -263,6 +237,21 @@
                 input.addEventListener('blur', function() {
                     validateField(this);
                 });
+                
+                // Add real-time validation for birthdate field
+                if (input.name === 'bdate') {
+                    input.addEventListener('change', function() {
+                        validateField(this);
+                    });
+                    input.addEventListener('input', function() {
+                        // Clear previous validation when user starts typing
+                        this.classList.remove('border-red-500', 'border-green-500');
+                        const existingError = this.parentNode.querySelector('.field-error');
+                        if (existingError) {
+                            existingError.remove();
+                        }
+                    });
+                }
             });
 
             function validateField(field) {
@@ -303,6 +292,21 @@
                     if (value.length < 3) {
                         isValid = false;
                         errorMessage = 'Username must be at least 3 characters long.';
+                    }
+                } else if (fieldName === 'bdate' && value) {
+                    const birthDate = new Date(value);
+                    const today = new Date();
+                    const age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    
+                    // Check if birthday hasn't occurred this year
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    
+                    if (age < 18) {
+                        isValid = false;
+                        errorMessage = 'You must be 18 years or above to register.';
                     }
                 }
 

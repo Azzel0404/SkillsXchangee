@@ -67,4 +67,12 @@ class User extends Authenticatable
     {
         return trim($this->firstname . ' ' . $this->lastname);
     }
+
+    /**
+     * Find user by username or email for authentication.
+     */
+    public function findForPassport($username)
+    {
+        return $this->where('username', $username)->orWhere('email', $username)->first();
+    }
 }
