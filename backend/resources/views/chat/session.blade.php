@@ -12,385 +12,401 @@
     window.initialMessageCount = parseInt('{{ $messages->count() }}');
 </script>
 <style>
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
 
-@keyframes flash {
-    0% { background-color: rgba(59, 130, 246, 0.3); }
-    50% { background-color: rgba(16, 185, 129, 0.5); }
-    100% { background-color: rgba(59, 130, 246, 0.3); }
-}
+        50% {
+            transform: scale(1.1);
+        }
 
-.flash-effect {
-    animation: flash 0.5s ease-in-out;
-}
+        100% {
+            transform: scale(1);
+        }
+    }
 
-/* Ensure all message bubbles have proper text wrapping */
-#chat-messages > div > div {
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-}
+    @keyframes flash {
+        0% {
+            background-color: rgba(59, 130, 246, 0.3);
+        }
 
-#chat-messages > div > div > div:first-child {
-    word-break: break-word !important;
-    line-height: 1.4 !important;
-}
+        50% {
+            background-color: rgba(16, 185, 129, 0.5);
+        }
 
-/* Video Chat Styles */
-.video-chat-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
-    justify-content: center;
-    align-items: center;
-}
+        100% {
+            background-color: rgba(59, 130, 246, 0.3);
+        }
+    }
 
-.video-chat-container {
-    background: #1a1a1a;
-    border-radius: 12px;
-    padding: 0;
-    max-width: 95vw;
-    width: 95vw;
-    max-height: 95vh;
-    height: 95vh;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
+    .flash-effect {
+        animation: flash 0.5s ease-in-out;
+    }
 
-.video-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    flex: 1;
-    padding: 10px;
-    min-height: 0;
-}
+    /* Ensure all message bubbles have proper text wrapping */
+    #chat-messages>div>div {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
 
-.video-grid.maximized {
-    grid-template-columns: 1fr;
-}
+    #chat-messages>div>div>div:first-child {
+        word-break: break-word !important;
+        line-height: 1.4 !important;
+    }
 
-.video-item {
-    position: relative;
-    background: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
+    /* Video Chat Styles */
+    .video-chat-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
 
-.video-item.maximized {
-    grid-column: 1 / -1;
-    grid-row: 1 / -1;
-}
+    .video-chat-container {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 0;
+        max-width: 95vw;
+        width: 95vw;
+        max-height: 95vh;
+        height: 95vh;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
 
-.video-item video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    flex: 1;
-}
+    .video-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        flex: 1;
+        padding: 10px;
+        min-height: 0;
+    }
 
-/* Default state for local video - no mirroring by default */
-#local-video {
-    transform: scaleX(1);
-}
+    .video-grid.maximized {
+        grid-template-columns: 1fr;
+    }
 
-.video-item.remote {
-    border: 2px solid #3b82f6;
-}
+    .video-item {
+        position: relative;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
 
-.video-item.local {
-    border: 2px solid #10b981;
-}
+    .video-item.maximized {
+        grid-column: 1 / -1;
+        grid-row: 1 / -1;
+    }
 
-.video-item.local.minimized {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 200px;
-    height: 150px;
-    z-index: 10;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
+    .video-item video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        flex: 1;
+    }
 
-.video-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    border-top: 1px solid #333;
-}
+    /* Default state for local video - no mirroring by default */
+    #local-video {
+        transform: scaleX(1);
+    }
 
-.video-btn {
-    padding: 12px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 48px;
-    min-height: 48px;
-    font-size: 18px;
-}
+    .video-item.remote {
+        border: 2px solid #3b82f6;
+    }
 
-.video-btn.primary {
-    background: #3b82f6;
-    color: white;
-}
+    .video-item.local {
+        border: 2px solid #10b981;
+    }
 
-.video-btn.primary:hover {
-    background: #2563eb;
-    transform: scale(1.05);
-}
+    .video-item.local.minimized {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 200px;
+        height: 150px;
+        z-index: 10;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
 
-.video-btn.danger {
-    background: #ef4444;
-    color: white;
-}
+    .video-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        border-top: 1px solid #333;
+    }
 
-.video-btn.danger:hover {
-    background: #dc2626;
-    transform: scale(1.05);
-}
+    .video-btn {
+        padding: 12px;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        min-height: 48px;
+        font-size: 18px;
+    }
 
-.video-btn.success {
-    background: #10b981;
-    color: white;
-}
+    .video-btn.primary {
+        background: #3b82f6;
+        color: white;
+    }
 
-.video-btn.success:hover {
-    background: #059669;
-    transform: scale(1.05);
-}
+    .video-btn.primary:hover {
+        background: #2563eb;
+        transform: scale(1.05);
+    }
 
-.video-btn.secondary {
-    background: #6b7280;
-    color: white;
-}
+    .video-btn.danger {
+        background: #ef4444;
+        color: white;
+    }
 
-.video-btn.secondary:hover {
-    background: #4b5563;
-    transform: scale(1.05);
-}
+    .video-btn.danger:hover {
+        background: #dc2626;
+        transform: scale(1.05);
+    }
 
-.video-btn.muted {
-    background: #ef4444 !important;
-}
+    .video-btn.success {
+        background: #10b981;
+        color: white;
+    }
 
-.video-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none !important;
-}
+    .video-btn.success:hover {
+        background: #059669;
+        transform: scale(1.05);
+    }
 
-.video-btn.maximize {
-    background: #8b5cf6;
-    color: white;
-}
+    .video-btn.secondary {
+        background: #6b7280;
+        color: white;
+    }
 
-.video-btn.maximize:hover {
-    background: #7c3aed;
-    transform: scale(1.05);
-}
+    .video-btn.secondary:hover {
+        background: #4b5563;
+        transform: scale(1.05);
+    }
 
-.video-status {
-    text-align: center;
-    padding: 15px;
-    font-weight: 600;
-    color: #e5e7eb;
-    background: rgba(0, 0, 0, 0.5);
-    border-bottom: 1px solid #333;
-}
+    .video-btn.muted {
+        background: #ef4444 !important;
+    }
 
-.call-timer {
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #3b82f6;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom: 1px solid #333;
-}
+    .video-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
 
-.close-video {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    z-index: 1000;
-    transition: all 0.2s;
-}
+    .video-btn.maximize {
+        background: #8b5cf6;
+        color: white;
+    }
 
-.close-video:hover {
-    background: rgba(239, 68, 68, 0.8);
-    transform: scale(1.1);
-}
+    .video-btn.maximize:hover {
+        background: #7c3aed;
+        transform: scale(1.05);
+    }
 
-.connection-status {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-    z-index: 10;
-}
+    .video-status {
+        text-align: center;
+        padding: 15px;
+        font-weight: 600;
+        color: #e5e7eb;
+        background: rgba(0, 0, 0, 0.5);
+        border-bottom: 1px solid #333;
+    }
 
-.connection-status.connected {
-    background: rgba(16, 185, 129, 0.9);
-    color: white;
-}
+    .call-timer {
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #3b82f6;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid #333;
+    }
 
-.connection-status.connecting {
-    background: rgba(245, 158, 11, 0.9);
-    color: white;
-}
+    .close-video {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        z-index: 1000;
+        transition: all 0.2s;
+    }
 
-.connection-status.disconnected {
-    background: rgba(239, 68, 68, 0.9);
-    color: white;
-}
+    .close-video:hover {
+        background: rgba(239, 68, 68, 0.8);
+        transform: scale(1.1);
+    }
 
-.video-overlay {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    right: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 10;
-}
+    .connection-status {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        z-index: 10;
+    }
 
-.user-name {
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-}
+    .connection-status.connected {
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+    }
 
-.video-controls-overlay {
-    display: flex;
-    gap: 8px;
-}
+    .connection-status.connecting {
+        background: rgba(245, 158, 11, 0.9);
+        color: white;
+    }
 
-.control-btn {
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: all 0.2s;
-    backdrop-filter: blur(10px);
-}
+    .connection-status.disconnected {
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+    }
 
-.control-btn:hover {
-    background: rgba(0, 0, 0, 0.9);
-    transform: scale(1.1);
-}
+    .video-overlay {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+    }
 
-.control-btn.active {
-    background: rgba(239, 68, 68, 0.9);
-}
+    .user-name {
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+    }
 
-/* Emoji button hover effect */
-#emoji-button:hover {
-    background-color: #f3f4f6 !important;
-}
+    .video-controls-overlay {
+        display: flex;
+        gap: 8px;
+    }
 
-#emoji-button:active {
-    background-color: #e5e7eb !important;
-}
+    .control-btn {
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.2s;
+        backdrop-filter: blur(10px);
+    }
 
-/* Message styles */
-.message-container {
-    margin-bottom: 16px;
-    display: flex;
-}
+    .control-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.1);
+    }
 
-.message-container[data-sender="{{ Auth::id() }}"] {
-    justify-content: flex-end;
-}
+    .control-btn.active {
+        background: rgba(239, 68, 68, 0.9);
+    }
 
-.message-container:not([data-sender="{{ Auth::id() }}"]) {
-    justify-content: flex-start;
-}
+    /* Emoji button hover effect */
+    #emoji-button:hover {
+        background-color: #f3f4f6 !important;
+    }
 
-.message-bubble {
-    max-width: 70%;
-    padding: 12px;
-    border-radius: 12px;
-    position: relative;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
+    #emoji-button:active {
+        background-color: #e5e7eb !important;
+    }
 
-.message-bubble[data-sender="{{ Auth::id() }}"] {
-    background: #3b82f6;
-    color: white;
-}
+    /* Message styles */
+    .message-container {
+        margin-bottom: 16px;
+        display: flex;
+    }
 
-.message-bubble:not([data-sender="{{ Auth::id() }}"]) {
-    background: #e5e7eb;
-    color: #374151;
-}
+    .message-container[data-sender="{{ Auth::id() }}"] {
+        justify-content: flex-end;
+    }
 
-.message-content {
-    margin-bottom: 4px;
-    word-break: break-word;
-    line-height: 1.4;
-}
+    .message-container:not([data-sender="{{ Auth::id() }}"]) {
+        justify-content: flex-start;
+    }
 
-.message-time {
-    font-size: 0.75rem;
-    opacity: 0.8;
-}
+    .message-bubble {
+        max-width: 70%;
+        padding: 12px;
+        border-radius: 12px;
+        position: relative;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .message-bubble[data-sender="{{ Auth::id() }}"] {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .message-bubble:not([data-sender="{{ Auth::id() }}"]) {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .message-content {
+        margin-bottom: 4px;
+        word-break: break-word;
+        line-height: 1.4;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
 </style>
 
 <!-- Video Chat Modal -->
 <div id="video-chat-modal" class="video-chat-modal">
     <div class="video-chat-container">
         <button class="close-video" onclick="closeVideoChat()">×</button>
-        
+
         <div class="video-status" id="video-status">Initializing video chat...</div>
         <div class="call-timer" id="call-timer" style="display: none;">00:00</div>
-        
+
         <div class="video-grid" id="video-grid">
             <div class="video-item local" id="local-video-item">
                 <video id="local-video" autoplay muted playsinline></video>
@@ -398,7 +414,8 @@
                 <div class="video-overlay">
                     <div class="user-name">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</div>
                     <div class="video-controls-overlay">
-                        <button class="control-btn" id="local-maximize-btn" onclick="maximizeVideo('local')" title="Maximize">⛶</button>
+                        <button class="control-btn" id="local-maximize-btn" onclick="maximizeVideo('local')"
+                            title="Maximize">⛶</button>
                     </div>
                 </div>
             </div>
@@ -406,34 +423,50 @@
                 <video id="remote-video" autoplay playsinline></video>
                 <div class="connection-status" id="remote-status">Waiting...</div>
                 <div class="video-overlay">
-                    <div class="user-name" id="remote-user-name">{{ $partner->firstname ?? 'Partner' }} {{ $partner->lastname ?? '' }}</div>
+                    <div class="user-name" id="remote-user-name">{{ $partner->firstname ?? 'Partner' }} {{
+                        $partner->lastname ?? '' }}</div>
                     <div class="video-controls-overlay">
-                        <button class="control-btn" id="remote-maximize-btn" onclick="maximizeVideo('remote')" title="Maximize">⛶</button>
+                        <button class="control-btn" id="remote-maximize-btn" onclick="maximizeVideo('remote')"
+                            title="Maximize">⛶</button>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="video-controls">
-            <button id="auto-call-toggle" class="video-btn secondary" onclick="toggleAutoCall()" title="Toggle Auto-call" style="background: #10b981;">🔗 Auto-call ON</button>
-            <div id="presence-status" style="color: #6b7280; font-size: 0.875rem; margin: 0 8px; display: flex; align-items: center;">🔴 Partner is offline</div>
-            <button id="start-call-btn" class="video-btn primary" onclick="startVideoCall()" title="Start Call">📞</button>
-            <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;" title="End Call">📞</button>
-            <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;" title="Mute/Unmute">🎤</button>
-            <button id="toggle-video-btn" class="video-btn success" onclick="toggleVideo()" style="display: none;" title="Turn Video On/Off">📹</button>
-            <button id="mirror-video-btn" class="video-btn secondary" onclick="toggleMirror()" style="display: none;" title="Mirror Video">🪞</button>
-            <button id="screen-share-btn" class="video-btn secondary" onclick="toggleScreenShare()" style="display: none;" title="Share Screen">🖥️</button>
-            <button id="maximize-btn" class="video-btn maximize" onclick="toggleMaximize()" style="display: none;" title="Maximize">⛶</button>
-            <button id="chat-toggle-btn" class="video-btn secondary" onclick="toggleChat()" style="display: none;" title="Toggle Chat">💬</button>
+            <button id="auto-call-toggle" class="video-btn secondary" onclick="toggleAutoCall()"
+                title="Toggle Auto-call" style="background: #10b981;">🔗 Auto-call ON</button>
+            <div id="presence-status"
+                style="color: #6b7280; font-size: 0.875rem; margin: 0 8px; display: flex; align-items: center;">🔴
+                Partner is offline</div>
+            <button id="start-call-btn" class="video-btn primary" onclick="startVideoCall()"
+                title="Start Call">📞</button>
+            <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;"
+                title="End Call">📞</button>
+            <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;"
+                title="Mute/Unmute">🎤</button>
+            <button id="toggle-video-btn" class="video-btn success" onclick="toggleVideo()" style="display: none;"
+                title="Turn Video On/Off">📹</button>
+            <button id="mirror-video-btn" class="video-btn secondary" onclick="toggleMirror()" style="display: none;"
+                title="Mirror Video">🪞</button>
+            <button id="screen-share-btn" class="video-btn secondary" onclick="toggleScreenShare()"
+                style="display: none;" title="Share Screen">🖥️</button>
+            <button id="maximize-btn" class="video-btn maximize" onclick="toggleMaximize()" style="display: none;"
+                title="Maximize">⛶</button>
+            <button id="chat-toggle-btn" class="video-btn secondary" onclick="toggleChat()" style="display: none;"
+                title="Toggle Chat">💬</button>
         </div>
     </div>
 </div>
 
 <div style="height: 100vh; display: flex; flex-direction: column;">
     <!-- Header -->
-    <div style="background: #1e40af; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+    <div
+        style="background: #1e40af; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
         <div style="font-size: 1.5rem; font-weight: bold;">SkillsXchange</div>
-        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="color: #ef4444; text-decoration: none;">Logout</a>
+        <a href="{{ route('logout') }}"
+            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+            style="color: #ef4444; text-decoration: none;">Logout</a>
     </div>
 
     <!-- Active Trade Session Banner -->
@@ -451,32 +484,39 @@
         <!-- Session Chat (Left Panel) -->
         <div style="flex: 1; display: flex; flex-direction: column; border-right: 1px solid #e5e7eb;">
             <!-- Chat Header -->
-            <div style="background: #1e40af; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div
+                style="background: #1e40af; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span>💬</span>
                     <span>Session Chat</span>
-                    <span id="new-message-indicator" style="display: none; background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; animation: pulse 2s infinite;">NEW</span>
+                    <span id="new-message-indicator"
+                        style="display: none; background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; animation: pulse 2s infinite;">NEW</span>
                     <div id="connection-status" style="margin-left: 12px; font-size: 0.7rem;">
-                        <span id="status-indicator" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; margin-right:4px;"></span>
+                        <span id="status-indicator"
+                            style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; margin-right:4px;"></span>
                         <span id="status-text">Connecting...</span>
                     </div>
                 </div>
                 <div style="display: flex; gap: 12px;">
-                    <button id="video-call-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;" onclick="openVideoChat()">📷</button>
-                    <button style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">🎤</button>
-                    <button style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">⚠️</button>
+                    <button id="video-call-btn"
+                        style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;"
+                        onclick="openVideoChat()">📷</button>
+                    <button
+                        style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">🎤</button>
+                    <button
+                        style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">⚠️</button>
                 </div>
             </div>
 
             <!-- Chat Messages -->
             <div id="chat-messages" style="flex: 1; padding: 16px; overflow-y: auto; background: #f9fafb;">
                 @foreach($messages as $message)
-                    <div class="message-container" data-sender="{{ $message->sender_id }}" data-auth="{{ Auth::id() }}">
-                        <div class="message-bubble" data-sender="{{ $message->sender_id }}" data-auth="{{ Auth::id() }}">
-                            <div class="message-content">{{ $message->message }}</div>
-                            <div class="message-time">{{ $message->created_at->format('g:i A') }}</div>
-                        </div>
+                <div class="message-container" data-sender="{{ $message->sender_id }}" data-auth="{{ Auth::id() }}">
+                    <div class="message-bubble" data-sender="{{ $message->sender_id }}" data-auth="{{ Auth::id() }}">
+                        <div class="message-content">{{ $message->message }}</div>
+                        <div class="message-time">{{ $message->created_at->format('g:i A') }}</div>
                     </div>
+                </div>
                 @endforeach
             </div>
 
@@ -484,20 +524,37 @@
             <div style="padding: 16px; background: white; border-top: 1px solid #e5e7eb;">
                 <form id="message-form" style="display: flex; gap: 8px;">
                     <div style="flex: 1; position: relative;">
-                        <input type="text" id="message-input" placeholder="Type your message here..." 
-                               style="width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
-                        <button type="button" id="emoji-button" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s;" title="Add emoji">😊</button>
+                        <input type="text" id="message-input" placeholder="Type your message here..."
+                            style="width: 100%; padding: 12px 40px 12px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                        <button type="button" id="emoji-button"
+                            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s;"
+                            title="Add emoji">😊</button>
                     </div>
-                    <button type="submit" id="send-button" style="background: #1e40af; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Send</button>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                            onchange="handleImageUpload(event)">
+                        <input type="file" id="video-upload" accept="video/*" style="display: none;"
+                            onchange="handleVideoUpload(event)">
+                        <button type="button" onclick="document.getElementById('image-upload').click()"
+                            style="padding: 8px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-size: 16px;"
+                            title="Send Image">📷</button>
+                        <button type="button" onclick="document.getElementById('video-upload').click()"
+                            style="padding: 8px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-size: 16px;"
+                            title="Send Video">🎥</button>
+                        <button type="submit" id="send-button"
+                            style="background: #1e40af; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Send</button>
+                    </div>
                 </form>
 
             </div>
         </div>
 
         <!-- Session Tasks (Right Sidebar) -->
-        <div style="width: 350px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column;">
+        <div
+            style="width: 350px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column;">
             <!-- Sidebar Header -->
-            <div style="background: #f3f4f6; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px;">
+            <div
+                style="background: #f3f4f6; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px;">
                 <span>☑️</span>
                 <span style="font-weight: 600;">Session Tasks</span>
             </div>
@@ -509,113 +566,143 @@
                     <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #374151;">Your Tasks</h3>
                     <div id="my-tasks">
                         @forelse($myTasks as $task)
-                            <div class="task-item" data-task-id="{{ $task->id }}" style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                    <input type="checkbox" {{ $task->completed ? 'checked' : '' }} 
-                                           onchange="toggleTask({{ $task->id }})" 
-                                           style="width: 16px; height: 16px;">
-                                    <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
-                                </div>
-                                @if($task->description)
-                                    <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description }}</div>
-                                @endif
+                        <div class="task-item" data-task-id="{{ $task->id }}"
+                            style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <input type="checkbox" {{ $task->completed ? 'checked' : '' }}
+                                onchange="toggleTask({{ $task->id }})"
+                                style="width: 16px; height: 16px;">
+                                <span
+                                    style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{
+                                    $task->title }}</span>
                             </div>
+                            @if($task->description)
+                            <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description
+                                }}</div>
+                            @endif
+                        </div>
                         @empty
-                            <div style="color: #6b7280; font-size: 0.875rem; text-align: center; padding: 16px;">No tasks assigned to you</div>
+                        <div style="color: #6b7280; font-size: 0.875rem; text-align: center; padding: 16px;">No tasks
+                            assigned to you</div>
                         @endforelse
                     </div>
-                    
+
                     <!-- Your Progress -->
                     <div style="margin-top: 16px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 0.875rem; color: #6b7280;">Progress</span>
-                            <span id="my-progress-text" style="font-size: 0.875rem; font-weight: 600;" data-progress="{{ round($myProgress) }}">{{ round($myProgress) }}%</span>
+                            <span id="my-progress-text" style="font-size: 0.875rem; font-weight: 600;"
+                                data-progress="{{ round($myProgress) }}">{{ round($myProgress) }}%</span>
                         </div>
                         <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div id="my-progress-bar" style="background: #10b981; height: 100%; transition: width 0.3s ease;" data-progress="{{ $myProgress }}"></div>
+                            <div id="my-progress-bar"
+                                style="background: #10b981; height: 100%; transition: width 0.3s ease;"
+                                data-progress="{{ $myProgress }}"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Partner's Tasks -->
                 <div style="margin-bottom: 24px;">
-                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #374151;">{{ $partner->firstname }}'s Tasks</h3>
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #374151;">{{
+                        $partner->firstname }}'s Tasks</h3>
                     <div id="partner-tasks">
                         @forelse($partnerTasks as $task)
-                            <div class="task-item" data-task-id="{{ $task->id }}" style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                    <input type="checkbox" {{ $task->completed ? 'checked' : '' }} disabled style="width: 16px; height: 16px;">
-                                    <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
-                                    
-                                    <!-- Verification Status Badge -->
-                                    @if($task->completed)
-                                        @if($task->verified)
-                                            <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">✓ Verified</span>
-                                        @else
-                                            <span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">⏳ Pending Verification</span>
-                                        @endif
-                                    @endif
-                                </div>
-                                @if($task->description)
-                                    <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description }}</div>
+                        <div class="task-item" data-task-id="{{ $task->id }}"
+                            style="margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <input type="checkbox" {{ $task->completed ? 'checked' : '' }} disabled style="width:
+                                16px; height: 16px;">
+                                <span
+                                    style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{
+                                    $task->title }}</span>
+
+                                <!-- Verification Status Badge -->
+                                @if($task->completed)
+                                @if($task->verified)
+                                <span
+                                    style="background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">✓
+                                    Verified</span>
+                                @else
+                                <span
+                                    style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">⏳
+                                    Pending Verification</span>
                                 @endif
-                                
-                                <!-- Verification Notes -->
-                                @if($task->verified && $task->verification_notes)
-                                    <div style="font-size: 0.875rem; color: #059669; margin-left: 24px; margin-top: 4px; font-style: italic;">
-                                        <strong>Verification:</strong> {{ $task->verification_notes }}
-                                    </div>
-                                @endif
-                                
-                                <!-- Verification Actions -->
-                                @if($task->completed && !$task->verified && $task->created_by == auth()->id())
-                                    <div style="margin-top: 8px; margin-left: 24px;">
-                                        <button class="verify-btn" data-task-id="{{ $task->id }}" data-task-title="{{ $task->title }}" data-verify="true"
-                                                style="background: #10b981; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 8px;">
-                                            ✓ Verify
-                                        </button>
-                                        <button class="verify-btn" data-task-id="{{ $task->id }}" data-task-title="{{ $task->title }}" data-verify="false"
-                                                style="background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
-                                            ✗ Reject
-                                        </button>
-                                    </div>
                                 @endif
                             </div>
+                            @if($task->description)
+                            <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description
+                                }}</div>
+                            @endif
+
+                            <!-- Verification Notes -->
+                            @if($task->verified && $task->verification_notes)
+                            <div
+                                style="font-size: 0.875rem; color: #059669; margin-left: 24px; margin-top: 4px; font-style: italic;">
+                                <strong>Verification:</strong> {{ $task->verification_notes }}
+                            </div>
+                            @endif
+
+                            <!-- Verification Actions -->
+                            @if($task->completed && !$task->verified && $task->created_by == auth()->id())
+                            <div style="margin-top: 8px; margin-left: 24px;">
+                                <button class="verify-btn" data-task-id="{{ $task->id }}"
+                                    data-task-title="{{ $task->title }}" data-verify="true"
+                                    style="background: #10b981; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 8px;">
+                                    ✓ Verify
+                                </button>
+                                <button class="verify-btn" data-task-id="{{ $task->id }}"
+                                    data-task-title="{{ $task->title }}" data-verify="false"
+                                    style="background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                                    ✗ Reject
+                                </button>
+                            </div>
+                            @endif
+                        </div>
                         @empty
-                            <div style="color: #6b7280; font-size: 0.875rem; text-align: center; padding: 16px;">No tasks assigned to {{ $partner->firstname }}</div>
+                        <div style="color: #6b7280; font-size: 0.875rem; text-align: center; padding: 16px;">No tasks
+                            assigned to {{ $partner->firstname }}</div>
                         @endforelse
                     </div>
-                    
+
                     <!-- Partner's Progress -->
                     <div style="margin-top: 16px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 0.875rem; color: #6b7280;">Progress</span>
-                            <span id="partner-progress-text" style="font-size: 0.875rem; font-weight: 600;" data-progress="{{ round($partnerProgress) }}">{{ round($partnerProgress) }}%</span>
+                            <span id="partner-progress-text" style="font-size: 0.875rem; font-weight: 600;"
+                                data-progress="{{ round($partnerProgress) }}">{{ round($partnerProgress) }}%</span>
                         </div>
                         <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div id="partner-progress-bar" style="background: #3b82f6; height: 100%; transition: width 0.3s ease;" data-progress="{{ $partnerProgress }}"></div>
+                            <div id="partner-progress-bar"
+                                style="background: #3b82f6; height: 100%; transition: width 0.3s ease;"
+                                data-progress="{{ $partnerProgress }}"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Skill Learning Status -->
-                <div style="margin-bottom: 24px; padding: 16px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px;">
-                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #0c4a6e;">🎓 Skill Learning Progress</h3>
+                <div
+                    style="margin-bottom: 24px; padding: 16px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px;">
+                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #0c4a6e;">🎓 Skill
+                        Learning Progress</h3>
                     <div id="skill-learning-status">
                         <div style="text-align: center; color: #6b7280; font-size: 0.875rem;">
                             Loading skill learning status...
                         </div>
                     </div>
                     <div id="complete-session-section" style="margin-top: 16px; display: none;">
-                        <button onclick="completeSession()" id="complete-session-btn" 
-                                style="width: 100%; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <button onclick="completeSession()" id="complete-session-btn"
+                            style="width: 100%; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
                             ✅ Complete Session & Learn Skills
                         </button>
                     </div>
                 </div>
 
                 <!-- Add Task Button -->
-                <button onclick="showAddTaskModal()" style="width: 100%; background: #1e40af; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <button onclick="showAddTaskModal()"
+                    style="width: 100%; background: #1e40af; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     + Add Task
                 </button>
             </div>
@@ -623,55 +710,87 @@
     </div>
 
     <!-- Footer -->
-        <div style="background: #f3f4f6; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb;">
-            <div style="font-size: 0.875rem; color: #6b7280;">
-                <div>Session started: {{ \Carbon\Carbon::parse($trade->start_date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($trade->start_date)->format('g:i A') }}</div>
-                <div>Current time: <span id="current-time">{{ now()->format('g:i A') }}</span> • Duration: <span id="session-duration">0 minutes</span></div>
-                <div>Status: <span id="session-status" style="color: #10b981; font-weight: 600;">🟢 Active</span> • Tasks: <span id="task-count">0</span></div>
+    <div
+        style="background: #f3f4f6; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb;">
+        <div style="font-size: 0.875rem; color: #6b7280;">
+            <div>Session started: {{ \Carbon\Carbon::parse($trade->start_date)->format('M d, Y') }} at {{
+                \Carbon\Carbon::parse($trade->start_date)->format('g:i A') }}</div>
+            <div>Current time: <span id="current-time">{{ now()->format('g:i A') }}</span> • Duration: <span
+                    id="session-duration">0 minutes</span></div>
+            <div>Status: <span id="session-status" style="color: #10b981; font-weight: 600;">🟢 Active</span> • Tasks:
+                <span id="task-count">0</span>
             </div>
-            <button onclick="endSession()" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">End Session</button>
         </div>
+        <button onclick="endSession()"
+            style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">End
+            Session</button>
+    </div>
 </div>
 
 <!-- Add Task Modal -->
-<div id="add-task-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;" onclick="handleModalClick(event)">
-    <div style="background: white; padding: 24px; border-radius: 8px; width: 400px; max-width: 90%;" onclick="event.stopPropagation()">
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px;">Add Task for {{ $partner->firstname }}</h3>
+<div id="add-task-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;"
+    onclick="handleModalClick(event)">
+    <div style="background: white; padding: 24px; border-radius: 8px; width: 400px; max-width: 90%;"
+        onclick="event.stopPropagation()">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px;">Add Task</h3>
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Assign Task To</label>
+            <select id="task-assignee" required
+                style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <option value="{{ $partner->id }}">{{ $partner->firstname }} {{ $partner->lastname }}</option>
+                <option value="{{ Auth::id() }}">Myself</option>
+            </select>
+        </div>
         <form id="add-task-form">
             <div style="margin-bottom: 16px;">
                 <label style="display: block; margin-bottom: 4px; font-weight: 500;">Task Title</label>
-                <input type="text" id="task-title" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <input type="text" id="task-title" required
+                    style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
             </div>
             <div style="margin-bottom: 16px;">
                 <label style="display: block; margin-bottom: 4px; font-weight: 500;">Description (Optional)</label>
-                <textarea id="task-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; resize: vertical;"></textarea>
+                <textarea id="task-description" rows="3"
+                    style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; resize: vertical;"></textarea>
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" onclick="hideAddTaskModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
-                <button type="submit" style="padding: 8px 16px; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Task</button>
+                <button type="button" onclick="hideAddTaskModal()"
+                    style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="submit"
+                    style="padding: 8px 16px; background: #1e40af; color: white; border: none; border-radius: 4px; cursor: pointer;">Add
+                    Task</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Task Verification Modal -->
-<div id="verification-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;" onclick="handleVerificationModalClick(event)">
-    <div style="background: white; border-radius: 8px; padding: 24px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #374151;" id="verification-modal-title">Verify Task</h3>
+<div id="verification-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;"
+    onclick="handleVerificationModalClick(event)">
+    <div style="background: white; border-radius: 8px; padding: 24px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;"
+        onclick="event.stopPropagation()">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #374151;"
+            id="verification-modal-title">Verify Task</h3>
         <form id="verification-form">
             <input type="hidden" id="verification-task-id" name="task_id">
             <input type="hidden" id="verification-verified" name="verified">
-            
+
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 8px;">Verification Notes (Optional)</label>
-                <textarea id="verification-notes" name="verification_notes" 
-                          style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.875rem; resize: vertical; min-height: 80px;"
-                          placeholder="Add any feedback or notes about the task completion..."></textarea>
+                <label
+                    style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 8px;">Verification
+                    Notes (Optional)</label>
+                <textarea id="verification-notes" name="verification_notes"
+                    style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.875rem; resize: vertical; min-height: 80px;"
+                    placeholder="Add any feedback or notes about the task completion..."></textarea>
             </div>
-            
+
             <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button type="button" onclick="hideVerificationModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
-                <button type="submit" id="verification-submit-btn" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: 500;">Verify Task</button>
+                <button type="button" onclick="hideVerificationModal()"
+                    style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="submit" id="verification-submit-btn"
+                    style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: 500;">Verify
+                    Task</button>
             </div>
         </form>
     </div>
@@ -683,7 +802,7 @@
 </form>
 
 <script>
-// Laravel Echo is already initialized in bootstrap.js
+    // Laravel Echo is already initialized in bootstrap.js
 // We'll use it to listen for events
 
         // Debug information
@@ -977,12 +1096,43 @@ function addMessageToChat(message, senderName, timestamp, isOwn, tempId = null) 
     const messageText = typeof message === 'string' ? message : message.message;
     const messageTime = timestamp || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     
-    messageDiv.innerHTML = `
-        <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
-            <div style="margin-bottom: 4px; word-break: break-word; line-height: 1.4;">${messageText}</div>
-            <div style="font-size: 0.75rem; opacity: 0.8;">${messageTime}</div>
-        </div>
-    `;
+    // Check if message contains image or video
+    let messageContent = '';
+    if (messageText.includes('[IMAGE:') && messageText.includes(']')) {
+        const fileName = messageText.match(/\[IMAGE:(.+?)\]/)[1];
+        messageContent = `
+            <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
+                <div style="margin-bottom: 8px;">
+                    <img src="${window.tempImageData || '#'}" alt="${fileName}" style="max-width: 200px; max-height: 200px; border-radius: 8px; object-fit: cover;" onerror="this.style.display='none'">
+                </div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">${fileName}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">${messageTime}</div>
+            </div>
+        `;
+    } else if (messageText.includes('[VIDEO:') && messageText.includes(']')) {
+        const fileName = messageText.match(/\[VIDEO:(.+?)\]/)[1];
+        messageContent = `
+            <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
+                <div style="margin-bottom: 8px;">
+                    <video controls style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                        <source src="${window.tempVideoData || '#'}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">${fileName}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">${messageTime}</div>
+            </div>
+        `;
+    } else {
+        messageContent = `
+            <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
+                <div style="margin-bottom: 4px; word-break: break-word; line-height: 1.4;">${messageText}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">${messageTime}</div>
+            </div>
+        `;
+    }
+    
+    messageDiv.innerHTML = messageContent;
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1311,6 +1461,7 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
     
     const title = document.getElementById('task-title').value;
     const description = document.getElementById('task-description').value;
+    const assignedTo = document.getElementById('task-assignee').value;
     
     fetch('{{ route("chat.create-task", $trade->id) }}', {
         method: 'POST',
@@ -1321,7 +1472,7 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
         body: JSON.stringify({
             title: title,
             description: description,
-            assigned_to: window.partnerId
+            assigned_to: assignedTo
         })
     })
     .then(response => response.json())
@@ -1333,6 +1484,7 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
             // Clear form
             document.getElementById('task-title').value = '';
             document.getElementById('task-description').value = '';
+            document.getElementById('task-assignee').value = '{{ $partner->id }}';
         } else {
             showError('Failed to create task: ' + (data.error || 'Unknown error'));
         }
@@ -1383,27 +1535,35 @@ document.getElementById('verification-form').addEventListener('submit', function
 });
 
 function addTaskToUI(task) {
-    const partnerTasksContainer = document.getElementById('partner-tasks');
+    // Determine which container to add the task to based on who it's assigned to
+    const isAssignedToMe = task.assigned_to == window.authUserId;
+    const container = isAssignedToMe ? document.getElementById('my-tasks') : document.getElementById('partner-tasks');
+    
     const taskDiv = document.createElement('div');
     taskDiv.className = 'task-item';
     taskDiv.setAttribute('data-task-id', task.id);
     taskDiv.style.cssText = 'margin-bottom: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;';
     
+    const checkboxHtml = isAssignedToMe 
+        ? `<input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" style="width: 16px; height: 16px;">`
+        : `<input type="checkbox" disabled style="width: 16px; height: 16px;">`;
+    
     taskDiv.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <input type="checkbox" disabled style="width: 16px; height: 16px;">
+            ${checkboxHtml}
             <span style="font-weight: 500;">${task.title}</span>
+            ${task.completed ? '<span style="color: #10b981; font-size: 0.75rem; margin-left: auto;">✓ Completed</span>' : ''}
         </div>
         ${task.description ? `<div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">${task.description}</div>` : ''}
     `;
     
     // Remove the "No tasks" message if it exists
-    const noTasksMessage = partnerTasksContainer.querySelector('div[style*="text-align: center"]');
+    const noTasksMessage = container.querySelector('div[style*="text-align: center"]');
     if (noTasksMessage) {
         noTasksMessage.remove();
     }
     
-    partnerTasksContainer.appendChild(taskDiv);
+    container.appendChild(taskDiv);
 }
 
 function updateTaskInUI(task) {
@@ -1906,14 +2066,14 @@ async function startVideoCall() {
         document.getElementById('call-timer').style.display = 'block';
         callTimer = setInterval(updateCallTimer, 1000);
         
-        // Set connection timeout (30 seconds)
+        // Set connection timeout (45 seconds) - increased for better reliability
         let connectionTimeout = setTimeout(() => {
             if (isCallActive && peerConnection && peerConnection.connectionState !== 'connected') {
                 console.warn('Connection timeout - ending call');
                 document.getElementById('video-status').textContent = 'Connection timeout. Please try again.';
                 endVideoCall();
             }
-        }, 30000);
+        }, 45000);
         
         // Clear timeout when connection is established
         const originalOnConnectionStateChange = peerConnection.onconnectionstatechange;
@@ -1968,10 +2128,13 @@ async function initializePeerConnection() {
     // Handle ICE candidates
     peerConnection.onicecandidate = async (event) => {
         if (event.candidate) {
-            console.log('ICE candidate generated:', event.candidate.type, event.candidate.protocol);
+            console.log('ICE candidate generated:', event.candidate.type, event.candidate.protocol, event.candidate.address);
             // Only send ICE candidates if we have a valid call setup
             if (currentCallId && otherUserId) {
-                await sendIceCandidate(event.candidate);
+                // Send ICE candidate in background without blocking
+                sendIceCandidate(event.candidate).catch(error => {
+                    console.warn('ICE candidate send failed (non-critical):', error);
+                });
             } else {
                 console.warn('Skipping ICE candidate - call not properly initialized', {
                     currentCallId: currentCallId,
@@ -2032,24 +2195,33 @@ async function initializePeerConnection() {
 // Signaling functions
 async function sendVideoCallOffer(offer) {
     try {
-        const response = await fetch(`{{ route('video-call.offer', $trade->id) }}`, {
+        // Generate absolute URL for production compatibility
+        const baseUrl = window.location.origin;
+        const url = baseUrl + '/chat/{{ $trade->id }}/video-call/offer';
+        console.log('Offer URL:', url);
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 offer: offer,
                 callId: currentCallId
-            })
+            }),
+            credentials: 'same-origin' // Important for CORS
         });
         
         if (!response.ok) {
-            throw new Error('Failed to send offer');
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
-        console.log('Offer sent successfully');
+        const result = await response.json();
+        console.log('Offer sent successfully:', result);
     } catch (error) {
         console.error('Error sending offer:', error);
         document.getElementById('video-status').textContent = 'Error sending call. Please try again.';
@@ -2058,25 +2230,34 @@ async function sendVideoCallOffer(offer) {
 
 async function sendVideoCallAnswer(answer) {
     try {
-        const response = await fetch(`{{ route('video-call.answer', $trade->id) }}`, {
+        // Generate absolute URL for production compatibility
+        const baseUrl = window.location.origin;
+        const url = baseUrl + '/chat/{{ $trade->id }}/video-call/answer';
+        console.log('Answer URL:', url);
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 answer: answer,
                 callId: currentCallId,
                 toUserId: otherUserId
-            })
+            }),
+            credentials: 'same-origin' // Important for CORS
         });
         
         if (!response.ok) {
-            throw new Error('Failed to send answer');
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
-        console.log('Answer sent successfully');
+        const result = await response.json();
+        console.log('Answer sent successfully:', result);
     } catch (error) {
         console.error('Error sending answer:', error);
     }
@@ -2098,18 +2279,25 @@ async function sendIceCandidate(candidate, retryCount = 0) {
 
         console.log('Sending ICE candidate to user:', otherUserId, 'for call:', currentCallId);
         
-        const response = await fetch(`{{ route('video-call.ice-candidate', $trade->id) }}`, {
+        // Generate absolute URL for production compatibility
+        const baseUrl = window.location.origin;
+        const url = baseUrl + '/chat/{{ $trade->id }}/video-call/ice-candidate';
+        console.log('ICE candidate URL:', url);
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 candidate: candidate,
                 callId: currentCallId,
                 toUserId: otherUserId
-            })
+            }),
+            credentials: 'same-origin' // Important for CORS
         });
         
         if (!response.ok) {
@@ -2117,7 +2305,8 @@ async function sendIceCandidate(candidate, retryCount = 0) {
             throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
-        console.log('ICE candidate sent successfully');
+        const result = await response.json();
+        console.log('ICE candidate sent successfully:', result);
         return true;
         
     } catch (error) {
@@ -2140,17 +2329,32 @@ async function sendIceCandidate(candidate, retryCount = 0) {
 async function endVideoCall() {
     if (currentCallId) {
         try {
-            await fetch(`{{ route('video-call.end', $trade->id) }}`, {
+            // Generate absolute URL for production compatibility
+            const baseUrl = window.location.origin;
+            const url = baseUrl + '/chat/{{ $trade->id }}/video-call/end';
+            console.log('End call URL:', url);
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     callId: currentCallId
-                })
+                }),
+                credentials: 'same-origin' // Important for CORS
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('Call ended successfully:', result);
         } catch (error) {
             console.error('Error ending call:', error);
         }
@@ -2334,6 +2538,34 @@ function debugWebRTCConnection() {
 
 // Add debug function to window for console access
 window.debugWebRTC = debugWebRTCConnection;
+
+// Additional debug function for video call troubleshooting
+function debugVideoCallStatus() {
+    console.log('🔍 Video Call Debug Status:');
+    console.log('- Current Call ID:', currentCallId);
+    console.log('- Other User ID:', otherUserId);
+    console.log('- Is Call Active:', isCallActive);
+    console.log('- Is Initiator:', isInitiator);
+    console.log('- Local Stream:', localStream ? 'Available' : 'Not Available');
+    console.log('- Remote Stream:', remoteStream ? 'Available' : 'Not Available');
+    console.log('- Peer Connection:', peerConnection ? 'Active' : 'Not Active');
+    
+    if (peerConnection) {
+        console.log('- Connection State:', peerConnection.connectionState);
+        console.log('- ICE Connection State:', peerConnection.iceConnectionState);
+        console.log('- ICE Gathering State:', peerConnection.iceGatheringState);
+        console.log('- Signaling State:', peerConnection.signalingState);
+    }
+    
+    console.log('- Window Location:', window.location.href);
+    console.log('- Base URL:', window.location.origin);
+    console.log('- Trade ID:', window.tradeId);
+    console.log('- Auth User ID:', window.authUserId);
+    console.log('- Partner ID:', window.partnerId);
+}
+
+// Add to window for console access
+window.debugVideoCallStatus = debugVideoCallStatus;
 
 function handleVideoCallEnd(data) {
     console.log('Handling video call end');
@@ -2752,6 +2984,65 @@ function initializeProgressBars() {
         partnerProgressBar.style.width = progress + '%';
         partnerProgressText.textContent = Math.round(progress) + '%';
     }
+}
+
+// ===== FILE UPLOAD FUNCTIONALITY =====
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showError('Image file is too large. Please select an image smaller than 10MB.');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            sendImageMessage(e.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function handleVideoUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        if (file.size > 50 * 1024 * 1024) { // 50MB limit
+            showError('Video file is too large. Please select a video smaller than 50MB.');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            sendVideoMessage(e.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function sendImageMessage(imageData, fileName) {
+    const message = `[IMAGE:${fileName}]`;
+    const messageInput = document.getElementById('message-input');
+    messageInput.value = message;
+    
+    // Store the image data temporarily for sending
+    window.tempImageData = imageData;
+    window.tempFileName = fileName;
+    
+    // Send the message
+    sendMessage(message);
+}
+
+function sendVideoMessage(videoData, fileName) {
+    const message = `[VIDEO:${fileName}]`;
+    const messageInput = document.getElementById('message-input');
+    messageInput.value = message;
+    
+    // Store the video data temporarily for sending
+    window.tempVideoData = videoData;
+    window.tempFileName = fileName;
+    
+    // Send the message
+    sendMessage(message);
 }
 
 // ===== EMOJI PICKER FUNCTIONALITY =====

@@ -122,6 +122,16 @@ class VideoCallController extends Controller
             'toUserId' => 'required|integer'
         ]);
         
+        // Additional validation for ICE candidate structure
+        if (!isset($request->candidate['candidate']) || !isset($request->candidate['sdpMid']) || !isset($request->candidate['sdpMLineIndex'])) {
+            Log::warning('Invalid ICE candidate structure', [
+                'candidate' => $request->candidate,
+                'user_id' => $user->id,
+                'trade_id' => $trade->id
+            ]);
+            return response()->json(['error' => 'Invalid ICE candidate format'], 400);
+        }
+        
         try {
             // Verify the target user exists and is part of the trade
             $targetUser = \App\Models\User::find($request->toUserId);
