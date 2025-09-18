@@ -72,6 +72,14 @@ class Skill extends Model
     }
 
     /**
+     * Get the users that have this skill.
+     */
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_skills', 'skill_id', 'user_id', 'skill_id', 'id');
+    }
+
+    /**
      * Scope to find skills by normalized name (case-insensitive, space-normalized)
      *
      * @param \Illuminate\Database\Eloquent\Builder $query

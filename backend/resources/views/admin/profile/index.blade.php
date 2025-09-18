@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Laravel') }} - Admin</title>
+    <title>{{ config('app.name', 'Laravel') }} - Admin Profile</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -22,7 +22,7 @@
         </div>
         
         <nav class="sidebar-nav">
-            <a href="{{ route('admin.dashboard') }}" class="nav-item active">
+            <a href="{{ route('admin.dashboard') }}" class="nav-item">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
                 </svg>
@@ -81,17 +81,10 @@
         <!-- Header -->
         <div class="admin-header">
             <div class="header-left">
-                <h1 class="page-title">Overview</h1>
-                <p class="page-subtitle">Dashboard overview and key metrics</p>
+                <h1 class="page-title">Profile</h1>
+                <p class="page-subtitle">Manage your admin profile and settings</p>
             </div>
             <div class="header-right">
-                <div class="time-range-selector">
-                    <select class="time-range-dropdown">
-                        <option value="7">Last 7 days</option>
-                        <option value="30">Last 30 days</option>
-                        <option value="90">Last 90 days</option>
-                    </select>
-                </div>
                 <div class="notifications" x-data="{ open: false }">
                     <div class="notification-icon" @click="open = !open">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,149 +189,110 @@
             </div>
         </div>
 
-        <!-- Dashboard Content -->
+        <!-- Profile Content -->
         <div class="dashboard-content">
-            <!-- Key Metrics Row -->
-            <div class="metrics-row">
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['totalUsers']['value'] }}</div>
-                        <div class="metric-label">Total Users</div>
-                        <div class="metric-change {{ $stats['totalUsers']['changeType'] }}">
-                            {{ $stats['totalUsers']['change'] >= 0 ? '+' : '' }}{{ $stats['totalUsers']['change'] }}% vs last week
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            <div class="profile-container">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar-section">
+                        <div class="profile-avatar">
+                            @if($user->photo && file_exists(storage_path('app/public/' . $user->photo)))
+                                <img src="{{ asset('storage/' . $user->photo) }}" alt="Profile Photo" class="avatar-image">
+                            @else
+                                <div class="avatar-fallback">{{ substr($user->firstname, 0, 1) }}{{ substr($user->lastname, 0, 1) }}</div>
+                            @endif
+                        </div>
+                        <div class="profile-info">
+                            <h2 class="profile-name">{{ $user->name }}</h2>
+                            <p class="profile-role">Administrator</p>
+                            <p class="profile-email">{{ $user->email }}</p>
                         </div>
                     </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ $user->created_at->format('M Y') }}</div>
+                            <div class="stat-label">Member Since</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ $user->is_verified ? 'Verified' : 'Pending' }}</div>
+                            <div class="stat-label">Status</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['activeUsers']['value'] }}</div>
-                        <div class="metric-label">Active Users</div>
-                        <div class="metric-change {{ $stats['activeUsers']['changeType'] }}">
-                            {{ $stats['activeUsers']['change'] >= 0 ? '+' : '' }}{{ $stats['activeUsers']['change'] }}% vs last week
-                        </div>
+                <!-- Profile Form -->
+                <div class="profile-form-section">
+                    <div class="form-header">
+                        <h3 class="form-title">Edit Profile</h3>
+                        <p class="form-subtitle">Update your personal information and profile settings</p>
                     </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
-                        </svg>
-                    </div>
-                </div>
 
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['totalSkills']['value'] }}</div>
-                        <div class="metric-label">Total Skills</div>
-                        <div class="metric-change {{ $stats['totalSkills']['changeType'] }}">
-                            {{ $stats['totalSkills']['change'] >= 0 ? '+' : '' }}{{ $stats['totalSkills']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+                    <form method="POST" action="{{ route('admin.profile.update') }}" enctype="multipart/form-data" class="profile-form">
+                        @csrf
+                        @method('PUT')
 
-            <!-- Additional Metrics and Popular Skills Row -->
-            <div class="content-row">
-                <div class="left-column">
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <div class="metric-value">{{ $stats['skillExchanges']['value'] }}</div>
-                            <div class="metric-label">Skill Exchanges</div>
-                            <div class="metric-change {{ $stats['skillExchanges']['changeType'] }}">
-                                {{ $stats['skillExchanges']['change'] >= 0 ? '+' : '' }}{{ $stats['skillExchanges']['change'] }}% vs last week
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="firstname" class="form-label">First Name</label>
+                                <input type="text" id="firstname" name="firstname" value="{{ old('firstname', $user->firstname) }}" class="form-input" required>
+                                @error('firstname')
+                                    <span class="form-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="middlename" class="form-label">Middle Name</label>
+                                <input type="text" id="middlename" name="middlename" value="{{ old('middlename', $user->middlename) }}" class="form-input">
+                                @error('middlename')
+                                    <span class="form-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastname" class="form-label">Last Name</label>
+                                <input type="text" id="lastname" name="lastname" value="{{ old('lastname', $user->lastname) }}" class="form-input" required>
+                                @error('lastname')
+                                    <span class="form-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" name="username" value="{{ old('username', $user->username) }}" class="form-input" required>
+                                @error('username')
+                                    <span class="form-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" class="form-input" required>
+                                @error('email')
+                                    <span class="form-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="photo" class="form-label">Profile Photo</label>
+                                <input type="file" id="photo" name="photo" accept="image/*" class="form-input">
+                                <p class="form-help">Upload a new profile photo (JPG, PNG, GIF - Max 2MB)</p>
+                                @error('photo')
+                                    <span class="form-error">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
-                        <div class="metric-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
-                            </svg>
-                        </div>
-                    </div>
 
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <div class="metric-value">${{ number_format($stats['monthlyRevenue']['value']) }}</div>
-                            <div class="metric-label">Monthly Revenue</div>
-                            <div class="metric-change {{ $stats['monthlyRevenue']['changeType'] }}">
-                                {{ $stats['monthlyRevenue']['change'] >= 0 ? '+' : '' }}{{ $stats['monthlyRevenue']['change'] }}% vs last month
-                            </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Cancel</a>
                         </div>
-                        <div class="metric-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="1" x2="12" y2="23"/>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="right-column">
-                    <div class="popular-skills-card">
-                        <h3 class="card-title">Popular Skills</h3>
-                        <div class="skills-list">
-                            @forelse($popularSkills as $skill)
-                            <div class="skill-item">
-                                <div class="skill-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                                    </svg>
-                                </div>
-                                <div class="skill-info">
-                                    <div class="skill-name">{{ $skill->name }}</div>
-                                    <div class="skill-category">{{ $skill->category }}</div>
-                                    <div class="skill-users">{{ $skill->user_count }} users</div>
-                                </div>
-                                <div class="skill-change {{ $skill->changeType }}">
-                                    {{ $skill->change >= 0 ? '+' : '' }}{{ $skill->change }}%
-                                </div>
-                            </div>
-                            @empty
-                            <div class="no-skills">No skills data available</div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="recent-activity-card">
-                <h3 class="card-title">Recent Activity</h3>
-                <div class="activity-list">
-                    @forelse($recentActivity as $activity)
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12,6 12,12 16,14"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-title">{{ $activity['title'] }}</div>
-                            <div class="activity-meta">
-                                <span class="activity-time">{{ $activity['time'] }}</span>
-                                <span class="activity-role">{{ $activity['role'] }}</span>
-                            </div>
-                        </div>
-                    </div>
-            @empty
-                    <div class="no-activity">No recent activity</div>
-            @endforelse
+                    </form>
                 </div>
             </div>
         </div>
@@ -346,5 +300,258 @@
 </div>
 
 @include('admin.dashboard-styles')
+<style>
+/* Profile Specific Styles */
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #e5e7eb;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-fallback {
+    width: 100%;
+    height: 100%;
+    background: #8b5cf6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+}
+
+.profile-role {
+    font-size: 14px;
+    color: #8b5cf6;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+}
+
+.profile-email {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 32px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profile-form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    margin-bottom: 32px;
+}
+
+.form-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+}
+
+.form-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.profile-form {
+    max-width: 600px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group:last-child {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a202c;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input[type="file"] {
+    padding: 8px 16px;
+}
+
+.form-help {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.form-error {
+    font-size: 12px;
+    color: #ef4444;
+    margin-top: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+.alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #a7f3d0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        gap: 24px;
+        text-align: center;
+    }
+    
+    .profile-stats {
+        justify-content: center;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
 </body>
 </html>

@@ -163,7 +163,7 @@
         </div>
 
         <!-- Skills data for JavaScript -->
-        <script type="application/json" id="skills-data">{{ json_encode($skills->toArray()) }}</script>
+        <div id="skills-data" data-skills='{!! json_encode($skills->toArray(), JSON_HEX_APOS | JSON_HEX_QUOT) !!}' style="display: none;"></div>
 
         <style>
         .skill-checkbox {
@@ -201,8 +201,21 @@
             
             // Get skills data from the data attribute
             const skillsDataElement = document.getElementById('skills-data');
-            const allSkills = JSON.parse(skillsDataElement.textContent);
+            let allSkills = [];
             let selectedSkills = [];
+            
+            try {
+                if (skillsDataElement && skillsDataElement.dataset.skills) {
+                    allSkills = JSON.parse(skillsDataElement.dataset.skills);
+                    console.log('Skills loaded successfully:', allSkills.length, 'skills');
+                } else {
+                    console.error('Skills data element not found');
+                }
+            } catch (error) {
+                console.error('Error parsing skills JSON:', error);
+                console.log('Raw skills data:', skillsDataElement ? skillsDataElement.dataset.skills : 'Element not found');
+                skillsContainer.innerHTML = '<p class="text-red-500 text-sm">Error loading skills data. Please refresh the page.</p>';
+            }
 
             categorySelect.addEventListener('change', function() {
                 const selectedCategory = this.value;

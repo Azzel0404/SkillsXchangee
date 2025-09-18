@@ -23,6 +23,21 @@ class TradeController extends Controller
         return view('trades.create', compact('user', 'skills'));
     }
 
+    public function show(Trade $trade)
+    {
+        $user = Auth::user();
+        
+        // Check if user can view this trade
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Admin users cannot access user trading functionality.');
+        }
+        
+        // Load trade with related data
+        $trade->load(['offeringUser', 'offeringSkill', 'lookingSkill']);
+        
+        return view('trades.show', compact('trade', 'user'));
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -344,7 +359,7 @@ class TradeController extends Controller
             ->limit(50)
             ->get()
             ->map(function($notification) {
-                $notification->data = json_decode($notification->data, true);
+                $notification->data = is_string($notification->data) ? json_decode($notification->data, true) : $notification->data;
                 return $notification;
             });
         return view('trades.notifications', compact('notifications'));

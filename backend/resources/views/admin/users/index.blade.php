@@ -22,13 +22,13 @@
         </div>
         
         <nav class="sidebar-nav">
-            <a href="{{ route('admin.dashboard') }}" class="nav-item active">
+            <a href="{{ route('admin.dashboard') }}" class="nav-item">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
                 </svg>
                 <span>Overview</span>
             </a>
-            <a href="{{ route('admin.users.index') }}" class="nav-item">
+            <a href="{{ route('admin.users.index') }}" class="nav-item active">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
@@ -81,17 +81,10 @@
         <!-- Header -->
         <div class="admin-header">
             <div class="header-left">
-                <h1 class="page-title">Overview</h1>
-                <p class="page-subtitle">Dashboard overview and key metrics</p>
+                <h1 class="page-title">Users</h1>
+                <p class="page-subtitle">Manage all registered users</p>
             </div>
             <div class="header-right">
-                <div class="time-range-selector">
-                    <select class="time-range-dropdown">
-                        <option value="7">Last 7 days</option>
-                        <option value="30">Last 30 days</option>
-                        <option value="90">Last 90 days</option>
-                    </select>
-                </div>
                 <div class="notifications" x-data="{ open: false }">
                     <div class="notification-icon" @click="open = !open">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,149 +189,117 @@
             </div>
         </div>
 
-        <!-- Dashboard Content -->
+        <!-- Users Content -->
         <div class="dashboard-content">
-            <!-- Key Metrics Row -->
-            <div class="metrics-row">
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['totalUsers']['value'] }}</div>
-                        <div class="metric-label">Total Users</div>
-                        <div class="metric-change {{ $stats['totalUsers']['changeType'] }}">
-                            {{ $stats['totalUsers']['change'] >= 0 ? '+' : '' }}{{ $stats['totalUsers']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
+            <!-- User Statistics Cards -->
+            <div class="user-stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
                     </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['activeUsers']['value'] }}</div>
-                        <div class="metric-label">Active Users</div>
-                        <div class="metric-change {{ $stats['activeUsers']['changeType'] }}">
-                            {{ $stats['activeUsers']['change'] >= 0 ? '+' : '' }}{{ $stats['activeUsers']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
-                        </svg>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ $users->total() }}</div>
+                        <div class="stat-label">Total Users</div>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['totalSkills']['value'] }}</div>
-                        <div class="metric-label">Total Skills</div>
-                        <div class="metric-change {{ $stats['totalSkills']['changeType'] }}">
-                            {{ $stats['totalSkills']['change'] >= 0 ? '+' : '' }}{{ $stats['totalSkills']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
+                <div class="stat-card">
+                    <div class="stat-icon verified">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
                         </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ $users->where('is_verified', true)->count() }}</div>
+                        <div class="stat-label">Verified Users</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ $users->where('is_verified', false)->count() }}</div>
+                        <div class="stat-label">Pending Approval</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Additional Metrics and Popular Skills Row -->
-            <div class="content-row">
-                <div class="left-column">
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <div class="metric-value">{{ $stats['skillExchanges']['value'] }}</div>
-                            <div class="metric-label">Skill Exchanges</div>
-                            <div class="metric-change {{ $stats['skillExchanges']['changeType'] }}">
-                                {{ $stats['skillExchanges']['change'] >= 0 ? '+' : '' }}{{ $stats['skillExchanges']['change'] }}% vs last week
-                            </div>
-                        </div>
-                        <div class="metric-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
-                            </svg>
-                        </div>
+            <div class="users-table-card">
+                <div class="table-header">
+                    <div class="table-title-section">
+                        <h3 class="card-title">All Users</h3>
+                        <p class="table-subtitle">Manage user accounts and approvals</p>
                     </div>
-
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <div class="metric-value">${{ number_format($stats['monthlyRevenue']['value']) }}</div>
-                            <div class="metric-label">Monthly Revenue</div>
-                            <div class="metric-change {{ $stats['monthlyRevenue']['changeType'] }}">
-                                {{ $stats['monthlyRevenue']['change'] >= 0 ? '+' : '' }}{{ $stats['monthlyRevenue']['change'] }}% vs last month
-                            </div>
-                        </div>
-                        <div class="metric-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="1" x2="12" y2="23"/>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                            </svg>
-                        </div>
+                    <div class="table-actions">
+                        <input type="text" placeholder="Search users..." class="search-input">
                     </div>
                 </div>
-
-                <div class="right-column">
-                    <div class="popular-skills-card">
-                        <h3 class="card-title">Popular Skills</h3>
-                        <div class="skills-list">
-                            @forelse($popularSkills as $skill)
-                            <div class="skill-item">
-                                <div class="skill-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                                    </svg>
-                                </div>
-                                <div class="skill-info">
-                                    <div class="skill-name">{{ $skill->name }}</div>
-                                    <div class="skill-category">{{ $skill->category }}</div>
-                                    <div class="skill-users">{{ $skill->user_count }} users</div>
-                                </div>
-                                <div class="skill-change {{ $skill->changeType }}">
-                                    {{ $skill->change >= 0 ? '+' : '' }}{{ $skill->change }}%
-                                </div>
-                            </div>
+                
+                <div class="table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>NAME</th>
+                                <th>USERNAME</th>
+                                <th>EMAIL</th>
+                                <th>SKILL</th>
+                                <th>STATUS</th>
+                                <th>PHOTO</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($users as $user)
+                            <tr>
+                                <td>
+                                    <div class="user-name-cell">
+                                        <div class="user-name">{{ $user->name }}</div>
+                                        <div class="user-role">{{ $user->role }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ $user->username }}</td>
+                                <td>{{ $user->email }}</td>
+                                <td>{{ optional($user->skill)->name ?? '—' }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ $user->is_verified ? 'verified' : 'pending' }}">
+                                        {{ $user->is_verified ? 'Verified' : 'Pending' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($user->photo && file_exists(storage_path('app/public/' . $user->photo)))
+                                        <img src="{{ asset('storage/' . $user->photo) }}" alt="User Photo" class="user-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="user-avatar-fallback" style="display: none;">{{ substr($user->firstname, 0, 1) }}{{ substr($user->lastname, 0, 1) }}</div>
+                                    @else
+                                        <div class="user-avatar-fallback">{{ substr($user->firstname, 0, 1) }}{{ substr($user->lastname, 0, 1) }}</div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ route('admin.user.show', $user->id) }}" class="btn btn-view">View</a>
+                                    </div>
+                                </td>
+                            </tr>
                             @empty
-                            <div class="no-skills">No skills data available</div>
+                            <tr>
+                                <td colspan="7" class="no-data">No users found</td>
+                            </tr>
                             @endforelse
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="recent-activity-card">
-                <h3 class="card-title">Recent Activity</h3>
-                <div class="activity-list">
-                    @forelse($recentActivity as $activity)
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12,6 12,12 16,14"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-title">{{ $activity['title'] }}</div>
-                            <div class="activity-meta">
-                                <span class="activity-time">{{ $activity['time'] }}</span>
-                                <span class="activity-role">{{ $activity['role'] }}</span>
-                            </div>
-                        </div>
-                    </div>
-            @empty
-                    <div class="no-activity">No recent activity</div>
-            @endforelse
+                
+                <div class="table-pagination">
+                    {{ $users->links() }}
                 </div>
             </div>
         </div>
@@ -346,5 +307,284 @@
 </div>
 
 @include('admin.dashboard-styles')
+<style>
+/* User Statistics Cards */
+.user-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.stat-icon.verified {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.stat-icon.pending {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #64748b;
+}
+
+/* Table Title Section */
+.table-title-section {
+    flex: 1;
+}
+
+.table-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+}
+
+/* Table Updates */
+.users-table-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 300px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    text-align: left;
+    padding: 16px 12px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.users-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.user-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: lowercase;
+}
+
+.user-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+    display: block;
+    background: #f3f4f6;
+}
+
+.user-avatar-fallback {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: #e5e7eb;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+}
+
+.no-photo {
+    color: #9ca3af;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.user-name {
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.user-skill {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.role-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.role-admin {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.role-user {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-verified {
+    background: #059669;
+    color: white;
+}
+
+.status-pending {
+    background: #f59e0b;
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-view {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #2563eb;
+}
+
+.btn-approve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-approve:hover {
+    background: #059669;
+}
+
+.no-data {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 40px;
+}
+
+.table-pagination {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .user-stats-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+}
+</style>
 </body>
 </html>

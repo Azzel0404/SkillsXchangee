@@ -176,6 +176,31 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Debug route for skills
+Route::get('/debug-skills', function () {
+    $skills = \App\Models\Skill::all();
+    return response()->json([
+        'count' => $skills->count(),
+        'skills' => $skills->toArray(),
+        'categories' => $skills->groupBy('category')->keys()->toArray()
+    ]);
+});
+
+// Debug route for trades
+Route::get('/debug-trades', function () {
+    $trades = \App\Models\Trade::with(['offeringUser', 'offeringSkill', 'lookingSkill'])->get();
+    return response()->json([
+        'count' => $trades->count(),
+        'trades' => $trades->toArray()
+    ]);
+});
+
+// Test route for trade view
+Route::get('/test-trade/{trade}', function (\App\Models\Trade $trade) {
+    $user = auth()->user();
+    return view('trades.test', compact('trade', 'user'));
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
@@ -256,10 +281,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware('user.only')->group(function () {
         Route::get('/trades/create', [\App\Http\Controllers\TradeController::class, 'create'])->name('trades.create');
         Route::post('/trades', [\App\Http\Controllers\TradeController::class, 'store'])->name('trades.store');
+        
+        // Specific routes must come before parameterized routes
         Route::get('/trades/matches', [\App\Http\Controllers\TradeController::class, 'matches'])->name('trades.matches');
         Route::get('/trades/requests', [\App\Http\Controllers\TradeController::class, 'requests'])->name('trades.requests');
         Route::get('/trades/ongoing', [\App\Http\Controllers\TradeController::class, 'ongoing'])->name('trades.ongoing');
         Route::get('/trades/notifications', [\App\Http\Controllers\TradeController::class, 'notify'])->name('trades.notifications');
+        
+        // Parameterized route must come last
+        Route::get('/trades/{trade}', [\App\Http\Controllers\TradeController::class, 'show'])->name('trades.show');
         
         // Trade request actions
         Route::post('/trades/{trade}/request', [\App\Http\Controllers\TradeController::class, 'requestTrade'])->name('trades.request');
@@ -287,14 +317,30 @@ Route::middleware('auth')->group(function () {
     
     // Admin functionality (moved from /admin to main dashboard) - Restricted to admin users only
     Route::middleware('admin')->group(function () {
+        // Main dashboard
         Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+        
+        // Admin tabs
+        Route::get('/admin/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
         Route::get('/admin/skills', [AdminController::class, 'skillsIndex'])->name('admin.skills.index');
+        Route::get('/admin/exchanges', [AdminController::class, 'exchangesIndex'])->name('admin.exchanges.index');
+        Route::get('/admin/reports', [AdminController::class, 'reportsIndex'])->name('admin.reports.index');
+        Route::get('/admin/messages', [AdminController::class, 'messagesIndex'])->name('admin.messages.index');
+        Route::get('/admin/settings', [AdminController::class, 'settingsIndex'])->name('admin.settings.index');
+        
+        // Skills management
         Route::get('/admin/skills/create', [AdminController::class, 'createSkill'])->name('admin.skill.create');
         Route::post('/admin/skills', [AdminController::class, 'storeSkill'])->name('admin.skill.store');
         Route::delete('/admin/skills/{skill}', [AdminController::class, 'deleteSkill'])->name('admin.skill.delete');
+        
+        // User management
         Route::patch('/admin/approve/{user}', [AdminController::class, 'approve'])->name('admin.approve');
         Route::patch('/admin/reject/{user}', [AdminController::class, 'reject'])->name('admin.reject');
         Route::get('/admin/user/{user}', [AdminController::class, 'show'])->name('admin.user.show');
+
+        // Admin profile
+        Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile');
+        Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
 });
 

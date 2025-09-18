@@ -37,7 +37,7 @@
                         </div>
                         @if($t->preferred_days)
                             <div style="color:#6b7280; font-size:0.9rem; margin-bottom:4px;">
-                                📆 Days: {{ implode(', ', is_array($t->preferred_days) ? $t->preferred_days : json_decode($t->preferred_days, true)) }}
+                                📆 Days: {{ implode(', ', $t->preferred_days) }}
                             </div>
                         @endif
                     </div>

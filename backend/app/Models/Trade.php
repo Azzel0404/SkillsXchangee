@@ -20,9 +20,15 @@ class Trade extends Model
         'end_date' => 'date',
     ];
 
+    // The user who created this trade (offering a skill)
     public function user() { return $this->belongsTo(User::class); }
+    public function offeringUser() { return $this->belongsTo(User::class, 'user_id'); }
+    
+    // Skills
     public function offeringSkill() { return $this->belongsTo(Skill::class, 'offering_skill_id', 'skill_id'); }
     public function lookingSkill() { return $this->belongsTo(Skill::class, 'looking_skill_id', 'skill_id'); }
+    
+    // Related models
     public function requests() { return $this->hasMany(TradeRequest::class); }
     public function messages() { return $this->hasMany(TradeMessage::class); }
     public function tasks() { return $this->hasMany(TradeTask::class); }

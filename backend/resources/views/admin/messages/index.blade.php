@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Laravel') }} - Admin</title>
+    <title>{{ config('app.name', 'Laravel') }} - Admin Messages</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -22,7 +22,7 @@
         </div>
         
         <nav class="sidebar-nav">
-            <a href="{{ route('admin.dashboard') }}" class="nav-item active">
+            <a href="{{ route('admin.dashboard') }}" class="nav-item">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
                 </svg>
@@ -60,7 +60,7 @@
                 </svg>
                 <span>Reports</span>
             </a>
-            <a href="{{ route('admin.messages.index') }}" class="nav-item">
+            <a href="{{ route('admin.messages.index') }}" class="nav-item active">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
@@ -81,17 +81,10 @@
         <!-- Header -->
         <div class="admin-header">
             <div class="header-left">
-                <h1 class="page-title">Overview</h1>
-                <p class="page-subtitle">Dashboard overview and key metrics</p>
+                <h1 class="page-title">Messages</h1>
+                <p class="page-subtitle">System messages and notifications</p>
             </div>
             <div class="header-right">
-                <div class="time-range-selector">
-                    <select class="time-range-dropdown">
-                        <option value="7">Last 7 days</option>
-                        <option value="30">Last 30 days</option>
-                        <option value="90">Last 90 days</option>
-                    </select>
-                </div>
                 <div class="notifications" x-data="{ open: false }">
                     <div class="notification-icon" @click="open = !open">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,149 +189,46 @@
             </div>
         </div>
 
-        <!-- Dashboard Content -->
+        <!-- Messages Content -->
         <div class="dashboard-content">
-            <!-- Key Metrics Row -->
-            <div class="metrics-row">
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['totalUsers']['value'] }}</div>
-                        <div class="metric-label">Total Users</div>
-                        <div class="metric-change {{ $stats['totalUsers']['changeType'] }}">
-                            {{ $stats['totalUsers']['change'] >= 0 ? '+' : '' }}{{ $stats['totalUsers']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                    </div>
+            <div class="messages-card">
+                <div class="messages-header">
+                    <h3 class="card-title">System Messages</h3>
+                    <button class="btn btn-primary">Send Message</button>
                 </div>
-
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['activeUsers']['value'] }}</div>
-                        <div class="metric-label">Active Users</div>
-                        <div class="metric-change {{ $stats['activeUsers']['changeType'] }}">
-                            {{ $stats['activeUsers']['change'] >= 0 ? '+' : '' }}{{ $stats['activeUsers']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-content">
-                        <div class="metric-value">{{ $stats['totalSkills']['value'] }}</div>
-                        <div class="metric-label">Total Skills</div>
-                        <div class="metric-change {{ $stats['totalSkills']['changeType'] }}">
-                            {{ $stats['totalSkills']['change'] >= 0 ? '+' : '' }}{{ $stats['totalSkills']['change'] }}% vs last week
-                        </div>
-                    </div>
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Additional Metrics and Popular Skills Row -->
-            <div class="content-row">
-                <div class="left-column">
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <div class="metric-value">{{ $stats['skillExchanges']['value'] }}</div>
-                            <div class="metric-label">Skill Exchanges</div>
-                            <div class="metric-change {{ $stats['skillExchanges']['changeType'] }}">
-                                {{ $stats['skillExchanges']['change'] >= 0 ? '+' : '' }}{{ $stats['skillExchanges']['change'] }}% vs last week
-                            </div>
-                        </div>
-                        <div class="metric-icon">
+                
+                <div class="messages-list">
+                    @forelse($messages as $message)
+                    <div class="message-item">
+                        <div class="message-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                             </svg>
                         </div>
-                    </div>
-
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <div class="metric-value">${{ number_format($stats['monthlyRevenue']['value']) }}</div>
-                            <div class="metric-label">Monthly Revenue</div>
-                            <div class="metric-change {{ $stats['monthlyRevenue']['changeType'] }}">
-                                {{ $stats['monthlyRevenue']['change'] >= 0 ? '+' : '' }}{{ $stats['monthlyRevenue']['change'] }}% vs last month
+                        <div class="message-content">
+                            <div class="message-title">{{ $message['title'] ?? 'System Message' }}</div>
+                            <div class="message-text">{{ $message['content'] ?? 'No content available' }}</div>
+                            <div class="message-meta">
+                                <span class="message-time">{{ $message['time'] ?? 'Unknown' }}</span>
+                                <span class="message-type">{{ $message['type'] ?? 'System' }}</span>
                             </div>
                         </div>
-                        <div class="metric-icon">
+                        <div class="message-actions">
+                            <button class="btn btn-sm btn-view">View</button>
+                            <button class="btn btn-sm btn-delete">Delete</button>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="no-messages">
+                        <div class="no-messages-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="1" x2="12" y2="23"/>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                             </svg>
                         </div>
+                        <h4>No Messages</h4>
+                        <p>There are no system messages at this time.</p>
                     </div>
-                </div>
-
-                <div class="right-column">
-                    <div class="popular-skills-card">
-                        <h3 class="card-title">Popular Skills</h3>
-                        <div class="skills-list">
-                            @forelse($popularSkills as $skill)
-                            <div class="skill-item">
-                                <div class="skill-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                                    </svg>
-                                </div>
-                                <div class="skill-info">
-                                    <div class="skill-name">{{ $skill->name }}</div>
-                                    <div class="skill-category">{{ $skill->category }}</div>
-                                    <div class="skill-users">{{ $skill->user_count }} users</div>
-                                </div>
-                                <div class="skill-change {{ $skill->changeType }}">
-                                    {{ $skill->change >= 0 ? '+' : '' }}{{ $skill->change }}%
-                                </div>
-                            </div>
-                            @empty
-                            <div class="no-skills">No skills data available</div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="recent-activity-card">
-                <h3 class="card-title">Recent Activity</h3>
-                <div class="activity-list">
-                    @forelse($recentActivity as $activity)
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12,6 12,12 16,14"/>
-                            </svg>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-title">{{ $activity['title'] }}</div>
-                            <div class="activity-meta">
-                                <span class="activity-time">{{ $activity['time'] }}</span>
-                                <span class="activity-role">{{ $activity['role'] }}</span>
-                            </div>
-                        </div>
-                    </div>
-            @empty
-                    <div class="no-activity">No recent activity</div>
-            @endforelse
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -346,5 +236,171 @@
 </div>
 
 @include('admin.dashboard-styles')
+<style>
+.messages-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.messages-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.btn-view {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #2563eb;
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+}
+
+.messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.message-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.message-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.message-icon {
+    width: 40px;
+    height: 40px;
+    background: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.message-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.message-content {
+    flex: 1;
+}
+
+.message-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.message-text {
+    color: #6b7280;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.message-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.message-type {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.message-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.no-messages {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.no-messages-icon {
+    width: 64px;
+    height: 64px;
+    background: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    color: #9ca3af;
+}
+
+.no-messages-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.no-messages h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+}
+
+.no-messages p {
+    margin: 0;
+    color: #6b7280;
+}
+</style>
 </body>
 </html>
