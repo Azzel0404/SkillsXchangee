@@ -152,7 +152,7 @@
     <body class="font-sans text-gray-900 antialiased">
         <div class="auth-container">
             <div class="auth-logo">
-                SX
+                <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
 
             <div class="auth-card">
