@@ -21,6 +21,8 @@
     @if(isset($cssFile))
       <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
     @else
+      {{-- Fallback CSS for production --}}
+      <link rel="stylesheet" href="{{ asset('css/fallback.css') }}">
       {{-- SkillsXchange style CSS matching the images --}}
       <style>
         * { box-sizing: border-box; }
@@ -41,7 +43,7 @@
           background: #fff; 
           border-bottom: 1px solid #e9ecef;
         }
-        header h3 { 
+        .logo { 
           color: #007bff; 
           margin: 0; 
           font-size: 1.5rem; 
@@ -184,7 +186,7 @@
         /* Mobile Responsive */
         @media (max-width: 768px) {
           header { padding: 1rem; }
-          header h3 { font-size: 1.25rem; }
+          .logo { font-size: 1.25rem; }
           header nav { gap: 0.5rem; }
           header nav a { padding: 0.375rem 0.75rem; font-size: 0.875rem; }
           .hero { padding: 4rem 1rem; min-height: 60vh; }
@@ -218,9 +220,7 @@
 </head>
 <body>
   <header>
-    <a href="/" style="text-decoration: none;">
-      <h3>SkillsXchange</h3>
-    </a>
+    <a href="/" class="logo">SkillsXchange</a>
     <nav>
       <a href="{{ route('login') }}">Login</a>
       <a href="{{ route('register') }}" class="signup">Sign Up</a>

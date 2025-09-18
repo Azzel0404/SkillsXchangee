@@ -48,7 +48,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 
 # Build assets (skip if build fails)
-RUN npm run build || echo "Asset build failed, continuing without built assets"
+RUN npm run build || echo "Asset build failed, continuing with fallback CSS"
 
 # Application key will be generated at runtime in start.sh
 

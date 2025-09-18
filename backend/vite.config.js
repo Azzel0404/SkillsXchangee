@@ -20,10 +20,23 @@ export default defineConfig({
                 app: 'resources/css/app.css',
                 js: 'resources/js/app.js',
             },
+            output: {
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js',
+            },
         },
+        cssCodeSplit: false,
+        sourcemap: false,
+        minify: 'esbuild',
     },
     define: {
         'process.env.MIX_PUSHER_APP_KEY': JSON.stringify(process.env.VITE_PUSHER_APP_KEY),
         'process.env.MIX_PUSHER_APP_CLUSTER': JSON.stringify(process.env.VITE_PUSHER_APP_CLUSTER),
+    },
+    server: {
+        hmr: {
+            host: 'localhost',
+        },
     },
 });

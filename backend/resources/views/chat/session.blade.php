@@ -2,7 +2,14 @@
 
 @section('content')
 <script>
-    window.currentUserId = {{ auth()->id() }};
+    // Initialize global variables for the chat session
+    // These values are set by the server-side Blade template
+    window.currentUserId = parseInt('{{ auth()->id() }}');
+    window.tradeId = parseInt('{{ $trade->id }}');
+    window.authUserId = parseInt('{{ Auth::id() }}');
+    window.partnerId = parseInt('{{ $partner->id }}');
+    window.partnerName = '{{ addslashes(($partner->firstname ?? 'Unknown') . ' ' . ($partner->lastname ?? 'User')) }}';
+    window.initialMessageCount = parseInt('{{ $messages->count() }}');
 </script>
 <style>
 @keyframes pulse {
@@ -681,8 +688,8 @@
 
         // Debug information
         console.log('=== CHAT DEBUG INFO ===');
-        console.log('Trade ID:', {{ $trade->id }});
-        console.log('User ID:', {{ Auth::id() }});
+        console.log('Trade ID:', window.tradeId);
+        console.log('User ID:', window.authUserId);
         console.log('Laravel Echo available:', !!window.Echo);
         console.log('Pusher available:', !!window.Pusher);
         console.log('Current URL:', window.location.href);
@@ -720,7 +727,7 @@ if (window.Echo) {
         .listen('new-message', function(data) {
             console.log('Received new message event:', data);
             // Only add if it's not from the current user (to avoid duplicates)
-            if (data.message.sender_id !== {{ Auth::id() }}) {
+            if (data.message.sender_id !== window.authUserId) {
                 addMessageToChat(data.message, data.sender_name, data.timestamp, false);
             } else {
                 // For our own messages, just update the timestamp if needed
@@ -746,7 +753,7 @@ if (window.Echo) {
     window.Echo.channel('trade-{{ $trade->id }}')
         .listen('video-call-offer', async function(data) {
             console.log('Received video call offer:', data);
-            if (data.fromUserId !== {{ Auth::id() }}) {
+            if (data.fromUserId !== window.authUserId) {
                 await handleVideoCallOffer(data);
             }
         });
@@ -754,7 +761,7 @@ if (window.Echo) {
     window.Echo.channel('trade-{{ $trade->id }}')
         .listen('video-call-answer', async function(data) {
             console.log('Received video call answer:', data);
-            if (data.toUserId === {{ Auth::id() }}) {
+            if (data.toUserId === window.authUserId) {
                 await handleVideoCallAnswer(data);
             }
         });
@@ -762,7 +769,7 @@ if (window.Echo) {
     window.Echo.channel('trade-{{ $trade->id }}')
         .listen('video-call-ice-candidate', async function(data) {
             console.log('Received ICE candidate:', data);
-            if (data.toUserId === {{ Auth::id() }}) {
+            if (data.toUserId === window.authUserId) {
                 await handleIceCandidate(data);
             }
         });
@@ -770,7 +777,7 @@ if (window.Echo) {
     window.Echo.channel('trade-{{ $trade->id }}')
         .listen('video-call-end', function(data) {
             console.log('Received video call end:', data);
-            if (data.fromUserId !== {{ Auth::id() }}) {
+            if (data.fromUserId !== window.authUserId) {
                 handleVideoCallEnd(data);
             }
         });
@@ -1314,7 +1321,7 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
         body: JSON.stringify({
             title: title,
             description: description,
-            assigned_to: {{ $partner->id }}
+            assigned_to: window.partnerId
         })
     })
     .then(response => response.json())
@@ -1657,7 +1664,7 @@ let timeInterval = setInterval(function() {
 }, 1000);
 
 // Keep track of the last message count
-let lastMessageCount = {{ $messages->count() }};
+let lastMessageCount = window.initialMessageCount;
 
 // Check for new messages every 10 seconds (only if Laravel Echo is not working)
 if (!window.Echo) {
@@ -1679,7 +1686,7 @@ function checkForNewMessages() {
                         msg,
                         msg.sender.firstname + ' ' + msg.sender.lastname,
                         new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        msg.sender_id === {{ Auth::id() }}
+                        msg.sender_id === window.authUserId
                     );
                 });
             }
@@ -1860,14 +1867,14 @@ async function startVideoCall() {
     isInitiator = true;
     
     // Get the other user ID (partner)
-    otherUserId = {{ $partner->id ?? 'null' }};
+    otherUserId = window.partnerId;
     
-    console.log('Debug - Partner ID:', {{ $partner->id ?? 'null' }});
-    console.log('Debug - Partner name:', '{{ $partner->firstname ?? 'Unknown' }} {{ $partner->lastname ?? 'User' }}');
+    console.log('Debug - Partner ID:', window.partnerId);
+    console.log('Debug - Partner name:', window.partnerName);
     
     if (!otherUserId || otherUserId === 'null') {
         console.error('Unable to determine other user ID');
-        console.error('Partner ID:', {{ $partner->id ?? 'null' }});
+        console.error('Partner ID:', window.partnerId);
         document.getElementById('video-status').textContent = 'Error: Unable to start call. Please refresh the page.';
         return;
     }

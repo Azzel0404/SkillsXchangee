@@ -14,6 +14,11 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
+        {{-- Fallback CSS for production --}}
+        @if(app()->environment('production'))
+            <link rel="stylesheet" href="{{ asset('css/fallback.css') }}">
+        @endif
+        
         <!-- Clean minimalist styles for auth pages -->
         <style>
             .auth-container {
@@ -29,15 +34,13 @@
             .auth-logo {
                 width: 60px;
                 height: 60px;
-                background: #333;
+                background: #fff;
                 border-radius: 8px;
                 margin-bottom: 2rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: white;
-                font-weight: bold;
-                font-size: 1.5rem;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             }
             
             .auth-card {
@@ -144,7 +147,6 @@
                 .auth-logo {
                     width: 50px;
                     height: 50px;
-                    font-size: 1.25rem;
                 }
             }
         </style>

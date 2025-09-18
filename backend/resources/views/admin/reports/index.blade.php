@@ -215,7 +215,7 @@
                         <div class="bar-chart">
                             @foreach($userTrends as $date => $count)
                             <div class="chart-bar">
-                                <div class="bar" style="height: {{ $count > 0 ? ($count / max($userTrends) * 100) : 5 }}%"></div>
+                                <div class="bar" style="--bar-height: {{ $count > 0 ? round($count / max($userTrends) * 100, 1) : 5 }}%; height: var(--bar-height);"></div>
                                 <div class="bar-label">{{ $date }}</div>
                                 <div class="bar-value">{{ $count }}</div>
                             </div>
@@ -230,7 +230,7 @@
                         <div class="bar-chart">
                             @foreach($tradeTrends as $date => $count)
                             <div class="chart-bar">
-                                <div class="bar trades" style="height: {{ $count > 0 ? ($count / max($tradeTrends) * 100) : 5 }}%"></div>
+                                <div class="bar trades" style="--bar-height: {{ $count > 0 ? round($count / max($tradeTrends) * 100, 1) : 5 }}%; height: var(--bar-height);"></div>
                                 <div class="bar-label">{{ $date }}</div>
                                 <div class="bar-value">{{ $count }}</div>
                             </div>

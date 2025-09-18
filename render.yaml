@@ -4,7 +4,7 @@ services:
     env: php
     plan: free
     buildCommand: |
-      cd backend && composer install --optimize-autoloader --no-dev && npm install && npm run build
+      cd backend && composer install --optimize-autoloader --no-dev && npm install && npm run build || echo "Asset build failed, using fallback CSS"
     startCommand: cd backend && ./start.sh
     rootDir: backend
     healthCheckPath: /

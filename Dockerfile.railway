@@ -51,7 +51,7 @@ RUN npm install
 RUN mkdir -p public/build
 
 # Try to build assets, but don't fail if it doesn't work
-RUN npm run build 2>/dev/null || echo "Asset build skipped - backend-only deployment"
+RUN npm run build 2>/dev/null || echo "Asset build failed, using fallback CSS"
 
 # Application key will be generated at runtime in start.sh
 
