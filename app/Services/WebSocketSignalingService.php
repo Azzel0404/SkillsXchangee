@@ -27,6 +27,8 @@ class WebSocketSignalingService implements MessageComponentInterface
     public function onOpen(ConnectionInterface $conn)
     {
         $this->clients->attach($conn);
+        // Store a unique identifier for this connection
+        $conn->resourceId = uniqid('conn_', true);
         Log::info("New WebSocket connection: {$conn->resourceId}");
     }
 
