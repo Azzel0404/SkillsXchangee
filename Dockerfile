@@ -18,11 +18,35 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+<<<<<<< HEAD
 # Set working directory
 WORKDIR /var/www/html
 
 # Copy application files
 COPY . /var/www/html
+=======
+# Set working directory to backend
+WORKDIR /var/www/html
+
+# Copy only necessary backend files for Railway (API only)
+COPY backend/composer.json backend/composer.lock ./
+COPY backend/package.json backend/package-lock.json ./
+COPY backend/artisan ./
+COPY backend/start.sh ./
+COPY backend/app/ ./app/
+COPY backend/bootstrap/ ./bootstrap/
+COPY backend/config/ ./config/
+COPY backend/database/ ./database/
+COPY backend/public/ ./public/
+COPY backend/resources/ ./resources/
+COPY backend/routes/ ./routes/
+COPY backend/storage/ ./storage/
+# Copy Vite config files
+COPY backend/vite.config.js ./
+COPY backend/tailwind.config.js ./
+COPY backend/postcss.config.js ./
+# Dependencies will be installed fresh during build
+>>>>>>> 4314806ab9d4fdc3a9ccec4c29df8f889e22901c
 
 # Create basic .env file for build process
 RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false" > .env
@@ -31,8 +55,13 @@ RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nA
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install
 
+<<<<<<< HEAD
 # Copy public assets to ensure they're available
 RUN cp -r public/* /var/www/html/public/ || true
+=======
+# Build assets (skip if build fails)
+RUN npm run build || echo "Asset build failed, continuing with fallback CSS"
+>>>>>>> 4314806ab9d4fdc3a9ccec4c29df8f889e22901c
 
 # Application key will be generated at runtime in start.sh
 
