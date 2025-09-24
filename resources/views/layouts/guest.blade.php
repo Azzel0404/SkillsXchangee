@@ -178,6 +178,7 @@
         }
 
         @media (max-width: 768px) {
+
             .form-row,
             .form-row-triple {
                 grid-template-columns: 1fr;
@@ -249,7 +250,7 @@
 <body class="font-sans text-gray-900 antialiased">
     <div class="auth-container">
         <div class="auth-logo">
-            <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo"
+            <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="logo-medium"
                 style="width: 100%; height: 100%; object-fit: contain;">
         </div>
 

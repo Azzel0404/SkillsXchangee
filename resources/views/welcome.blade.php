@@ -3,14 +3,19 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>SkillsXchange - Trade Your Skills</title>
-  <meta name="description" content="Connect with students to trade skills and learn together. A peer-to-peer learning platform for skill exchange.">
-  
+  <meta name="description"
+    content="Connect with students to trade skills and learn together. A peer-to-peer learning platform for skill exchange.">
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   {{-- Try Vite first, fallback to built assets --}}
   @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -328,8 +333,15 @@
     }
 
     @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-20px);
+      }
     }
 
     /* Features Section */
@@ -518,13 +530,13 @@
       font-size: 1.5rem;
       font-weight: 800;
       color: var(--primary);
-        margin-bottom: 1rem;
-      }
+      margin-bottom: 1rem;
+    }
 
     .footer-text {
       color: var(--gray-400);
-        margin-bottom: 2rem;
-      }
+      margin-bottom: 2rem;
+    }
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
@@ -586,6 +598,7 @@
         opacity: 0;
         transform: translateY(30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -612,23 +625,23 @@
   <!-- Modern Header -->
   <header class="header" id="header">
     <div class="header-content">
-    <a href="/" class="logo">
-        <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="logo-image">
+      <a href="/" class="logo">
+        <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="logo-large">
         <span>SkillsXchange</span>
       </a>
-      
+
       <nav class="nav">
         <ul class="nav-links">
           <li><a href="#features">Features</a></li>
           <li><a href="#how-it-works">How it Works</a></li>
           <li><a href="#about">About</a></li>
         </ul>
-        
+
         <div class="nav-buttons">
           <a href="{{ route('login') }}" class="btn btn-outline">Login</a>
           <a href="{{ route('register') }}" class="btn btn-primary">Sign Up</a>
         </div>
-    </nav>
+      </nav>
     </div>
   </header>
 
@@ -640,25 +653,28 @@
           <span>✨</span>
           <span>Join 1000+ students already trading skills</span>
         </div>
-        
+
         <h1>Trade Your Skills.<br>Learn from Others.</h1>
-        <p>Connect with fellow students to exchange skills, learn together, and grow your expertise in a collaborative learning environment.</p>
-        
+        <p>Connect with fellow students to exchange skills, learn together, and grow your expertise in a collaborative
+          learning environment.</p>
+
         <div class="hero-buttons">
           <a href="{{ route('register') }}" class="btn btn-hero btn-hero-primary" id="getStartedBtn">Get Started</a>
           <a href="#how-it-works" class="btn btn-hero btn-hero-secondary">Learn More</a>
         </div>
       </div>
-      
+
       <div class="hero-visual">
         <div class="hero-card">
           <div style="text-align: center; color: white;">
             <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Skill Exchange in Action</h3>
             <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
-              <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem;">
+              <div
+                style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem;">
                 📚 Math Tutoring
               </div>
-              <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem;">
+              <div
+                style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem;">
                 🎨 Design Skills
               </div>
             </div>
@@ -675,68 +691,84 @@
       <div class="section-header">
         <span></span>
         <h2 class="section-title">Everything you need to trade skills</h2>
-        <p class="section-description">Our platform makes it easy to connect with students, exchange skills, and build meaningful learning relationships.</p>
+        <p class="section-description">Our platform makes it easy to connect with students, exchange skills, and build
+          meaningful learning relationships.</p>
       </div>
-      
+
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">Discover Skills</h3>
-          <p class="feature-description">Browse through a diverse range of skills offered by students. From academic subjects to creative arts, find exactly what you want to learn.</p>
+          <p class="feature-description">Browse through a diverse range of skills offered by students. From academic
+            subjects to creative arts, find exactly what you want to learn.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">Smart Matching</h3>
-          <p class="feature-description">Our intelligent system matches you with students who have complementary skills and similar learning goals for optimal skill exchanges.</p>
+          <p class="feature-description">Our intelligent system matches you with students who have complementary skills
+            and similar learning goals for optimal skill exchanges.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">Real-time Chat</h3>
-          <p class="feature-description">Communicate seamlessly with your skill exchange partners through our integrated chat system with video call capabilities.</p>
+          <p class="feature-description">Communicate seamlessly with your skill exchange partners through our integrated
+            chat system with video call capabilities.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">Trust & Reviews</h3>
-          <p class="feature-description">Build a reputation through honest reviews and ratings. Our community-driven trust system ensures quality skill exchanges.</p>
+          <p class="feature-description">Build a reputation through honest reviews and ratings. Our community-driven
+            trust system ensures quality skill exchanges.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">Flexible Scheduling</h3>
-          <p class="feature-description">Schedule your skill exchange sessions at times that work for both you and your partner. Learn at your own pace.</p>
+          <p class="feature-description">Schedule your skill exchange sessions at times that work for both you and your
+            partner. Learn at your own pace.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">Progress Tracking</h3>
-          <p class="feature-description">Track your learning progress and skill development. Set goals and celebrate achievements with your learning community.</p>
+          <p class="feature-description">Track your learning progress and skill development. Set goals and celebrate
+            achievements with your learning community.</p>
         </div>
       </div>
     </div>
@@ -750,36 +782,43 @@
         <h2 class="section-title">How it works</h2>
         <p class="section-description">Get started with skill trading in just a few simple steps.</p>
       </div>
-      
+
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
             </svg>
           </div>
           <h3 class="feature-title">1. Create Your Profile</h3>
-          <p class="feature-description">Sign up and create your student profile. List the skills you can teach and the skills you want to learn.</p>
+          <p class="feature-description">Sign up and create your student profile. List the skills you can teach and the
+            skills you want to learn.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">2. Find Your Match</h3>
-          <p class="feature-description">Browse available skills or search for specific topics. Find students whose skills complement your learning goals.</p>
+          <p class="feature-description">Browse available skills or search for specific topics. Find students whose
+            skills complement your learning goals.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+              </path>
             </svg>
           </div>
           <h3 class="feature-title">3. Start Learning</h3>
-          <p class="feature-description">Connect with your skill exchange partner, schedule sessions, and begin your collaborative learning journey.</p>
+          <p class="feature-description">Connect with your skill exchange partner, schedule sessions, and begin your
+            collaborative learning journey.</p>
         </div>
       </div>
     </div>
@@ -802,7 +841,7 @@
     <div class="footer-content">
       <div class="footer-logo">SkillsXchange</div>
       <p class="footer-text">Connecting students through skill exchange and collaborative learning.</p>
-    <p>&copy; {{ date('Y') }} SkillsXchange. All rights reserved.</p>
+      <p>&copy; {{ date('Y') }} SkillsXchange. All rights reserved.</p>
     </div>
   </footer>
 

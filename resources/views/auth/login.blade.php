@@ -5,17 +5,19 @@
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
-        <!-- Email -->
+        <!-- Username or Email -->
         <div class="form-group">
-            <label for="login" class="form-label">Email</label>
-            <input id="login" class="form-input" type="email" name="login" value="{{ old('login') }}" required autofocus autocomplete="email" />
+            <label for="login" class="form-label">Username or Email</label>
+            <input id="login" class="form-input" type="text" name="login" value="{{ old('login') }}" required autofocus
+                autocomplete="username" placeholder="Enter your username or email" />
             <x-input-error :messages="$errors->get('login')" class="mt-2" />
         </div>
 
         <!-- Password -->
         <div class="form-group">
             <label for="password" class="form-label">Password</label>
-            <input id="password" class="form-input" type="password" name="password" required autocomplete="current-password" />
+            <input id="password" class="form-input" type="password" name="password" required
+                autocomplete="current-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
@@ -28,9 +30,9 @@
         <div class="form-footer">
             <div class="form-footer-left">
                 @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
-                    </a>
+                <a href="{{ route('password.request') }}">
+                    {{ __('Forgot your password?') }}
+                </a>
                 @endif
             </div>
 

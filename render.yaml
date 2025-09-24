@@ -3,15 +3,8 @@ services:
     name: skillsxchangee
     env: php
     plan: free
-    buildCommand: |
-<<<<<<< HEAD
-      composer install --optimize-autoloader --no-dev && npm install && npm run build
-    startCommand: ./start.sh
-=======
-      cd backend && composer install --optimize-autoloader --no-dev && npm install && npm run build || echo "Asset build failed, using fallback CSS"
-    startCommand: cd backend && ./start.sh
-    rootDir: backend
->>>>>>> 4314806ab9d4fdc3a9ccec4c29df8f889e22901c
+    buildCommand: chmod +x build-render.sh && ./build-render.sh
+    startCommand: chmod +x start-render.sh && ./start-render.sh
     healthCheckPath: /
     envVars:
       - key: APP_NAME

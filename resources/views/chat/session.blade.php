@@ -1103,7 +1103,7 @@ function addMessageToChat(message, senderName, timestamp, isOwn, tempId = null) 
         messageContent = `
             <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
                 <div style="margin-bottom: 8px;">
-                    <img src="${window.tempImageData || '#'}" alt="${fileName}" style="max-width: 200px; max-height: 200px; border-radius: 8px; object-fit: cover;" onerror="this.style.display='none'">
+                    <img src="${window.tempImageData || '#'}" alt="${fileName}" class="chat-image" onerror="this.style.display='none'">
                 </div>
                 <div style="font-size: 0.75rem; opacity: 0.8;">${fileName}</div>
                 <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">${messageTime}</div>
