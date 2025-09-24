@@ -1,16 +1,9 @@
 [build]
 builder = "DOCKERFILE"
-<<<<<<< HEAD
 dockerfilePath = "Dockerfile"
 
 [deploy]
 healthcheckPath = "/"
-=======
-dockerfilePath = "Dockerfile.railway"
-
-[deploy]
-healthcheckPath = "/ping"
->>>>>>> 4314806ab9d4fdc3a9ccec4c29df8f889e22901c
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
