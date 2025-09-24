@@ -916,6 +916,60 @@ if (window.Echo) {
 } else {
     console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
     updateConnectionStatus('error');
+    
+    // Fallback: Use WebSocket directly for video calls
+    console.log('Initializing WebSocket fallback for video calls...');
+    initializeWebSocketFallback();
+}
+
+// WebSocket fallback for video calls when Pusher is not available
+function initializeWebSocketFallback() {
+    try {
+        // Use the WebSocket signaling service directly
+        const wsUrl = `wss://${window.location.hostname}:8080`;
+        window.videoWebSocket = new WebSocket(wsUrl);
+        
+        window.videoWebSocket.onopen = function() {
+            console.log('✅ WebSocket fallback connected for video calls');
+            updateConnectionStatus('connected');
+        };
+        
+        window.videoWebSocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            handleWebSocketVideoMessage(data);
+        };
+        
+        window.videoWebSocket.onclose = function() {
+            console.log('❌ WebSocket fallback disconnected');
+            updateConnectionStatus('disconnected');
+        };
+        
+        window.videoWebSocket.onerror = function(error) {
+            console.error('🚨 WebSocket fallback error:', error);
+            updateConnectionStatus('error');
+        };
+    } catch (error) {
+        console.error('Failed to initialize WebSocket fallback:', error);
+        updateConnectionStatus('error');
+    }
+}
+
+// Handle WebSocket video messages
+function handleWebSocketVideoMessage(data) {
+    switch (data.type) {
+        case 'video-call-offer':
+            handleVideoCallOffer(data);
+            break;
+        case 'video-call-answer':
+            handleVideoCallAnswer(data);
+            break;
+        case 'video-call-ice-candidate':
+            handleVideoCallIceCandidate(data);
+            break;
+        case 'video-call-end':
+            handleVideoCallEnd(data);
+            break;
+    }
 }
 
 // Connection status update function
@@ -1639,7 +1693,10 @@ function updateTaskInUI(task) {
 // Skill Learning Functions
 async function loadSkillLearningStatus() {
     try {
-        const response = await fetch('{{ route("chat.skill-learning-status", $trade->id) }}', {
+        // Ensure HTTPS URL
+        const url = '{{ route("chat.skill-learning-status", $trade->id) }}';
+        const httpsUrl = url.replace('http://', 'https://');
+        const response = await fetch(httpsUrl, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -1987,7 +2044,24 @@ async function initializeVideoChat() {
         });
         
         // Display local video
-        document.getElementById('local-video').srcObject = localStream;
+        const localVideo = document.getElementById('local-video');
+        if (localVideo) {
+            console.log('Setting up local video with stream:', localStream);
+            console.log('Local stream tracks:', localStream.getTracks());
+            localVideo.srcObject = localStream;
+            localVideo.muted = true; // Mute local video to prevent echo
+            localVideo.autoplay = true;
+            localVideo.playsInline = true;
+            localVideo.play().then(() => {
+                console.log('Local video started playing');
+            }).catch(e => {
+                console.log('Local video play error:', e);
+                // Try to play again after a short delay
+                setTimeout(() => {
+                    localVideo.play().catch(err => console.log('Retry play error:', err));
+                }, 1000);
+            });
+        }
         document.getElementById('local-status').textContent = 'Ready';
         document.getElementById('local-status').className = 'connection-status connected';
         
@@ -2118,8 +2192,24 @@ async function initializePeerConnection() {
     // Handle incoming tracks
     peerConnection.ontrack = (event) => {
         console.log('Received remote stream');
+        console.log('Remote stream tracks:', event.streams[0].getTracks());
         remoteStream = event.streams[0];
-        document.getElementById('remote-video').srcObject = remoteStream;
+        const remoteVideo = document.getElementById('remote-video');
+        if (remoteVideo) {
+            remoteVideo.srcObject = remoteStream;
+            remoteVideo.autoplay = true;
+            remoteVideo.playsInline = true;
+            remoteVideo.muted = false; // Allow audio for remote video
+            remoteVideo.play().then(() => {
+                console.log('Remote video started playing');
+            }).catch(e => {
+                console.log('Remote video play error:', e);
+                // Try to play again after a short delay
+                setTimeout(() => {
+                    remoteVideo.play().catch(err => console.log('Retry play error:', err));
+                }, 1000);
+            });
+        }
         document.getElementById('remote-status').textContent = 'Connected';
         document.getElementById('remote-status').className = 'connection-status connected';
         document.getElementById('video-status').textContent = 'Call connected! You can now see and hear each other.';
@@ -2188,6 +2278,16 @@ async function initializePeerConnection() {
             document.getElementById('video-status').textContent = 'Connection failed. Please check your network and try again.';
         } else if (peerConnection.iceConnectionState === 'connected') {
             console.log('ICE connection established');
+            document.getElementById('video-status').textContent = 'Call connected! You can now see and hear each other.';
+            // Ensure videos are playing
+            const localVideo = document.getElementById('local-video');
+            const remoteVideo = document.getElementById('remote-video');
+            if (localVideo && localVideo.srcObject) {
+                localVideo.play().catch(e => console.log('Local video play error:', e));
+            }
+            if (remoteVideo && remoteVideo.srcObject) {
+                remoteVideo.play().catch(e => console.log('Remote video play error:', e));
+            }
         }
     };
 }

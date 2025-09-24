@@ -23,13 +23,27 @@ import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'ap1',
-    wsHost: import.meta.env.VITE_PUSHER_HOST ?? `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
-    wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
-    wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-    forceTLS: import.meta.env.VITE_PUSHER_FORCE_TLS === 'true',
-    enabledTransports: ['ws', 'wss'],
-});
+// Initialize Echo with proper error handling
+try {
+    window.Echo = new Echo({
+        broadcaster: 'pusher',
+        key: import.meta.env.VITE_PUSHER_APP_KEY || 'your-pusher-key',
+        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1',
+        wsHost: import.meta.env.VITE_PUSHER_HOST || `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1'}.pusher.com`,
+        wsPort: import.meta.env.VITE_PUSHER_PORT || 80,
+        wssPort: import.meta.env.VITE_PUSHER_PORT || 443,
+        forceTLS: import.meta.env.VITE_PUSHER_FORCE_TLS === 'true' || true,
+        enabledTransports: ['ws', 'wss'],
+        authEndpoint: '/broadcasting/auth',
+        auth: {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+        },
+    });
+    
+    console.log('✅ Laravel Echo initialized successfully');
+} catch (error) {
+    console.error('❌ Failed to initialize Laravel Echo:', error);
+    window.Echo = null;
+}
