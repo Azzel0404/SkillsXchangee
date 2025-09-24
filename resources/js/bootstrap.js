@@ -25,18 +25,23 @@ window.Pusher = Pusher;
 
 // Initialize Echo with proper error handling
 try {
-    // Use free Pusher account for development
-    const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '5c02e54d01ca577ae77e';
-    const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1';
+    // Get Pusher configuration from environment or use defaults
+    const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || window.PUSHER_APP_KEY || '5c02e54d01ca577ae77e';
+    const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || window.PUSHER_APP_CLUSTER || 'ap1';
+    
+    console.log('🔧 Pusher Configuration:');
+    console.log('🔑 Key:', pusherKey);
+    console.log('🌐 Cluster:', pusherCluster);
+    console.log('📡 Environment Vars:', {
+        VITE_PUSHER_APP_KEY: import.meta.env.VITE_PUSHER_APP_KEY,
+        VITE_PUSHER_APP_CLUSTER: import.meta.env.VITE_PUSHER_APP_CLUSTER
+    });
     
     window.Echo = new Echo({
         broadcaster: 'pusher',
         key: pusherKey,
         cluster: pusherCluster,
-        wsHost: import.meta.env.VITE_PUSHER_HOST || `ws-${pusherCluster}.pusher.com`,
-        wsPort: import.meta.env.VITE_PUSHER_PORT || 80,
-        wssPort: import.meta.env.VITE_PUSHER_PORT || 443,
-        forceTLS: import.meta.env.VITE_PUSHER_FORCE_TLS === 'true' || true,
+        forceTLS: true,
         enabledTransports: ['ws', 'wss'],
         authEndpoint: '/broadcasting/auth',
         auth: {
@@ -47,9 +52,13 @@ try {
     });
     
     console.log('✅ Laravel Echo initialized successfully with Pusher');
-    console.log('🔑 Pusher Key:', pusherKey);
-    console.log('🌐 Pusher Cluster:', pusherCluster);
+    
+    // Test Pusher connection
+    if (window.Echo) {
+        console.log('🎉 Pusher connection established');
+    }
 } catch (error) {
     console.error('❌ Failed to initialize Laravel Echo:', error);
+    console.error('🔍 Error details:', error);
     window.Echo = null;
 }

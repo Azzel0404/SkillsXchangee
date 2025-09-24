@@ -20,6 +20,12 @@
     <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
+    <!-- Pusher Configuration -->
+    <script>
+        window.PUSHER_APP_KEY = '{{ env("VITE_PUSHER_APP_KEY", "5c02e54d01ca577ae77e") }}';
+        window.PUSHER_APP_CLUSTER = '{{ env("VITE_PUSHER_APP_CLUSTER", "ap1") }}';
+    </script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

@@ -1581,7 +1581,7 @@ document.getElementById('add-task-form').addEventListener('submit', function(e) 
     const description = document.getElementById('task-description').value;
     const assignedTo = document.getElementById('task-assignee').value;
     
-    fetch('{{ route("chat.create-task", $trade->id) }}', {
+    fetch('{{ route("chat.create-task", $trade->id) }}'.replace('http://', 'https://'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
