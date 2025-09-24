@@ -25,11 +25,15 @@ window.Pusher = Pusher;
 
 // Initialize Echo with proper error handling
 try {
+    // Use free Pusher account for development
+    const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY || '5c02e54d01ca577ae77e';
+    const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1';
+    
     window.Echo = new Echo({
         broadcaster: 'pusher',
-        key: import.meta.env.VITE_PUSHER_APP_KEY || 'your-pusher-key',
-        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1',
-        wsHost: import.meta.env.VITE_PUSHER_HOST || `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1'}.pusher.com`,
+        key: pusherKey,
+        cluster: pusherCluster,
+        wsHost: import.meta.env.VITE_PUSHER_HOST || `ws-${pusherCluster}.pusher.com`,
         wsPort: import.meta.env.VITE_PUSHER_PORT || 80,
         wssPort: import.meta.env.VITE_PUSHER_PORT || 443,
         forceTLS: import.meta.env.VITE_PUSHER_FORCE_TLS === 'true' || true,
@@ -42,7 +46,7 @@ try {
         },
     });
     
-    console.log('✅ Laravel Echo initialized successfully');
+    console.log('✅ Laravel Echo initialized successfully with Pusher');
 } catch (error) {
     console.error('❌ Failed to initialize Laravel Echo:', error);
     window.Echo = null;

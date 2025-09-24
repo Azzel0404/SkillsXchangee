@@ -20,14 +20,17 @@ class TradeTask extends Model
         'verified',
         'verified_at',
         'verified_by',
-        'verification_notes'
+        'verification_notes',
+        'priority',
+        'due_date'
     ];
 
     protected $casts = [
         'completed' => 'boolean',
         'completed_at' => 'datetime',
         'verified' => 'boolean',
-        'verified_at' => 'datetime'
+        'verified_at' => 'datetime',
+        'due_date' => 'datetime'
     ];
 
     public function trade()

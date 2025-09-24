@@ -1,90 +1,88 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="py-6 sm:py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-4 py-md-5">
+    <div class="container">
         <!-- Welcome Section -->
-        <div class="mb-6 sm:mb-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome back, {{ auth()->user()->firstname }}!
-            </h1>
-            <p class="text-sm sm:text-base text-gray-600">Here's what's happening with your skill trades today.</p>
+        <div class="mb-4 mb-md-5">
+            <h1 class="h2 fw-bold text-dark mb-2">Welcome back, {{ auth()->user()->firstname }}!</h1>
+            <p class="text-muted">Here's what's happening with your skill trades today.</p>
         </div>
 
         @if(auth()->user()->role === 'admin')
         <!-- Admin Stats Cards -->
-        <div class="dashboard-grid">
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
-                                    </path>
-                                </svg>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-users text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Total Users</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $stats['totalUsers'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Total Users</p>
+                                <h3 class="fw-bold mb-0">{{ $stats['totalUsers'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4"></path>
-                                </svg>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-check-circle text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Verified Users</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $stats['verifiedUsers'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Verified Users</p>
+                                <h3 class="fw-bold mb-0">{{ $stats['verifiedUsers'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-warning rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-clock text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Pending Users</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $stats['pendingUsers'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Pending Users</p>
+                                <h3 class="fw-bold mb-0">{{ $stats['pendingUsers'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6z"></path>
-                                </svg>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-info rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-exchange-alt text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Total Trades</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $stats['totalTrades'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Total Trades</p>
+                                <h3 class="fw-bold mb-0">{{ $stats['totalTrades'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -92,78 +90,78 @@
         </div>
         @else
         <!-- User Stats Cards -->
-        <div class="dashboard-grid">
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-check-circle text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Completed Sessions</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $userStats['completedSessions'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Completed Sessions</p>
+                                <h3 class="fw-bold mb-0">{{ $userStats['completedSessions'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-clock text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Ongoing Sessions</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $userStats['ongoingSessions'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Ongoing Sessions</p>
+                                <h3 class="fw-bold mb-0">{{ $userStats['ongoingSessions'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-warning rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-hourglass-half text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $userStats['pendingRequests'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Pending Requests</p>
+                                <h3 class="fw-bold mb-0">{{ $userStats['pendingRequests'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-danger rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-times-circle text-white"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">Declined Requests</p>
-                            <p class="text-2xl font-semibold text-gray-900">{{ $userStats['declinedRequests'] }}</p>
+                            <div class="ms-3">
+                                <p class="text-muted small mb-1">Declined Requests</p>
+                                <h3 class="fw-bold mb-0">{{ $userStats['declinedRequests'] }}</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -171,63 +169,100 @@
         </div>
         @endif
 
-        <!-- Quick Actions -->
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    @if(auth()->user()->role !== 'admin')
-                    <a href="{{ route('trades.create') }}"
-                        class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+        <!-- Expired Sessions -->
+        @if($expiredSessions->count() > 0)
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Expired Sessions ({{
+                    $expiredSessions->count() }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Session Expired!</strong> The following sessions have passed their scheduled time and are
+                    now marked as expired.
+                </div>
+                <div class="row g-3">
+                    @foreach($expiredSessions->take(3) as $session)
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    {{ $session->offeringSkill->name }} ↔ {{ $session->lookingSkill->name }}
+                                </h6>
+                                <p class="card-text small text-muted">
+                                    <strong>Ended:</strong> {{ $session->end_date ?
+                                    \Carbon\Carbon::parse($session->end_date)->format('M d, Y') : 'N/A' }}
+                                </p>
+                                <p class="card-text small text-muted">
+                                    <strong>Status:</strong> <span class="badge bg-warning">Expired</span>
+                                </p>
                             </div>
                         </div>
-                        <div class="ml-4">
-                            <h3 class="text-sm font-medium text-gray-900">Post a Trade</h3>
-                            <p class="text-sm text-gray-500">Create a new skill trade post</p>
-                        </div>
-                    </a>
+                    </div>
+                    @endforeach
+                </div>
+                @if($expiredSessions->count() > 3)
+                <div class="text-center mt-3">
+                    <small class="text-muted">And {{ $expiredSessions->count() - 3 }} more expired sessions...</small>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
 
-                    <a href="{{ route('trades.matches') }}"
-                        class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
+        <!-- Quick Actions -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 fw-bold text-dark mb-4">Quick Actions</h2>
+                <div class="row g-3">
+                    @if(auth()->user()->role !== 'admin')
+                    <div class="col-md-4">
+                        <a href="{{ route('trades.create') }}" class="text-decoration-none">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <div class="bg-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3"
+                                        style="width: 48px; height: 48px;">
+                                        <i class="fas fa-plus text-white"></i>
+                                    </div>
+                                    <h5 class="card-title text-dark">Post a Trade</h5>
+                                    <p class="card-text text-muted small">Create a new skill trade post</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-sm font-medium text-gray-900">Find Matches</h3>
-                            <p class="text-sm text-gray-500">Browse available trades</p>
-                        </div>
-                    </a>
+                        </a>
+                    </div>
+
+                    <div class="col-md-4">
+                        <a href="{{ route('trades.matches') }}" class="text-decoration-none">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <div class="bg-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3"
+                                        style="width: 48px; height: 48px;">
+                                        <i class="fas fa-search text-white"></i>
+                                    </div>
+                                    <h5 class="card-title text-dark">Find Matches</h5>
+                                    <p class="card-text text-muted small">Browse available trades</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
                     @endif
 
-                    <a href="{{ route('profile.edit') }}"
-                        class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
+                    <div class="col-md-4">
+                        <a href="{{ route('profile.edit') }}" class="text-decoration-none">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center">
+                                    <div class="bg-info rounded-3 d-inline-flex align-items-center justify-content-center mb-3"
+                                        style="width: 48px; height: 48px;">
+                                        <i class="fas fa-user-edit text-white"></i>
+                                    </div>
+                                    <h5 class="card-title text-dark">Update Profile</h5>
+                                    <p class="card-text text-muted small">Manage your skills and info</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-sm font-medium text-gray-900">Update Profile</h3>
-                            <p class="text-sm text-gray-500">Manage your skills and info</p>
-                        </div>
-                    </a>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

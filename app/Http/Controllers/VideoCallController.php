@@ -220,6 +220,33 @@ class VideoCallController extends Controller
     }
     
     /**
+     * Poll for video call messages (HTTP fallback)
+     */
+    public function pollMessages(Request $request, Trade $trade)
+    {
+        $user = Auth::user();
+        
+        // Verify user is part of this trade
+        if (!$this->isUserInTrade($user, $trade)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        try {
+            // For now, return empty messages
+            // In a real implementation, you would store messages in database/cache
+            // and retrieve them here
+            return response()->json([
+                'success' => true,
+                'messages' => []
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error polling video call messages: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to poll messages'], 500);
+        }
+    }
+    
+    /**
      * Get the other user in the trade
      */
     private function getOtherUserInTrade($user, $trade)

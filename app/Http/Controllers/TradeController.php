@@ -309,10 +309,23 @@ class TradeController extends Controller
     public function requests()
     {
         $user = Auth::user();
-        $incoming = TradeRequest::with('trade')
-            ->whereHas('trade', function($q) use ($user){ $q->where('user_id',$user->id); })
-            ->latest()->get();
-        $outgoing = TradeRequest::where('requester_id', $user->id)->latest()->get();
+        
+        // Get incoming requests (only pending ones for actions)
+        $incoming = TradeRequest::with(['trade', 'requester'])
+            ->whereHas('trade', function($q) use ($user){ 
+                $q->where('user_id',$user->id); 
+            })
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+            
+        // Get outgoing requests (pending and declined for user to see)
+        $outgoing = TradeRequest::with(['trade', 'trade.user'])
+            ->where('requester_id', $user->id)
+            ->whereIn('status', ['pending', 'declined'])
+            ->latest()
+            ->get();
+            
         return view('trades.requests', compact('incoming','outgoing'));
     }
 

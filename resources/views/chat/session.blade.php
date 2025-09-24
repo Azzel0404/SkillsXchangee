@@ -929,8 +929,11 @@ function initializeWebSocketFallback() {
         const endpoints = [
             `wss://${window.location.hostname}:8080`,
             `wss://${window.location.hostname}/ws`,
-            `ws://${window.location.hostname}:8080`,
-            `ws://${window.location.hostname}/ws`
+            // Only try WSS endpoints on HTTPS sites
+            ...(window.location.protocol === 'https:' ? [] : [
+                `ws://${window.location.hostname}:8080`,
+                `ws://${window.location.hostname}/ws`
+            ])
         ];
         
         let connected = false;
@@ -974,8 +977,9 @@ function initializeWebSocketFallback() {
         }
         
         if (!connected) {
-            console.log('⚠️ No WebSocket connection available, using HTTP fallback for signaling');
+            console.log('⚠️ No WebSocket connection available, using HTTP polling for signaling');
             updateConnectionStatus('http-fallback');
+            initializeHttpPolling();
         }
     } catch (error) {
         console.error('Failed to initialize WebSocket fallback:', error);
@@ -999,6 +1003,37 @@ function handleWebSocketVideoMessage(data) {
             handleVideoCallEnd(data);
             break;
     }
+}
+
+// HTTP polling for video call signaling when WebSocket is not available
+function initializeHttpPolling() {
+    console.log('Initializing HTTP polling for video call signaling...');
+    
+    // Poll for incoming video call messages every 2 seconds
+    window.videoCallPolling = setInterval(async () => {
+        try {
+            const response = await fetch(`/chat/{{ $trade->id }}/video-call/poll`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.messages && data.messages.length > 0) {
+                    data.messages.forEach(message => {
+                        handleWebSocketVideoMessage(message);
+                    });
+                }
+            }
+        } catch (error) {
+            console.log('HTTP polling error:', error);
+        }
+    }, 2000);
+    
+    console.log('HTTP polling initialized for video calls');
 }
 
 // Connection status update function

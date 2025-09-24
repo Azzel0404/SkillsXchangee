@@ -233,6 +233,15 @@ Route::middleware('auth')->group(function () {
             // Get all trades user is involved in
             $allUserTrades = $myTrades->merge($participatedTrades)->unique('id');
             
+            // Check for expired sessions and mark them as closed
+            $expiredSessions = collect();
+            foreach ($allUserTrades as $trade) {
+                if ($trade->status === 'active' && $trade->isExpired()) {
+                    $trade->update(['status' => 'closed']);
+                    $expiredSessions->push($trade);
+                }
+            }
+            
             // Categorize trades
             $completedSessions = $allUserTrades->where('status', 'completed');
             $ongoingSessions = $allUserTrades->where('status', 'active');
@@ -258,6 +267,7 @@ Route::middleware('auth')->group(function () {
             $userStats = [
                 'completedSessions' => $completedSessions->count(),
                 'ongoingSessions' => $ongoingSessions->count(),
+                'expiredSessions' => $expiredSessions->count(),
                 'pendingRequests' => $pendingRequests->count(),
                 'declinedRequests' => $declinedRequests->count(),
                 'pendingRequestsToMe' => $pendingRequestsToMe->count(),
@@ -266,6 +276,7 @@ Route::middleware('auth')->group(function () {
             return view('dashboard', compact(
                 'completedSessions', 
                 'ongoingSessions', 
+                'expiredSessions',
                 'pendingRequests', 
                 'declinedRequests', 
                 'pendingRequestsToMe',
@@ -308,11 +319,55 @@ Route::middleware('auth')->group(function () {
         Route::post('/chat/{trade}/complete-session', [\App\Http\Controllers\ChatController::class, 'completeSession'])->name('chat.complete-session');
         Route::get('/chat/{trade}/skill-learning-status', [\App\Http\Controllers\ChatController::class, 'getSkillLearningStatus'])->name('chat.skill-learning-status');
         
+        // Task management routes
+        Route::get('/tasks', [\App\Http\Controllers\TaskController::class, 'index'])->name('tasks.index');
+        Route::get('/tasks/create', [\App\Http\Controllers\TaskController::class, 'create'])->name('tasks.create');
+        Route::post('/tasks', [\App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store');
+        Route::get('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'show'])->name('tasks.show');
+        Route::get('/tasks/{task}/edit', [\App\Http\Controllers\TaskController::class, 'edit'])->name('tasks.edit');
+        Route::put('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'update'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy');
+        Route::patch('/tasks/{task}/toggle', [\App\Http\Controllers\TaskController::class, 'toggle'])->name('tasks.toggle');
+        
+        // API routes for task management
+        Route::get('/api/trades/{trade}/participants', function(\App\Models\Trade $trade) {
+            $user = auth()->user();
+            
+            // Check if user is part of this trade
+            if ($trade->user_id !== $user->id && 
+                !$trade->requests()->where('requester_id', $user->id)->where('status', 'accepted')->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
+            $participants = collect();
+            
+            // Add trade owner
+            $participants->push([
+                'id' => $trade->user_id,
+                'name' => $trade->user->firstname . ' ' . $trade->user->lastname
+            ]);
+            
+            // Add accepted requester
+            $acceptedRequest = $trade->requests()->where('status', 'accepted')->first();
+            if ($acceptedRequest) {
+                $participants->push([
+                    'id' => $acceptedRequest->requester_id,
+                    'name' => $acceptedRequest->requester->firstname . ' ' . $acceptedRequest->requester->lastname
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'participants' => $participants
+            ]);
+        });
+        
         // Video call routes
         Route::post('/chat/{trade}/video-call/offer', [\App\Http\Controllers\VideoCallController::class, 'sendOffer'])->name('video-call.offer');
         Route::post('/chat/{trade}/video-call/answer', [\App\Http\Controllers\VideoCallController::class, 'sendAnswer'])->name('video-call.answer');
         Route::post('/chat/{trade}/video-call/ice-candidate', [\App\Http\Controllers\VideoCallController::class, 'sendIceCandidate'])->name('video-call.ice-candidate');
         Route::post('/chat/{trade}/video-call/end', [\App\Http\Controllers\VideoCallController::class, 'endCall'])->name('video-call.end');
+        Route::get('/chat/{trade}/video-call/poll', [\App\Http\Controllers\VideoCallController::class, 'pollMessages'])->name('video-call.poll');
     });
     
     // Admin functionality (moved from /admin to main dashboard) - Restricted to admin users only

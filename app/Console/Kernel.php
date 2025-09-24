@@ -15,7 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Run session expiration every hour
+        $schedule->command('sessions:expire')->hourly();
     }
 
     /**
