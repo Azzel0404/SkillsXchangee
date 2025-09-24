@@ -47,6 +47,8 @@ try {
     });
     
     console.log('✅ Laravel Echo initialized successfully with Pusher');
+    console.log('🔑 Pusher Key:', pusherKey);
+    console.log('🌐 Pusher Cluster:', pusherCluster);
 } catch (error) {
     console.error('❌ Failed to initialize Laravel Echo:', error);
     window.Echo = null;
