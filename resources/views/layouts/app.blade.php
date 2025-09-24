@@ -35,12 +35,16 @@
     @if(isset($cssFile) && file_exists(public_path('build/' . $cssFile)))
     <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
     @else
-    {{-- Fallback CSS for Render deployment --}}
+    {{-- Bootstrap CDN fallback for Render deployment --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/fallback.css') }}">
     @endif
 
     @if(isset($jsFile) && file_exists(public_path('build/' . $jsFile)))
     <script src="{{ asset('build/' . $jsFile) }}"></script>
+    @else
+    {{-- Bootstrap JS CDN fallback --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @endif
     @endif
 </head>
