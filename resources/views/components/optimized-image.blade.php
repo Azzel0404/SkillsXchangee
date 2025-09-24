@@ -24,8 +24,17 @@ $typeClasses = [
 'general' => ''
 ];
 
-$baseClass = $typeClasses[$type] ?? '';
-$sizeClass = $sizeClasses[$size] ?? '';
+$baseClass = '';
+$sizeClass = '';
+
+if (isset($type) && isset($typeClasses[$type])) {
+$baseClass = $typeClasses[$type];
+}
+
+if (isset($size) && isset($sizeClasses[$size])) {
+$sizeClass = $sizeClasses[$size];
+}
+
 $combinedClass = trim("$baseClass $sizeClass $class");
 @endphp
 

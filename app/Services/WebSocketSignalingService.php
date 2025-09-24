@@ -28,6 +28,7 @@ class WebSocketSignalingService implements MessageComponentInterface
     {
         $this->clients->attach($conn);
         // Store a unique identifier for this connection
+        /** @var object $conn */
         $conn->resourceId = uniqid('conn_', true);
         Log::info("New WebSocket connection: {$conn->resourceId}");
     }
@@ -81,15 +82,16 @@ class WebSocketSignalingService implements MessageComponentInterface
         
         // Clean up rooms
         foreach ($this->rooms as $roomId => $room) {
-            if (isset($room['connections'][$conn->resourceId])) {
-                unset($this->rooms[$roomId]['connections'][$conn->resourceId]);
+            $resourceId = $conn->resourceId ?? null;
+            if ($resourceId && isset($room['connections'][$resourceId])) {
+                unset($this->rooms[$roomId]['connections'][$resourceId]);
                 if (empty($this->rooms[$roomId]['connections'])) {
                     unset($this->rooms[$roomId]);
                 }
             }
         }
         
-        Log::info("WebSocket connection closed: {$conn->resourceId}");
+        Log::info("WebSocket connection closed: " . ($conn->resourceId ?? 'unknown'));
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e)
@@ -120,10 +122,12 @@ class WebSocketSignalingService implements MessageComponentInterface
             ];
         }
         
-        $this->rooms[$roomId]['connections'][$conn->resourceId] = $conn;
+        $resourceId = $conn->resourceId ?? uniqid('conn_', true);
+        $this->rooms[$roomId]['connections'][$resourceId] = $conn;
         $this->rooms[$roomId]['users'][$userId] = $conn;
         
         // Store room info in connection
+        /** @var object $conn */
         $conn->roomId = $roomId;
         $conn->userId = $userId;
         
@@ -153,12 +157,12 @@ class WebSocketSignalingService implements MessageComponentInterface
 
         $this->sendToConnection($targetConn, [
             'type' => 'offer',
-            'fromUserId' => $from->userId,
+            'fromUserId' => $from->userId ?? null,
             'offer' => $data['offer'],
             'callId' => $data['callId']
         ]);
 
-        Log::info("Offer sent from {$from->userId} to {$toUserId}");
+        Log::info("Offer sent from " . ($from->userId ?? 'unknown') . " to {$toUserId}");
     }
 
     protected function handleAnswer(ConnectionInterface $from, $data)
@@ -178,12 +182,12 @@ class WebSocketSignalingService implements MessageComponentInterface
 
         $this->sendToConnection($targetConn, [
             'type' => 'answer',
-            'fromUserId' => $from->userId,
+            'fromUserId' => $from->userId ?? null,
             'answer' => $data['answer'],
             'callId' => $data['callId']
         ]);
 
-        Log::info("Answer sent from {$from->userId} to {$toUserId}");
+        Log::info("Answer sent from " . ($from->userId ?? 'unknown') . " to {$toUserId}");
     }
 
     protected function handleIceCandidate(ConnectionInterface $from, $data)
@@ -203,12 +207,12 @@ class WebSocketSignalingService implements MessageComponentInterface
 
         $this->sendToConnection($targetConn, [
             'type' => 'ice-candidate',
-            'fromUserId' => $from->userId,
+            'fromUserId' => $from->userId ?? null,
             'candidate' => $data['candidate'],
             'callId' => $data['callId']
         ]);
 
-        Log::info("ICE candidate sent from {$from->userId} to {$toUserId}");
+        Log::info("ICE candidate sent from " . ($from->userId ?? 'unknown') . " to {$toUserId}");
     }
 
     protected function handleEndCall(ConnectionInterface $from, $data)
@@ -224,12 +228,12 @@ class WebSocketSignalingService implements MessageComponentInterface
         if ($targetConn) {
             $this->sendToConnection($targetConn, [
                 'type' => 'end-call',
-                'fromUserId' => $from->userId,
+                'fromUserId' => $from->userId ?? null,
                 'callId' => $data['callId']
             ]);
         }
 
-        Log::info("End call sent from {$from->userId} to {$toUserId}");
+        Log::info("End call sent from " . ($from->userId ?? 'unknown') . " to {$toUserId}");
     }
 
     protected function sendToConnection(ConnectionInterface $conn, $data)

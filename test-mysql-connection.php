@@ -1,74 +1,44 @@
 <?php
-/**
- * MySQL Connection Test Script
- * Run this script to test your MySQL database connection
- */
+// Test MySQL connection
+require_once 'vendor/autoload.php';
 
-// Database configuration (update these with your Railway MySQL details)
-$host = 'shuttle.proxy.rlwy.net';  // From your Railway public connection
-$port = '14460';
-$database = 'railway';
-$username = 'root';
-$password = 'lncQUGzAqadIdRckNFrZLgrIlgpKJPOx';  // From your Railway variables
-
-echo "Testing MySQL Connection...\n";
-echo "Host: $host\n";
-echo "Port: $port\n";
-echo "Database: $database\n";
-echo "Username: $username\n";
-echo "Password: " . str_repeat('*', strlen($password)) . "\n\n";
+// Database connection details
+$host = $_ENV['DB_HOST'] ?? 'localhost';
+$port = $_ENV['DB_PORT'] ?? '3306';
+$dbname = $_ENV['DB_DATABASE'] ?? 'skillsxchangee';
+$username = $_ENV['DB_USERNAME'] ?? 'root';
+$password = $_ENV['DB_PASSWORD'] ?? '';
 
 try {
-    // Create PDO connection
-    $dsn = "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4";
-    $pdo = new PDO($dsn, $username, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
+    $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    echo "✅ Database connection successful!\n\n";
+    echo "✅ MySQL connection successful!\n";
+    echo "Database: $dbname\n";
+    echo "Host: $host:$port\n";
+    echo "Username: $username\n\n";
     
-    // Test basic query
-    $stmt = $pdo->query("SELECT VERSION() as version");
-    $version = $stmt->fetch();
-    echo "MySQL Version: " . $version['version'] . "\n";
+    // Test a simple query
+    $stmt = $pdo->query("SELECT VERSION()");
+    $version = $stmt->fetchColumn();
+    echo "MySQL Version: $version\n\n";
     
-    // Check if users table exists
-    $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
-    if ($stmt->rowCount() > 0) {
-        echo "✅ Users table exists\n";
-        
-        // Count users
-        $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
-        $count = $stmt->fetch();
-        echo "Total users: " . $count['count'] . "\n";
-        
-        // Check for test user
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute(['test@example.com']);
-        $testUser = $stmt->fetch();
-        
-        if ($testUser) {
-            echo "✅ Test user found:\n";
-            echo "  - ID: " . $testUser['id'] . "\n";
-            echo "  - Name: " . $testUser['name'] . "\n";
-            echo "  - Email: " . $testUser['email'] . "\n";
-            echo "  - Created: " . $testUser['created_at'] . "\n";
-        } else {
-            echo "❌ Test user not found (run: php artisan db:seed)\n";
-        }
+    // List tables
+    $stmt = $pdo->query("SHOW TABLES");
+    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    if (empty($tables)) {
+        echo "No tables found. Run migrations first.\n";
     } else {
-        echo "❌ Users table does not exist (run: php artisan migrate)\n";
+        echo "Tables found:\n";
+        foreach ($tables as $table) {
+            echo "- $table\n";
+        }
     }
     
-    echo "\n🎉 Database connection test completed successfully!\n";
-    
 } catch (PDOException $e) {
-    echo "❌ Database connection failed!\n";
-    echo "Error: " . $e->getMessage() . "\n";
-    echo "\nTroubleshooting:\n";
-    echo "1. Check if your Railway MySQL service is running\n";
-    echo "2. Verify the connection details in Railway dashboard\n";
-    echo "3. Make sure you're using the correct public network connection\n";
-    echo "4. Check if your IP is whitelisted (if required)\n";
+    echo "❌ MySQL connection failed: " . $e->getMessage() . "\n";
+    exit(1);
 }
+?>
