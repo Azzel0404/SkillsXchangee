@@ -925,29 +925,58 @@ if (window.Echo) {
 // WebSocket fallback for video calls when Pusher is not available
 function initializeWebSocketFallback() {
     try {
-        // Use the WebSocket signaling service directly
-        const wsUrl = `wss://${window.location.hostname}:8080`;
-        window.videoWebSocket = new WebSocket(wsUrl);
+        // Try multiple WebSocket endpoints
+        const endpoints = [
+            `wss://${window.location.hostname}:8080`,
+            `wss://${window.location.hostname}/ws`,
+            `ws://${window.location.hostname}:8080`,
+            `ws://${window.location.hostname}/ws`
+        ];
         
-        window.videoWebSocket.onopen = function() {
-            console.log('✅ WebSocket fallback connected for video calls');
-            updateConnectionStatus('connected');
-        };
+        let connected = false;
         
-        window.videoWebSocket.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            handleWebSocketVideoMessage(data);
-        };
+        for (const endpoint of endpoints) {
+            try {
+                console.log(`Trying WebSocket endpoint: ${endpoint}`);
+                window.videoWebSocket = new WebSocket(endpoint);
+                
+                window.videoWebSocket.onopen = function() {
+                    if (!connected) {
+                        connected = true;
+                        console.log('✅ WebSocket fallback connected for video calls');
+                        updateConnectionStatus('connected');
+                    }
+                };
+                
+                window.videoWebSocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketVideoMessage(data);
+                };
+                
+                window.videoWebSocket.onclose = function() {
+                    console.log('❌ WebSocket fallback disconnected');
+                    updateConnectionStatus('disconnected');
+                };
+                
+                window.videoWebSocket.onerror = function(error) {
+                    console.error('🚨 WebSocket fallback error:', error);
+                    updateConnectionStatus('error');
+                };
+                
+                // If connection succeeds, break the loop
+                if (window.videoWebSocket.readyState === WebSocket.OPEN) {
+                    break;
+                }
+            } catch (error) {
+                console.log(`Failed to connect to ${endpoint}:`, error);
+                continue;
+            }
+        }
         
-        window.videoWebSocket.onclose = function() {
-            console.log('❌ WebSocket fallback disconnected');
-            updateConnectionStatus('disconnected');
-        };
-        
-        window.videoWebSocket.onerror = function(error) {
-            console.error('🚨 WebSocket fallback error:', error);
-            updateConnectionStatus('error');
-        };
+        if (!connected) {
+            console.log('⚠️ No WebSocket connection available, using HTTP fallback for signaling');
+            updateConnectionStatus('http-fallback');
+        }
     } catch (error) {
         console.error('Failed to initialize WebSocket fallback:', error);
         updateConnectionStatus('error');
@@ -2037,10 +2066,20 @@ async function initializeVideoChat() {
             throw new Error('Media devices not supported');
         }
         
-        // Request camera and microphone access
+        console.log('Requesting camera and microphone access...');
+        
+        // Request camera and microphone access with better constraints
         localStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
+            video: {
+                width: { ideal: 1280, max: 1920 },
+                height: { ideal: 720, max: 1080 },
+                frameRate: { ideal: 30, max: 60 }
+            },
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
         });
         
         // Display local video
@@ -2173,13 +2212,32 @@ async function startVideoCall() {
 }
 
 async function initializePeerConnection() {
-    // Create RTCPeerConnection with STUN servers for NAT traversal
+    // Create RTCPeerConnection with STUN/TURN servers for NAT traversal
     const configuration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
-        ]
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            // Add TURN servers for better connectivity
+            {
+                urls: 'turn:openrelay.metered.ca:80',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            },
+            {
+                urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+            }
+        ],
+        iceCandidatePoolSize: 10
     };
     
     peerConnection = new RTCPeerConnection(configuration);
@@ -2276,6 +2334,8 @@ async function initializePeerConnection() {
         if (peerConnection.iceConnectionState === 'failed') {
             console.error('ICE connection failed');
             document.getElementById('video-status').textContent = 'Connection failed. Please check your network and try again.';
+            // Try to restart ICE gathering
+            peerConnection.restartIce();
         } else if (peerConnection.iceConnectionState === 'connected') {
             console.log('ICE connection established');
             document.getElementById('video-status').textContent = 'Call connected! You can now see and hear each other.';
@@ -2288,6 +2348,18 @@ async function initializePeerConnection() {
             if (remoteVideo && remoteVideo.srcObject) {
                 remoteVideo.play().catch(e => console.log('Remote video play error:', e));
             }
+        } else if (peerConnection.iceConnectionState === 'checking') {
+            document.getElementById('video-status').textContent = 'Connecting... Please wait.';
+        } else if (peerConnection.iceConnectionState === 'disconnected') {
+            document.getElementById('video-status').textContent = 'Connection lost. Attempting to reconnect...';
+        }
+    };
+    
+    // Handle ICE gathering state changes
+    peerConnection.onicegatheringstatechange = () => {
+        console.log('ICE gathering state:', peerConnection.iceGatheringState);
+        if (peerConnection.iceGatheringState === 'complete') {
+            console.log('ICE gathering completed');
         }
     };
 }
@@ -2295,7 +2367,19 @@ async function initializePeerConnection() {
 // Signaling functions
 async function sendVideoCallOffer(offer) {
     try {
-        // Generate absolute URL for production compatibility
+        // Try WebSocket first if available
+        if (window.videoWebSocket && window.videoWebSocket.readyState === WebSocket.OPEN) {
+            window.videoWebSocket.send(JSON.stringify({
+                type: 'video-call-offer',
+                toUserId: window.partnerId,
+                offer: offer,
+                callId: window.currentCallId
+            }));
+            console.log('Offer sent via WebSocket');
+            return;
+        }
+        
+        // Fallback to HTTP
         const baseUrl = window.location.origin;
         const url = baseUrl + '/chat/{{ $trade->id }}/video-call/offer';
         console.log('Offer URL:', url);
@@ -2330,7 +2414,19 @@ async function sendVideoCallOffer(offer) {
 
 async function sendVideoCallAnswer(answer) {
     try {
-        // Generate absolute URL for production compatibility
+        // Try WebSocket first if available
+        if (window.videoWebSocket && window.videoWebSocket.readyState === WebSocket.OPEN) {
+            window.videoWebSocket.send(JSON.stringify({
+                type: 'video-call-answer',
+                toUserId: window.partnerId,
+                answer: answer,
+                callId: window.currentCallId
+            }));
+            console.log('Answer sent via WebSocket');
+            return;
+        }
+        
+        // Fallback to HTTP
         const baseUrl = window.location.origin;
         const url = baseUrl + '/chat/{{ $trade->id }}/video-call/answer';
         console.log('Answer URL:', url);

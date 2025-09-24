@@ -17,6 +17,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet">
 
+  {{-- Always include Bootstrap CDN for reliability --}}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
   {{-- Try Vite first, fallback to built assets --}}
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -30,21 +33,23 @@
   $jsFile = $manifest['resources/js/app.js']['file'] ?? null;
   }
   @endphp
-  @if(isset($cssFile))
+  @if(isset($cssFile) && file_exists(public_path('build/' . $cssFile)))
   <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
   @else
-  {{-- Bootstrap CDN fallback for Render deployment --}}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  {{-- Additional fallback CSS for Render deployment --}}
   <link rel="stylesheet" href="{{ asset('css/fallback.css') }}">
   @endif
 
-  @if(isset($jsFile))
+  @if(isset($jsFile) && file_exists(public_path('build/' . $jsFile)))
   <script src="{{ asset('build/' . $jsFile) }}"></script>
   @else
   {{-- Bootstrap JS CDN fallback --}}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   @endif
   @endif
+
+  <!-- Always include Bootstrap JS for reliability -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
     body {
@@ -56,14 +61,14 @@
     }
 
     .btn-primary {
-      background-color: #3b82f6;
-      border-color: #3b82f6;
+      background-color: #2563eb;
+      border-color: #2563eb;
       font-weight: 600;
     }
 
     .btn-primary:hover {
-      background-color: #2563eb;
-      border-color: #2563eb;
+      background-color: #1d4ed8;
+      border-color: #1d4ed8;
     }
 
     .btn-outline-secondary {
@@ -79,33 +84,33 @@
     }
 
     .feature-icon {
-      width: 80px;
-      height: 80px;
+      width: 50px;
+      height: 50px;
       background: #3b82f6;
-      border-radius: 20px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
     }
 
     .feature-icon svg {
-      width: 40px;
-      height: 40px;
+      width: 24px;
+      height: 24px;
       color: white;
     }
 
     .feature-icon.search {
-      background: #3b82f6;
+      background: #2563eb;
     }
 
     .feature-icon.match {
-      background: #f59e0b;
+      background: #2563eb;
     }
 
     .feature-icon.rate {
-      background: #f59e0b;
+      background: #2563eb;
     }
   </style>
 </head>
@@ -114,8 +119,8 @@
   <!-- Header -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
     <div class="container">
-      <a class="navbar-brand fw-bold text-primary fs-4" href="/">
-        <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="me-2" style="width: 32px; height: 32px;">
+      <a class="navbar-brand fw-bold text-primary fs-5" href="/">
+        <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="me-2" style="width: 20px; height: 20px;">
         SkillsXchange
       </a>
 

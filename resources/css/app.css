@@ -1,11 +1,9 @@
 /* Import Bootstrap */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* stylelint-enable at-rule-no-unknown */
 
 /* Modern SkillsXchange Landing Page Styles */
 :root {
