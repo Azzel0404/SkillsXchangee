@@ -120,7 +120,7 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
     <div class="container">
       <a class="navbar-brand fw-bold text-primary fs-5" href="/">
-        <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="me-2" style="width: 20px; height: 20px;">
+        <img src="{{ asset('logo.png') }}" alt="SkillsXchange Logo" class="me-2" style="width: 100px; height: 100px;">
         SkillsXchange
       </a>
 
@@ -147,7 +147,7 @@
   </nav>
 
   <!-- Hero Section -->
-  <section class="hero-gradient min-vh-100 d-flex align-items-center">
+  <section class="hero-gradient py-5 d-flex align-items-center" style="min-height: 60vh;">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8 text-center">
