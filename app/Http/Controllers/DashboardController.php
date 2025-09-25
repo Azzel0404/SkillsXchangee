@@ -71,7 +71,10 @@ class DashboardController extends Controller
     
     private function getUserStatistics($user)
     {
-        // Completed Sessions: Trades where user participated and status is 'completed'
+        // Debug: Log user ID for troubleshooting
+        Log::info('Calculating statistics for user: ' . $user->id);
+        
+        // Completed Sessions: Trades where user participated and status is 'closed'
         $completedSessions = Trade::where(function($query) use ($user) {
                 $query->where('user_id', $user->id)
                       ->orWhereHas('requests', function($q) use ($user) {
@@ -79,10 +82,11 @@ class DashboardController extends Controller
                             ->where('status', 'accepted');
                       });
             })
-            ->where('status', 'completed')
+            ->where('status', 'closed')
             ->count();
         
-        // Ongoing Sessions: Trades where user participated and status is 'ongoing'
+        // Ongoing Sessions: Trades where user participated and status is 'ongoing' or 'open'
+        // (Open trades with accepted requests should be considered ongoing)
         $ongoingSessions = Trade::where(function($query) use ($user) {
                 $query->where('user_id', $user->id)
                       ->orWhereHas('requests', function($q) use ($user) {
@@ -90,8 +94,11 @@ class DashboardController extends Controller
                             ->where('status', 'accepted');
                       });
             })
-            ->where('status', 'ongoing')
+            ->whereIn('status', ['ongoing', 'open'])
             ->count();
+        
+        // Log the calculated ongoing sessions count
+        Log::info('Ongoing sessions calculated: ' . $ongoingSessions);
         
         // Pending Requests: Trade requests sent by this user that are still pending
         $pendingRequests = TradeRequest::where('requester_id', $user->id)
@@ -109,7 +116,7 @@ class DashboardController extends Controller
             $query->where('user_id', $user->id);
         })->count();
         
-        return [
+        $stats = [
             'completedSessions' => $completedSessions,
             'ongoingSessions' => $ongoingSessions,
             'pendingRequests' => $pendingRequests,
@@ -117,5 +124,9 @@ class DashboardController extends Controller
             'totalTradesCreated' => $totalTradesCreated,
             'totalRequestsReceived' => $totalRequestsReceived,
         ];
+        
+        Log::info('Dashboard statistics calculated:', $stats);
+        
+        return $stats;
     }
 }
