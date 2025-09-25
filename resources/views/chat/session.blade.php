@@ -2250,26 +2250,31 @@ async function initializePeerConnection() {
     // Create RTCPeerConnection with STUN/TURN servers for NAT traversal
     const configuration = {
         iceServers: [
+            // Metered.ca STUN server
+            { urls: 'stun:stun.relay.metered.ca:80' },
+            // Google STUN servers as backup
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' },
-            // Add TURN servers for better connectivity
+            // Metered.ca TURN servers for reliable connectivity
             {
-                urls: 'turn:openrelay.metered.ca:80',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
+                urls: 'turn:global.relay.metered.ca:80',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
             },
             {
-                urls: 'turn:openrelay.metered.ca:443',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
+                urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
             },
             {
-                urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
+                urls: 'turn:global.relay.metered.ca:443',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
             }
         ],
         iceCandidatePoolSize: 10
