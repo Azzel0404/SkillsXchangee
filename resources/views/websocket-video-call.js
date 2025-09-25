@@ -281,6 +281,16 @@ class WebSocketVideoCallManager {
             });
             
             this.log('Media access granted', 'success');
+            
+            // Display local stream in video element
+            const localVideo = document.getElementById('local-video');
+            if (localVideo) {
+                localVideo.srcObject = this.localStream;
+                this.log('Local video stream displayed', 'success');
+            } else {
+                this.log('Local video element not found!', 'error');
+            }
+            
             return true;
             
         } catch (error) {
@@ -349,6 +359,13 @@ class WebSocketVideoCallManager {
         // Handle incoming tracks
         this.peerConnection.ontrack = (event) => {
             this.log('Received remote stream', 'success');
+            this.log(`Stream tracks: ${event.streams[0].getTracks().length}`, 'info');
+            
+            // Log track details
+            event.streams[0].getTracks().forEach((track, index) => {
+                this.log(`Track ${index}: ${track.kind} - enabled: ${track.enabled}, muted: ${track.muted}`, 'info');
+            });
+            
             this.remoteStream = event.streams[0];
             this.updateRemoteVideo();
             this.updateConnectionStatus('connected');
@@ -502,8 +519,12 @@ class WebSocketVideoCallManager {
             this.otherUserId = data.fromUserId;
             this.isInitiator = false;
             
-            // Show incoming call notification
-            const acceptCall = confirm(`Incoming video call. Do you want to accept?`);
+            // Show incoming call notification using the notification service
+            this.showIncomingCallNotification(data.fromUserId);
+            
+            // Auto-accept for now (you can modify this behavior)
+            // In a real app, you'd want to show a proper UI with accept/decline buttons
+            const acceptCall = true; // For debugging - auto-accept
             
             if (acceptCall) {
                 // Initialize media and peer connection
@@ -517,9 +538,15 @@ class WebSocketVideoCallManager {
                 await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 
                 // Create and send answer
+                this.log('Creating answer...', 'info');
                 const answer = await this.peerConnection.createAnswer();
+                this.log('Answer created successfully', 'success');
+                
                 await this.peerConnection.setLocalDescription(answer);
+                this.log('Local description set for answer', 'success');
+                
                 this.sendAnswer(answer);
+                this.log('Answer sent via WebSocket', 'success');
                 
                 // Update UI
                 this.updateCallUI('connected');
@@ -539,11 +566,18 @@ class WebSocketVideoCallManager {
     
     async handleAnswer(data) {
         try {
-            this.log('Handling call answer', 'info');
+            this.log(`📞 Received answer from: ${data.fromUserId}`, 'info');
+            this.log(`Answer data: ${JSON.stringify(data.answer, null, 2)}`, 'info');
+            
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            this.log('Call answer processed', 'success');
+            this.log('✅ Call answer processed successfully', 'success');
+            
+            // Update UI to show connection
+            this.updateCallUI('connected');
+            
         } catch (error) {
-            this.log(`Error handling call answer: ${error.message}`, 'error');
+            this.log(`❌ Error handling call answer: ${error.message}`, 'error');
+            this.showError('Failed to process call answer. Please try again.');
         }
     }
     
@@ -716,9 +750,41 @@ class WebSocketVideoCallManager {
         const remoteVideo = document.getElementById('remote-video');
         if (remoteVideo && this.remoteStream) {
             remoteVideo.srcObject = this.remoteStream;
+            this.log('Remote video stream displayed', 'success');
+            
+            // Add event listeners for debugging
+            remoteVideo.onloadedmetadata = () => {
+                this.log('Remote video metadata loaded', 'success');
+            };
+            
+            remoteVideo.oncanplay = () => {
+                this.log('Remote video can start playing', 'success');
+            };
+            
+            remoteVideo.onerror = (error) => {
+                this.log(`Remote video error: ${error}`, 'error');
+            };
+        } else {
+            this.log(`Remote video setup failed - Element: ${!!remoteVideo}, Stream: ${!!this.remoteStream}`, 'error');
         }
     }
     
+    showIncomingCallNotification(fromUserId) {
+        this.log(`📞 Incoming call from: ${fromUserId}`, 'info');
+        
+        // Show notification using the notification service if available
+        if (window.notificationService) {
+            window.notificationService.showIncomingCallNotification(
+                `User ${fromUserId}`,
+                fromUserId,
+                this.currentCallId
+            );
+        }
+        
+        // Also show a simple alert for debugging
+        alert(`📞 Incoming video call from User ${fromUserId}\n\nThis call will be auto-accepted for testing.`);
+    }
+
     showError(message) {
         const statusElement = document.getElementById('video-status');
         if (statusElement) {
