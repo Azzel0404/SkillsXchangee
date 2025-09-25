@@ -873,6 +873,14 @@ if (window.Echo) {
         .listen('video-call-offer', async function(data) {
             console.log('Received video call offer:', data);
             if (data.fromUserId !== window.authUserId) {
+                // Show notification for incoming call
+                if (window.notificationService) {
+                    window.notificationService.showIncomingCallNotification(
+                        data.fromUserName || 'Unknown User',
+                        data.fromUserId,
+                        data.tradeId
+                    );
+                }
                 await handleVideoCallOffer(data);
             }
         });
@@ -2246,38 +2254,48 @@ async function startVideoCall() {
     }
 }
 
-async function initializePeerConnection() {
-    // Create RTCPeerConnection with STUN/TURN servers for NAT traversal
-    const configuration = {
-        iceServers: [
-            // Metered.ca STUN server
-            { urls: 'stun:stun.relay.metered.ca:80' },
-            // Google STUN servers as backup
+// Metered API Configuration
+const METERED_API_KEY = '511852cda421697270ed9af8b089038b39a7';
+const METERED_API_URL = 'https://skillxchange.metered.live/api/v1/turn/credentials';
+
+// Fetch TURN server credentials from Metered API
+async function fetchTurnCredentials() {
+    try {
+        console.log('🔄 Fetching TURN server credentials...');
+        const response = await fetch(`${METERED_API_URL}?apiKey=${METERED_API_KEY}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const iceServers = await response.json();
+        console.log('✅ TURN credentials fetched successfully:', iceServers);
+        return iceServers;
+    } catch (error) {
+        console.error('❌ Error fetching TURN credentials:', error);
+        
+        // Fallback to basic STUN servers
+        return [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            // Metered.ca TURN servers for reliable connectivity
-            {
-                urls: 'turn:global.relay.metered.ca:80',
-                username: '0582eeabe15281e17e922394',
-                credential: 'g7fjNoaIyTpLnkaf'
-            },
-            {
-                urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-                username: '0582eeabe15281e17e922394',
-                credential: 'g7fjNoaIyTpLnkaf'
-            },
-            {
-                urls: 'turn:global.relay.metered.ca:443',
-                username: '0582eeabe15281e17e922394',
-                credential: 'g7fjNoaIyTpLnkaf'
-            },
-            {
-                urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-                username: '0582eeabe15281e17e922394',
-                credential: 'g7fjNoaIyTpLnkaf'
-            }
-        ],
-        iceCandidatePoolSize: 10
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' }
+        ];
+    }
+}
+
+async function initializePeerConnection() {
+    // Fetch fresh TURN server credentials
+    const iceServers = await fetchTurnCredentials();
+    
+    // Create RTCPeerConnection with dynamic TURN server configuration
+    const configuration = {
+        iceServers: iceServers,
+        iceCandidatePoolSize: 10,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+        iceTransportPolicy: 'all'
     };
     
     peerConnection = new RTCPeerConnection(configuration);
@@ -2701,6 +2719,20 @@ async function handleVideoCallOffer(data) {
         isCallActive = true;
     }
 }
+
+// Handle incoming call (called from notification service)
+window.handleIncomingCall = async function(callerId, tradeId) {
+    console.log('📞 Handling incoming call from notification:', callerId);
+    
+    // Clear any existing notifications
+    if (window.notificationService) {
+        window.notificationService.clearAllNotifications();
+    }
+    
+    // The offer should already be handled by the existing handler
+    // This function is mainly for UI updates and ensuring the call is accepted
+    console.log('✅ Incoming call handled via notification');
+};
 
 async function handleVideoCallAnswer(data) {
     console.log('Handling video call answer');

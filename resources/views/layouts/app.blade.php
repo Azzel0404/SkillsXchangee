@@ -27,7 +27,7 @@
     </script>
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/notification-service.js'])
 
     {{-- Fallback for production if Vite fails --}}
     @if(app()->environment('production'))

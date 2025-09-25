@@ -18,7 +18,11 @@ class VideoCallManager {
         this.retryCount = 0;
         this.maxRetries = 3;
         
-        // Enhanced STUN/TURN configuration
+        // Metered API Configuration
+        this.meteredApiKey = '511852cda421697270ed9af8b089038b39a7';
+        this.meteredApiUrl = 'https://skillxchange.metered.live/api/v1/turn/credentials';
+        
+        // Enhanced STUN/TURN configuration (will be updated with fresh credentials)
         this.iceServers = [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
@@ -74,12 +78,33 @@ class VideoCallManager {
         }
     }
     
+    async fetchTurnCredentials() {
+        try {
+            this.log('Fetching TURN server credentials...', 'info');
+            const response = await fetch(`${this.meteredApiUrl}?apiKey=${this.meteredApiKey}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const iceServers = await response.json();
+            this.log('TURN credentials fetched successfully', 'success');
+            return iceServers;
+        } catch (error) {
+            this.log(`Error fetching TURN credentials: ${error.message}`, 'error');
+            return this.iceServers; // Return fallback servers
+        }
+    }
+
     async initializePeerConnection() {
         try {
             this.log('Initializing peer connection...', 'info');
             
+            // Fetch fresh TURN server credentials
+            const iceServers = await this.fetchTurnCredentials();
+            
             const configuration = {
-                iceServers: this.iceServers,
+                iceServers: iceServers,
                 iceCandidatePoolSize: 10,
                 bundlePolicy: 'max-bundle',
                 rtcpMuxPolicy: 'require'
