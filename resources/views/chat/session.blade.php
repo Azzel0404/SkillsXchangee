@@ -8,7 +8,7 @@
     window.tradeId = parseInt('{{ $trade->id }}');
     window.authUserId = parseInt('{{ Auth::id() }}');
     window.partnerId = parseInt('{{ $partner->id }}');
-    window.partnerName = '{{ addslashes(($partner->firstname ?? 'Unknown') . ' ' . ($partner->lastname ?? 'User')) }}';
+    window.partnerName = '{{ addslashes(($partner->firstname ?? "Unknown") . " " . ($partner->lastname ?? "User")) }}';
     window.initialMessageCount = parseInt('{{ $messages->count() }}');
 </script>
 <style>
@@ -572,9 +572,7 @@
                                 <input type="checkbox" {{ $task->completed ? 'checked' : '' }}
                                 onchange="toggleTask({{ $task->id }})"
                                 style="width: 16px; height: 16px;">
-                                <span
-                                    style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{
-                                    $task->title }}</span>
+                                <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
                             </div>
                             @if($task->description)
                             <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description
@@ -614,9 +612,7 @@
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <input type="checkbox" {{ $task->completed ? 'checked' : '' }} disabled style="width:
                                 16px; height: 16px;">
-                                <span
-                                    style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{
-                                    $task->title }}</span>
+                                <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
 
                                 <!-- Verification Status Badge -->
                                 @if($task->completed)
@@ -818,6 +814,12 @@
 // Listen for events using Laravel Echo
 if (window.Echo) {
     console.log('Initializing Pusher connection for trade {{ $trade->id }}');
+    console.log('Pusher configuration:', {
+        key: window.PUSHER_APP_KEY,
+        cluster: window.PUSHER_APP_CLUSTER,
+        encrypted: true
+    });
+    console.log('Echo available:', !!window.Echo);
     
     // Connection status monitoring
     window.Echo.connector.pusher.connection.bind('connected', function() {
@@ -869,19 +871,37 @@ if (window.Echo) {
         });
 
     // Listen for video call events
-    window.Echo.private('trade.{{ $trade->id }}')
+    const privateChannel = window.Echo.private('trade.{{ $trade->id }}');
+    console.log('📡 Subscribing to private channel: trade.{{ $trade->id }}');
+    
+    // Add subscription error handling
+    privateChannel.error((error) => {
+        console.error('❌ Private channel subscription error:', error);
+    });
+    
+    privateChannel
         .listen('video-call-offer', async function(data) {
-            console.log('Received video call offer:', data);
+            console.log('📞 Received video call offer:', data);
+            console.log('📞 Current user ID:', window.authUserId);
+            console.log('📞 From user ID:', data.fromUserId);
+            console.log('📞 Notification service available:', !!window.notificationService);
+            
             if (data.fromUserId !== window.authUserId) {
+                console.log('📞 Processing incoming call from different user');
                 // Show notification for incoming call
                 if (window.notificationService) {
+                    console.log('📞 Showing notification for incoming call');
                     window.notificationService.showIncomingCallNotification(
                         data.fromUserName || 'Unknown User',
                         data.fromUserId,
                         data.tradeId
                     );
+                } else {
+                    console.log('❌ Notification service not available');
                 }
                 await handleVideoCallOffer(data);
+            } else {
+                console.log('📞 Ignoring call from self');
             }
         });
 

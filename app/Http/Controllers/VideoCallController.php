@@ -34,20 +34,28 @@ class VideoCallController extends Controller
             // Get the other user in the trade
             $otherUser = $this->getOtherUserInTrade($user, $trade);
             
-            // Broadcast the offer
-            event(new VideoCallOffer(
+            // Create the event
+            $event = new VideoCallOffer(
                 $trade->id,
                 $user->id,
                 $user->firstname . ' ' . $user->lastname,
                 $request->offer,
                 $request->callId
-            ));
+            );
+            
+            // Broadcast the offer
+            event($event);
+            
+            // Also try broadcasting directly
+            broadcast($event);
             
             Log::info('Video call offer sent', [
                 'trade_id' => $trade->id,
                 'from_user_id' => $user->id,
                 'to_user_id' => $otherUser->id,
-                'call_id' => $request->callId
+                'call_id' => $request->callId,
+                'channel' => 'trade.' . $trade->id,
+                'event_name' => 'video-call-offer'
             ]);
             
             return response()->json(['success' => true]);
