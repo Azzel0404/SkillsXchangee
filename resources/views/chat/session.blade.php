@@ -820,6 +820,7 @@ if (window.Echo) {
         encrypted: true
     });
     console.log('Echo available:', !!window.Echo);
+    console.log('✅ Using Pusher for video call signaling (WebSocket fallback disabled)');
     
     // Connection status monitoring
     window.Echo.connector.pusher.connection.bind('connected', function() {
@@ -944,125 +945,11 @@ if (window.Echo) {
 } else {
     console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
     updateConnectionStatus('error');
-    
-    // Fallback: Use WebSocket directly for video calls
-    console.log('Initializing WebSocket fallback for video calls...');
-    initializeWebSocketFallback();
 }
 
-// WebSocket fallback for video calls when Pusher is not available
-function initializeWebSocketFallback() {
-    try {
-        // Try multiple WebSocket endpoints
-        const endpoints = [
-            `wss://${window.location.hostname}:8080`,
-            `wss://${window.location.hostname}/ws`,
-            // Only try WSS endpoints on HTTPS sites
-            ...(window.location.protocol === 'https:' ? [] : [
-                `ws://${window.location.hostname}:8080`,
-                `ws://${window.location.hostname}/ws`
-            ])
-        ];
-        
-        let connected = false;
-        
-        for (const endpoint of endpoints) {
-            try {
-                console.log(`Trying WebSocket endpoint: ${endpoint}`);
-                window.videoWebSocket = new WebSocket(endpoint);
-                
-                window.videoWebSocket.onopen = function() {
-                    if (!connected) {
-                        connected = true;
-                        console.log('✅ WebSocket fallback connected for video calls');
-                        updateConnectionStatus('connected');
-                    }
-                };
-                
-                window.videoWebSocket.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    handleWebSocketVideoMessage(data);
-                };
-                
-                window.videoWebSocket.onclose = function() {
-                    console.log('❌ WebSocket fallback disconnected');
-                    updateConnectionStatus('disconnected');
-                };
-                
-                window.videoWebSocket.onerror = function(error) {
-                    console.error('🚨 WebSocket fallback error:', error);
-                    updateConnectionStatus('error');
-                };
-                
-                // If connection succeeds, break the loop
-                if (window.videoWebSocket.readyState === WebSocket.OPEN) {
-                    break;
-                }
-            } catch (error) {
-                console.log(`Failed to connect to ${endpoint}:`, error);
-                continue;
-            }
-        }
-        
-        if (!connected) {
-            console.log('⚠️ No WebSocket connection available, using HTTP polling for signaling');
-            updateConnectionStatus('http-fallback');
-            initializeHttpPolling();
-        }
-    } catch (error) {
-        console.error('Failed to initialize WebSocket fallback:', error);
-        updateConnectionStatus('error');
-    }
-}
+// WebSocket fallback removed - using Pusher for all video call signaling
 
-// Handle WebSocket video messages
-function handleWebSocketVideoMessage(data) {
-    switch (data.type) {
-        case 'video-call-offer':
-            handleVideoCallOffer(data);
-            break;
-        case 'video-call-answer':
-            handleVideoCallAnswer(data);
-            break;
-        case 'video-call-ice-candidate':
-            handleVideoCallIceCandidate(data);
-            break;
-        case 'video-call-end':
-            handleVideoCallEnd(data);
-            break;
-    }
-}
-
-// HTTP polling for video call signaling when WebSocket is not available
-function initializeHttpPolling() {
-    console.log('Initializing HTTP polling for video call signaling...');
-    
-    // Poll for incoming video call messages every 2 seconds
-    window.videoCallPolling = setInterval(async () => {
-        try {
-            const response = await fetch(`/chat/{{ $trade->id }}/video-call/poll`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.messages && data.messages.length > 0) {
-                    data.messages.forEach(message => {
-                        handleWebSocketVideoMessage(message);
-                    });
-                }
-            }
-        } catch (error) {
-            console.log('HTTP polling error:', error);
-        }
-    }, 2000);
-    
-    console.log('HTTP polling initialized for video calls');
-}
+// WebSocket and HTTP polling removed - using Pusher for all video call signaling
 
 // Connection status update function
 function updateConnectionStatus(status) {
