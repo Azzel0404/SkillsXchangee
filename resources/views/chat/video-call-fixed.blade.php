@@ -85,28 +85,28 @@ function initializeVideoCallSignaling() {
     console.log('✅ Pusher and Echo available');
     
     // Create private channel for this trade
-    const channelName = `video-call.${window.tradeId}`;
+    const channelName = `trade.${window.tradeId}`;
     const channel = window.Echo.private(channelName);
     
     console.log(`📡 Listening on channel: ${channelName}`);
     
     // Listen for video call events
-    channel.listen('VideoCallOffer', (data) => {
+    channel.listen('video-call-offer', (data) => {
         console.log('📞 Received video call offer:', data);
         handleVideoCallOffer(data);
     });
     
-    channel.listen('VideoCallAnswer', (data) => {
+    channel.listen('video-call-answer', (data) => {
         console.log('📞 Received video call answer:', data);
         handleVideoCallAnswer(data);
     });
     
-    channel.listen('VideoCallIceCandidate', (data) => {
+    channel.listen('video-call-ice-candidate', (data) => {
         console.log('📞 Received ICE candidate:', data);
         handleIceCandidate(data);
     });
     
-    channel.listen('VideoCallEnd', (data) => {
+    channel.listen('video-call-end', (data) => {
         console.log('📞 Video call ended:', data);
         endVideoCall();
     });

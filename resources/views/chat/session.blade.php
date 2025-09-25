@@ -869,7 +869,7 @@ if (window.Echo) {
         });
 
     // Listen for video call events
-    window.Echo.channel('trade-{{ $trade->id }}')
+    window.Echo.private('trade.{{ $trade->id }}')
         .listen('video-call-offer', async function(data) {
             console.log('Received video call offer:', data);
             if (data.fromUserId !== window.authUserId) {
@@ -877,7 +877,7 @@ if (window.Echo) {
             }
         });
 
-    window.Echo.channel('trade-{{ $trade->id }}')
+    window.Echo.private('trade.{{ $trade->id }}')
         .listen('video-call-answer', async function(data) {
             console.log('Received video call answer:', data);
             if (data.toUserId === window.authUserId) {
@@ -885,7 +885,7 @@ if (window.Echo) {
             }
         });
 
-    window.Echo.channel('trade-{{ $trade->id }}')
+    window.Echo.private('trade.{{ $trade->id }}')
         .listen('video-call-ice-candidate', async function(data) {
             console.log('Received ICE candidate:', data);
             if (data.toUserId === window.authUserId) {
@@ -893,7 +893,7 @@ if (window.Echo) {
             }
         });
 
-    window.Echo.channel('trade-{{ $trade->id }}')
+    window.Echo.private('trade.{{ $trade->id }}')
         .listen('video-call-end', function(data) {
             console.log('Received video call end:', data);
             if (data.fromUserId !== window.authUserId) {
@@ -1621,7 +1621,7 @@ document.getElementById('verification-form').addEventListener('submit', function
     const verified = document.getElementById('verification-verified').value === '1';
     const verificationNotes = document.getElementById('verification-notes').value;
     
-    fetch(`{{ url('/chat/task') }}/${taskId}/verify`, {
+    fetch(`{{ secure_url('/chat/task') }}/${taskId}/verify`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
