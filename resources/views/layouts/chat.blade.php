@@ -13,6 +13,9 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <!-- Notification Service for Video Calls -->
+        <script src="{{ asset('js/notification-service.js') }}"></script>
     </head>
     <body class="font-sans antialiased">
         @yield('content')
