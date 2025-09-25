@@ -2025,6 +2025,7 @@ let isVideoOff = false;
 let currentCallId = null;
 let isInitiator = false;
 let otherUserId = null;
+let pendingOffer = null; // Store the offer data for notification handling
 
 // Video chat modal functions
 function openVideoChat() {
@@ -2658,15 +2659,25 @@ async function handleVideoCallOffer(data) {
     currentCallId = data.callId;
     otherUserId = data.fromUserId;
     isInitiator = false;
+    pendingOffer = data; // Store offer data for notification handling
     
-    // Auto-accept if auto-call is enabled, otherwise show confirmation
+    // Auto-accept if auto-call is enabled, otherwise show notification
     let acceptCall = false;
     
     if (isAutoCallEnabled) {
         acceptCall = true;
         console.log('Auto-accepting video call from:', data.fromUserName);
     } else {
-        acceptCall = confirm(`${data.fromUserName} is calling you. Do you want to accept?`);
+        // Show notification instead of confirm dialog
+        if (window.notificationService) {
+            console.log('📞 Showing notification for incoming call from:', data.fromUserName);
+            // The notification was already shown in the Pusher event listener
+            // We'll wait for user to click answer/decline
+            return; // Don't proceed with auto-accept
+        } else {
+            // Fallback to confirm dialog if notification service not available
+            acceptCall = confirm(`${data.fromUserName} is calling you. Do you want to accept?`);
+        }
     }
     
     if (acceptCall) {
@@ -2729,9 +2740,56 @@ window.handleIncomingCall = async function(callerId, tradeId) {
         window.notificationService.clearAllNotifications();
     }
     
-    // The offer should already be handled by the existing handler
-    // This function is mainly for UI updates and ensuring the call is accepted
-    console.log('✅ Incoming call handled via notification');
+    // Proceed with call acceptance
+    if (currentCallId && otherUserId === callerId) {
+        console.log('✅ Proceeding with call acceptance');
+        
+        // Initialize video chat if not already open
+        if (document.getElementById('video-chat-modal').style.display === 'none') {
+            openVideoChat();
+        }
+        
+        // Wait for camera to be ready
+        await new Promise(resolve => {
+            const checkCamera = setInterval(() => {
+                if (localStream) {
+                    clearInterval(checkCamera);
+                    resolve();
+                }
+            }, 100);
+        });
+        
+        // Initialize peer connection
+        await initializePeerConnection();
+        
+        // Set remote description
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(pendingOffer.offer));
+        
+        // Create and send answer
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        await sendVideoCallAnswer(answer);
+        
+        // Update UI
+        document.getElementById('video-status').textContent = 'Call in progress...';
+        document.getElementById('start-call-btn').style.display = 'none';
+        document.getElementById('end-call-btn').style.display = 'flex';
+        document.getElementById('toggle-audio-btn').style.display = 'flex';
+        document.getElementById('toggle-video-btn').style.display = 'flex';
+        document.getElementById('mirror-video-btn').style.display = 'flex';
+        document.getElementById('screen-share-btn').style.display = 'flex';
+        document.getElementById('maximize-btn').style.display = 'flex';
+        document.getElementById('chat-toggle-btn').style.display = 'flex';
+        
+        // Start call timer
+        callStartTime = new Date();
+        document.getElementById('call-timer').style.display = 'block';
+        callTimer = setInterval(updateCallTimer, 1000);
+        
+        isCallActive = true;
+    } else {
+        console.log('❌ No pending call found for caller:', callerId);
+    }
 };
 
 async function handleVideoCallAnswer(data) {
@@ -3170,12 +3228,10 @@ function toggleAutoCall() {
 // Send presence signal when page loads
 function sendPresenceSignal() {
     if (window.Echo) {
-        // Broadcast that this user joined the chat
+        // Use regular channel event instead of whisper
         window.Echo.channel('trade-{{ $trade->id }}')
-            .whisper('user-joined', {
-                userId: window.currentUserId,
-                userName: '{{ Auth::user()->firstname }}',
-                timestamp: new Date().toISOString()
+            .listen('user-joined', function(data) {
+                console.log('User joined:', data);
             });
     }
 }
@@ -3191,11 +3247,10 @@ window.addEventListener('beforeunload', () => {
     
     // Send user left signal
     if (window.Echo) {
+        // Use regular channel event instead of whisper
         window.Echo.channel('trade-{{ $trade->id }}')
-            .whisper('user-left', {
-                userId: window.currentUserId,
-                userName: '{{ Auth::user()->firstname }}',
-                timestamp: new Date().toISOString()
+            .listen('user-left', function(data) {
+                console.log('User left:', data);
             });
     }
 });

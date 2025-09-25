@@ -22,8 +22,21 @@
 
     <!-- Pusher Configuration -->
     <script>
-        window.PUSHER_APP_KEY = '{{ env("VITE_PUSHER_APP_KEY", "5c02e54d01ca577ae77e") }}';
-        window.PUSHER_APP_CLUSTER = '{{ env("VITE_PUSHER_APP_CLUSTER", "ap1") }}';
+        // Use config values instead of env() for production reliability
+        window.PUSHER_APP_KEY = '{{ config("broadcasting.connections.pusher.key", "5c02e54d01ca577ae77e") }}';
+        window.PUSHER_APP_CLUSTER = '{{ config("broadcasting.connections.pusher.options.cluster", "ap1") }}';
+        
+        // Fallback to hardcoded values if config fails
+        if (!window.PUSHER_APP_KEY || window.PUSHER_APP_KEY === 'null') {
+            window.PUSHER_APP_KEY = '5c02e54d01ca577ae77e';
+        }
+        if (!window.PUSHER_APP_CLUSTER || window.PUSHER_APP_CLUSTER === 'null') {
+            window.PUSHER_APP_CLUSTER = 'ap1';
+        }
+        
+        console.log('🔧 Pusher Configuration:');
+        console.log('🔑 Key:', window.PUSHER_APP_KEY);
+        console.log('🌐 Cluster:', window.PUSHER_APP_CLUSTER);
     </script>
 
     <!-- Scripts -->
