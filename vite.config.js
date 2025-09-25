@@ -38,5 +38,7 @@ export default defineConfig({
         hmr: {
             host: 'localhost',
         },
+        https: true,
     },
+    base: process.env.NODE_ENV === 'production' ? 'https://skillsxchangee.onrender.com/' : '/',
 });
