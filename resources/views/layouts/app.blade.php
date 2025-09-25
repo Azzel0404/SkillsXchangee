@@ -27,7 +27,10 @@
     </script>
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/notification-service.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Notification Service (Inline to avoid Vite manifest issues) -->
+    <script src="{{ asset('js/notification-service.js') }}"></script>
 
     {{-- Fallback for production if Vite fails --}}
     @if(app()->environment('production'))
