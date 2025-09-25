@@ -45,9 +45,29 @@ class WebSocketVideoCallManager {
     connectWebSocket() {
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.hostname}:8080`;
             
-            this.log(`Connecting to WebSocket: ${wsUrl}`, 'info');
+            // Determine WebSocket URL based on environment
+            let wsUrl;
+            
+            // Check if we're in production (Render deployment)
+            if (window.location.hostname.includes('render.com') || 
+                window.location.hostname.includes('onrender.com')) {
+                // In production, use the separate WebSocket service
+                // The WebSocket service will be available at a different subdomain or port
+                // For Render, we'll try the WebSocket service URL
+                const baseHostname = window.location.hostname.replace('skillsxchangee-main', 'skillsxchangee-websocket');
+                wsUrl = `${protocol}//${baseHostname}`;
+                this.log(`Attempting WebSocket connection (production): ${wsUrl}`, 'info');
+            } else if (window.location.hostname === 'localhost' || 
+                      window.location.hostname.includes('127.0.0.1')) {
+                // Development environment
+                wsUrl = `${protocol}//${window.location.hostname}:8080`;
+                this.log(`Connecting to WebSocket (dev): ${wsUrl}`, 'info');
+            } else {
+                // Custom domain or other production environment
+                wsUrl = `${protocol}//${window.location.hostname}:8080`;
+                this.log(`Connecting to WebSocket (custom): ${wsUrl}`, 'info');
+            }
             
             this.websocket = new WebSocket(wsUrl);
             
@@ -68,6 +88,11 @@ class WebSocketVideoCallManager {
             
             this.websocket.onerror = (error) => {
                 this.log(`WebSocket error: ${error}`, 'error');
+                // Try alternative connection methods in production
+                if (window.location.hostname.includes('render.com') || 
+                    window.location.hostname.includes('onrender.com')) {
+                    this.tryAlternativeConnection();
+                }
             };
             
         } catch (error) {
@@ -76,6 +101,109 @@ class WebSocketVideoCallManager {
         }
     }
     
+    tryAlternativeConnection() {
+        this.log('Trying alternative WebSocket connection methods...', 'info');
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let alternativeUrl;
+        
+        if (window.location.hostname.includes('render.com') || 
+            window.location.hostname.includes('onrender.com')) {
+            // Try different approaches for Render deployment
+            const alternatives = [
+                // Try the WebSocket service directly
+                `${protocol}//skillsxchangee-websocket.onrender.com`,
+                // Try with port 8080
+                `${protocol}//${window.location.hostname}:8080`,
+                // Try same hostname with different subdomain
+                `${protocol}//${window.location.hostname.replace('skillsxchangee-main', 'skillsxchangee-websocket')}`
+            ];
+            
+            // Try each alternative
+            this.tryConnectionAlternatives(alternatives, 0);
+        } else {
+            // For other environments, try localhost:8080
+            alternativeUrl = `${protocol}//localhost:8080`;
+            this.log(`Trying alternative URL: ${alternativeUrl}`, 'info');
+            this.trySingleAlternative(alternativeUrl);
+        }
+    }
+    
+    tryConnectionAlternatives(alternatives, index) {
+        if (index >= alternatives.length) {
+            this.log('All alternative connections failed', 'error');
+            this.handleWebSocketDisconnect();
+            return;
+        }
+        
+        const url = alternatives[index];
+        this.log(`Trying alternative ${index + 1}/${alternatives.length}: ${url}`, 'info');
+        
+        try {
+            const altWebSocket = new WebSocket(url);
+            
+            altWebSocket.onopen = () => {
+                this.log(`Alternative connection ${index + 1} successful!`, 'success');
+                this.websocket = altWebSocket;
+                this.setupWebSocketHandlers();
+                this.joinRoom();
+            };
+            
+            altWebSocket.onerror = (error) => {
+                this.log(`Alternative ${index + 1} failed, trying next...`, 'warning');
+                // Try next alternative after a short delay
+                setTimeout(() => {
+                    this.tryConnectionAlternatives(alternatives, index + 1);
+                }, 1000);
+            };
+            
+        } catch (error) {
+            this.log(`Alternative ${index + 1} failed: ${error.message}`, 'error');
+            setTimeout(() => {
+                this.tryConnectionAlternatives(alternatives, index + 1);
+            }, 1000);
+        }
+    }
+    
+    trySingleAlternative(url) {
+        try {
+            const altWebSocket = new WebSocket(url);
+            
+            altWebSocket.onopen = () => {
+                this.log('Alternative WebSocket connection successful!', 'success');
+                this.websocket = altWebSocket;
+                this.setupWebSocketHandlers();
+                this.joinRoom();
+            };
+            
+            altWebSocket.onerror = (error) => {
+                this.log('Alternative connection also failed', 'error');
+                this.handleWebSocketDisconnect();
+            };
+            
+        } catch (error) {
+            this.log(`Alternative connection failed: ${error.message}`, 'error');
+            this.handleWebSocketDisconnect();
+        }
+    }
+    
+    setupWebSocketHandlers() {
+        if (!this.websocket) return;
+        
+        this.websocket.onmessage = (event) => {
+            this.handleWebSocketMessage(event);
+        };
+        
+        this.websocket.onclose = (event) => {
+            this.log(`WebSocket closed: ${event.code} - ${event.reason}`, 'warning');
+            this.handleWebSocketDisconnect();
+        };
+        
+        this.websocket.onerror = (error) => {
+            this.log(`WebSocket error: ${error}`, 'error');
+        };
+    }
+
     handleWebSocketDisconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
