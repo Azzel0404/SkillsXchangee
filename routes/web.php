@@ -34,6 +34,18 @@ Route::get('/test-video-call-debug', function () {
     return response()->file(public_path('test-video-call-debug.html'));
 });
 
+Route::get('/video-call-api-alternatives', function () {
+    return response()->file(public_path('video-call-api-alternatives.html'));
+});
+
+Route::get('/test-webrtc-remote-connection', function () {
+    return response()->file(public_path('test-webrtc-remote-connection.html'));
+});
+
+Route::get('/test-console-errors', function () {
+    return response()->file(public_path('test-console-errors.html'));
+});
+
 Route::get('/debug', function () {
     return response()->json([
         'app_env' => app()->environment(),

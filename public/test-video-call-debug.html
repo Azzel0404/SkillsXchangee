@@ -214,21 +214,38 @@
                     ]
                 };
                 
-                const pc = new RTCPeerConnection(config);
+                const pc1 = new RTCPeerConnection(config);
+                const pc2 = new RTCPeerConnection(config);
                 log('✅ RTCPeerConnection created successfully', 'success');
                 
-                // Test offer creation
-                const offer = await pc.createOffer();
+                // Test offer creation on first peer
+                const offer = await pc1.createOffer();
                 log('✅ Offer created successfully', 'success');
                 log(`Offer type: ${offer.type}`, 'info');
                 
-                // Test answer creation
-                await pc.setLocalDescription(offer);
-                const answer = await pc.createAnswer();
+                // Set offer as local description on first peer
+                await pc1.setLocalDescription(offer);
+                log('✅ Offer set as local description', 'success');
+                
+                // Set offer as remote description on second peer
+                await pc2.setRemoteDescription(offer);
+                log('✅ Offer set as remote description', 'success');
+                
+                // Now create answer on second peer (this is the correct flow)
+                const answer = await pc2.createAnswer();
                 log('✅ Answer created successfully', 'success');
                 log(`Answer type: ${answer.type}`, 'info');
                 
-                pc.close();
+                // Set answer as local description on second peer
+                await pc2.setLocalDescription(answer);
+                log('✅ Answer set as local description', 'success');
+                
+                // Set answer as remote description on first peer
+                await pc1.setRemoteDescription(answer);
+                log('✅ Answer set as remote description', 'success');
+                
+                pc1.close();
+                pc2.close();
                 
                 resultDiv.innerHTML = '<div class="success">✅ WebRTC peer connection test passed!</div>';
                 

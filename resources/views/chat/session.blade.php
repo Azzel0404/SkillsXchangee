@@ -875,8 +875,34 @@ if (window.Echo) {
             updateProgress();
         });
 
-    // Include the improved video call implementation
-    @include('chat.video-call-fixed-v2')
+    // Video call functionality
+    function openVideoChat() {
+        console.log('Opening video chat...');
+        const modal = document.getElementById('video-chat-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            initializeVideoChat();
+        } else {
+            console.error('Video chat modal not found');
+            alert('Video chat is not available. Please refresh the page.');
+        }
+    }
+    
+    function closeVideoChat() {
+        const modal = document.getElementById('video-chat-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    
+    function initializeVideoChat() {
+        console.log('Initializing video chat...');
+        // Basic video chat initialization
+        const statusElement = document.getElementById('video-status');
+        if (statusElement) {
+            statusElement.textContent = 'Video chat initialized. Click start to begin.';
+        }
+    }
 
     // Listen for user presence events
     window.Echo.channel('trade-{{ $trade->id }}')
@@ -1084,7 +1110,7 @@ function addMessageToChat(message, senderName, timestamp, isOwn, tempId = null) 
         messageContent = `
             <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
                 <div style="margin-bottom: 8px;">
-                    <img src="${window.tempImageData || '#'}" alt="${fileName}" class="chat-image" onerror="this.style.display='none'">
+                    <img src="\${window.tempImageData || '#'}" alt="\${fileName}" class="chat-image" onerror="this.style.display='none'">
                 </div>
                 <div style="font-size: 0.75rem; opacity: 0.8;">${fileName}</div>
                 <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">${messageTime}</div>
@@ -1096,7 +1122,7 @@ function addMessageToChat(message, senderName, timestamp, isOwn, tempId = null) 
             <div style="max-width: 70%; ${isOwn ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #374151;'} padding: 12px; border-radius: 12px; position: relative; word-wrap: break-word; overflow-wrap: break-word;">
                 <div style="margin-bottom: 8px;">
                     <video controls style="max-width: 200px; max-height: 200px; border-radius: 8px;">
-                        <source src="${window.tempVideoData || '#'}" type="video/mp4">
+                        <source src="\${window.tempVideoData || '#'}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
