@@ -212,6 +212,9 @@ Route::get('/', function () {
 // Broadcasting authentication route
 Broadcast::routes();
 
+// Custom broadcasting auth route for better error handling
+Route::post('/broadcasting/auth', [App\Http\Controllers\BroadcastingController::class, 'auth'])->middleware('auth');
+
 // Debug route for skills
 Route::get('/debug-skills', function () {
     $skills = \App\Models\Skill::all();
