@@ -89,16 +89,15 @@
                 .error((error) => {
                     console.error('❌ Error listening to video-call-offer:', error);
                     if (error.type === 'AuthError') {
-                        console.warn('⚠️ Authentication error - video calls may not work properly');
-                        console.warn('⚠️ This is likely due to Pusher configuration issues');
-                        // Don't retry immediately, as it will likely fail again
-                        // Instead, show a user-friendly message
-                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
+                        // Start HTTP polling as fallback
+                        startVideoCallPolling();
                     }
                 });
         } catch (error) {
             console.error('❌ Error setting up video-call-offer listener:', error);
-            showVideoCallError('Failed to set up video call listeners. Please refresh the page and try again.');
+            console.warn('⚠️ Switching to HTTP polling fallback');
+            startVideoCallPolling();
         }
 
         try {
@@ -117,7 +116,8 @@
                 .error((error) => {
                     console.error('❌ Error listening to video-call-answer:', error);
                     if (error.type === 'AuthError') {
-                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
+                        startVideoCallPolling();
                     }
                 });
         } catch (error) {
@@ -140,7 +140,8 @@
                 .error((error) => {
                     console.error('❌ Error listening to video-call-ice-candidate:', error);
                     if (error.type === 'AuthError') {
-                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
+                        startVideoCallPolling();
                     }
                 });
         } catch (error) {
@@ -163,7 +164,8 @@
                 .error((error) => {
                     console.error('❌ Error listening to video-call-end:', error);
                     if (error.type === 'AuthError') {
-                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
+                        startVideoCallPolling();
                     }
                 });
         } catch (error) {
@@ -175,6 +177,20 @@
         
         // Also initialize presence listeners
         initializePresenceListeners();
+        
+        // Check if Pusher is working, if not start polling fallback
+        setTimeout(() => {
+            if (typeof window.Echo !== 'undefined' && window.Echo.connector && window.Echo.connector.pusher) {
+                const connectionState = window.Echo.connector.pusher.connection.state;
+                if (connectionState !== 'connected' && connectionState !== 'connecting') {
+                    console.warn('⚠️ Pusher connection not stable, starting polling fallback');
+                    startVideoCallPolling();
+                }
+            } else {
+                console.warn('⚠️ Pusher not available, starting polling fallback');
+                startVideoCallPolling();
+            }
+        }, 5000); // Check after 5 seconds
     }
 
     // Wait for Pusher to be available before initializing video call listeners
@@ -1789,6 +1805,79 @@ function showVideoCallError(message) {
     const chatContainer = document.querySelector('.chat-container') || document.querySelector('.bg-white');
     if (chatContainer) {
         chatContainer.insertBefore(errorDiv, chatContainer.firstChild);
+    }
+}
+
+// HTTP polling fallback for video calls when Pusher fails
+let videoCallPollingInterval = null;
+let lastPollTime = Date.now();
+
+function startVideoCallPolling() {
+    console.log('🔄 Starting HTTP polling fallback for video calls...');
+    
+    if (videoCallPollingInterval) {
+        clearInterval(videoCallPollingInterval);
+    }
+    
+    videoCallPollingInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/chat/{{ $trade->id }}/video-call/poll?since=${lastPollTime}`);
+            const data = await response.json();
+            
+            if (data.success && data.messages && data.messages.length > 0) {
+                console.log('📞 Polling received messages:', data.messages);
+                
+                for (const message of data.messages) {
+                    if (message.type === 'video-call-offer' && message.toUserId === {{ auth()->id() }}) {
+                        console.log('📞 Processing video call offer via polling:', message);
+                        await handleVideoCallOffer(message);
+                    } else if (message.type === 'video-call-answer' && message.toUserId === {{ auth()->id() }}) {
+                        console.log('📞 Processing video call answer via polling:', message);
+                        await handleVideoCallAnswer(message);
+                    } else if (message.type === 'video-call-ice-candidate' && message.toUserId === {{ auth()->id() }}) {
+                        console.log('📞 Processing ICE candidate via polling:', message);
+                        await handleIceCandidate(message);
+                    } else if (message.type === 'video-call-end' && message.fromUserId !== {{ auth()->id() }}) {
+                        console.log('📞 Processing video call end via polling:', message);
+                        handleVideoCallEnd(message);
+                    }
+                }
+                
+                lastPollTime = Date.now();
+            }
+        } catch (error) {
+            console.error('❌ Error polling for video call messages:', error);
+        }
+    }, 2000); // Poll every 2 seconds
+    
+    // Show a notification that we're using polling fallback
+    const fallbackDiv = document.createElement('div');
+    fallbackDiv.className = 'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4';
+    fallbackDiv.innerHTML = `
+        <div class="flex">
+            <div class="py-1">
+                <svg class="fill-current h-6 w-6 text-yellow-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-bold">Using Fallback Mode</p>
+                <p class="text-sm">Video calls are working via HTTP polling. Real-time features may be slightly delayed.</p>
+            </div>
+        </div>
+    `;
+    
+    const chatContainer = document.querySelector('.chat-container') || document.querySelector('.bg-white');
+    if (chatContainer) {
+        chatContainer.insertBefore(fallbackDiv, chatContainer.firstChild);
+    }
+}
+
+function stopVideoCallPolling() {
+    if (videoCallPollingInterval) {
+        clearInterval(videoCallPollingInterval);
+        videoCallPollingInterval = null;
+        console.log('🛑 Stopped HTTP polling for video calls');
     }
 }
 
