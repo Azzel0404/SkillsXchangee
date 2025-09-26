@@ -25,13 +25,34 @@ class WebSocketVideoCallManager {
         this.meteredApiKey = '511852cda421697270ed9af8b089038b39a7';
         this.meteredApiUrl = 'https://skillxchange.metered.live/api/v1/turn/credentials';
         
-        // Enhanced STUN/TURN configuration (will be updated with fresh credentials)
+        // Enhanced STUN/TURN configuration with Metered credentials
         this.iceServers = [
+            // Google STUN servers (fallback)
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' }
+            // Metered STUN server
+            { urls: 'stun:stun.relay.metered.ca:80' },
+            // Metered TURN servers with credentials
+            {
+                urls: 'turn:asia.relay.metered.ca:80',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turn:asia.relay.metered.ca:80?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turn:asia.relay.metered.ca:443',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turns:asia.relay.metered.ca:443?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            }
         ];
         
         this.init();

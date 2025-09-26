@@ -572,7 +572,9 @@
                                 <input type="checkbox" {{ $task->completed ? 'checked' : '' }}
                                 onchange="toggleTask({{ $task->id }})"
                                 style="width: 16px; height: 16px;">
-                                <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
+                                <span
+                                    style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{
+                                    $task->title }}</span>
                             </div>
                             @if($task->description)
                             <div style="font-size: 0.875rem; color: #6b7280; margin-left: 24px;">{{ $task->description
@@ -612,7 +614,9 @@
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <input type="checkbox" {{ $task->completed ? 'checked' : '' }} disabled style="width:
                                 16px; height: 16px;">
-                                <span style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{ $task->title }}</span>
+                                <span
+                                    style="font-weight: 500; {{ $task->completed ? 'text-decoration: line-through; color: #6b7280;' : '' }}">{{
+                                    $task->title }}</span>
 
                                 <!-- Verification Status Badge -->
                                 @if($task->completed)
@@ -2182,13 +2186,34 @@ async function fetchTurnCredentials() {
     } catch (error) {
         console.error('❌ Error fetching TURN credentials:', error);
         
-        // Fallback to basic STUN servers
+        // Fallback to basic STUN servers with Metered TURN servers
         return [
+            // Google STUN servers (fallback)
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' }
+            // Metered STUN server
+            { urls: 'stun:stun.relay.metered.ca:80' },
+            // Metered TURN servers with credentials
+            {
+                urls: 'turn:asia.relay.metered.ca:80',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turn:asia.relay.metered.ca:80?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turn:asia.relay.metered.ca:443',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turns:asia.relay.metered.ca:443?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            }
         ];
     }
 }

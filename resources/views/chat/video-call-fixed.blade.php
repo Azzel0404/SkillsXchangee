@@ -183,13 +183,34 @@ async function fetchTurnCredentials() {
     } catch (error) {
         console.error('❌ Error fetching TURN credentials:', error);
         
-        // Fallback to basic STUN servers
+        // Fallback to basic STUN servers with Metered TURN servers
         return [
+            // Google STUN servers (fallback)
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' }
+            // Metered STUN server
+            { urls: 'stun:stun.relay.metered.ca:80' },
+            // Metered TURN servers with credentials
+            {
+                urls: 'turn:asia.relay.metered.ca:80',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turn:asia.relay.metered.ca:80?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turn:asia.relay.metered.ca:443',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            },
+            {
+                urls: 'turns:asia.relay.metered.ca:443?transport=tcp',
+                username: '0582eeabe15281e17e922394',
+                credential: 'g7fjNoaIyTpLnkaf'
+            }
         ];
     }
 }
