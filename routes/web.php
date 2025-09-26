@@ -209,11 +209,24 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Broadcasting authentication route
-Broadcast::routes();
-
 // Custom broadcasting auth route for better error handling
 Route::post('/broadcasting/auth', [App\Http\Controllers\BroadcastingController::class, 'auth'])->middleware('auth');
+
+// Test broadcasting auth without auth middleware for debugging
+Route::post('/test-broadcasting-auth', [App\Http\Controllers\BroadcastingController::class, 'auth']);
+
+// Test route for broadcasting auth
+Route::get('/test-broadcasting-auth', function () {
+    return response()->file(public_path('test-auth-endpoint.html'));
+});
+
+// Final broadcasting test
+Route::get('/test-broadcasting-final', function () {
+    return response()->file(public_path('test-broadcasting-final.html'));
+});
+
+// Broadcasting authentication route (fallback)
+Broadcast::routes();
 
 // Debug route for skills
 Route::get('/debug-skills', function () {

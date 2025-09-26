@@ -14,6 +14,14 @@ class BroadcastingController extends Controller
     public function auth(Request $request)
     {
         try {
+            // Log the incoming request for debugging
+            Log::info('Broadcasting auth request received', [
+                'headers' => $request->headers->all(),
+                'body' => $request->all(),
+                'user_authenticated' => Auth::check(),
+                'user_id' => Auth::id()
+            ]);
+            
             $user = Auth::user();
             
             if (!$user) {
@@ -32,6 +40,7 @@ class BroadcastingController extends Controller
             
             // Handle private channels
             if (str_starts_with($channelName, 'private-')) {
+                $originalChannelName = $channelName;
                 $channelName = str_replace('private-', '', $channelName);
                 
                 // Check if user can access this channel
@@ -56,6 +65,9 @@ class BroadcastingController extends Controller
                         return response()->json(['error' => 'Unauthorized for this trade'], 403);
                     }
                 }
+                
+                // Use the original channel name for Pusher auth
+                $channelName = $originalChannelName;
             }
             
             // Generate Pusher auth signature
