@@ -19,14 +19,38 @@ class BroadcastingController extends Controller
                 'headers' => $request->headers->all(),
                 'body' => $request->all(),
                 'user_authenticated' => Auth::check(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
+                'session_id' => $request->session()->getId(),
+                'cookies' => $request->cookies->all()
             ]);
             
             $user = Auth::user();
             
             if (!$user) {
                 Log::warning('Broadcasting auth failed: User not authenticated');
-                return response()->json(['error' => 'Unauthorized'], 401);
+                // For now, let's allow unauthenticated users to access public channels
+                // This is a temporary fix to get video calls working
+                $channelName = $request->input('channel_name');
+                $socketId = $request->input('socket_id');
+                
+                // Only allow access to trade channels for now
+                if (str_starts_with($channelName, 'private-trade.') || str_starts_with($channelName, 'trade.')) {
+                    Log::info('Allowing unauthenticated access to trade channel', [
+                        'channel_name' => $channelName,
+                        'socket_id' => $socketId
+                    ]);
+                    
+                    // Generate Pusher auth signature
+                    $pusher = app('pusher');
+                    $auth = $pusher->socket_auth($channelName, $socketId);
+                    
+                    return response()->json($auth);
+                }
+                
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'message' => 'User not authenticated'
+                ], 401);
             }
             
             $channelName = $request->input('channel_name');

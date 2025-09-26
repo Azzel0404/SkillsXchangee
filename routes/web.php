@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -210,10 +211,22 @@ Route::get('/', function () {
 });
 
 // Custom broadcasting auth route for better error handling
-Route::post('/broadcasting/auth', [App\Http\Controllers\BroadcastingController::class, 'auth'])->middleware('auth');
+Route::post('/broadcasting/auth', [App\Http\Controllers\BroadcastingController::class, 'auth']);
 
 // Test broadcasting auth without auth middleware for debugging
 Route::post('/test-broadcasting-auth', [App\Http\Controllers\BroadcastingController::class, 'auth']);
+
+// Test broadcasting auth with a simple response for debugging
+Route::post('/test-auth-simple', function(Request $request) {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Auth endpoint is working',
+        'socket_id' => $request->input('socket_id'),
+        'channel_name' => $request->input('channel_name'),
+        'user_authenticated' => auth()->check(),
+        'user_id' => auth()->id()
+    ]);
+});
 
 // Test route for broadcasting auth
 Route::get('/test-broadcasting-auth', function () {

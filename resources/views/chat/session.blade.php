@@ -90,15 +90,15 @@
                     console.error('❌ Error listening to video-call-offer:', error);
                     if (error.type === 'AuthError') {
                         console.warn('⚠️ Authentication error - video calls may not work properly');
-                        // Try to re-authenticate after a delay
-                        setTimeout(() => {
-                            console.log('🔄 Retrying video call listener setup...');
-                            initializeVideoCallListeners();
-                        }, 5000);
+                        console.warn('⚠️ This is likely due to Pusher configuration issues');
+                        // Don't retry immediately, as it will likely fail again
+                        // Instead, show a user-friendly message
+                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
                     }
                 });
         } catch (error) {
             console.error('❌ Error setting up video-call-offer listener:', error);
+            showVideoCallError('Failed to set up video call listeners. Please refresh the page and try again.');
         }
 
         try {
@@ -116,6 +116,9 @@
                 })
                 .error((error) => {
                     console.error('❌ Error listening to video-call-answer:', error);
+                    if (error.type === 'AuthError') {
+                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                    }
                 });
         } catch (error) {
             console.error('❌ Error setting up video-call-answer listener:', error);
@@ -136,6 +139,9 @@
                 })
                 .error((error) => {
                     console.error('❌ Error listening to video-call-ice-candidate:', error);
+                    if (error.type === 'AuthError') {
+                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                    }
                 });
         } catch (error) {
             console.error('❌ Error setting up video-call-ice-candidate listener:', error);
@@ -156,6 +162,9 @@
                 })
                 .error((error) => {
                     console.error('❌ Error listening to video-call-end:', error);
+                    if (error.type === 'AuthError') {
+                        showVideoCallError('Video calls are temporarily unavailable due to configuration issues. Please refresh the page and try again.');
+                    }
                 });
         } catch (error) {
             console.error('❌ Error setting up video-call-end listener:', error);
@@ -1753,6 +1762,34 @@ if (window.Echo) {
     };
 
     updateConnectionStatus('error');
+}
+
+// Function to show video call errors to the user
+function showVideoCallError(message) {
+    console.error('📞 Video Call Error:', message);
+    
+    // Show a user-friendly error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+    errorDiv.innerHTML = `
+        <div class="flex">
+            <div class="py-1">
+                <svg class="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-bold">Video Call Unavailable</p>
+                <p class="text-sm">${message}</p>
+            </div>
+        </div>
+    `;
+    
+    // Insert the error message at the top of the chat container
+    const chatContainer = document.querySelector('.chat-container') || document.querySelector('.bg-white');
+    if (chatContainer) {
+        chatContainer.insertBefore(errorDiv, chatContainer.firstChild);
+    }
 }
 
 // WebSocket fallback removed - using Pusher for all video call signaling
