@@ -15,13 +15,108 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof NotificationService !== 'undefined') {
             window.notificationService = new NotificationService();
-            window.notificationService.requestPermission();
+            if (window.notificationService.requestPermission) {
+                window.notificationService.requestPermission();
+            }
             console.log('✅ Notification service initialized');
         } else {
             console.warn('⚠️ NotificationService not available');
         }
     });
     
+    // Initialize video call listeners when Pusher is ready
+    let videoCallListenersInitialized = false;
+    
+    function initializeVideoCallListeners() {
+        if (videoCallListenersInitialized) {
+            console.log('⚠️ Video call listeners already initialized, skipping...');
+            return;
+        }
+        
+        console.log('🔧 Setting up video call listeners...');
+        
+        window.Echo.private('trade.{{ $trade->id }}')
+            .listen('video-call-offer', async function(data) {
+                console.log('📞 Received video call offer:', data);
+                console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
+                
+                if (data.fromUserId !== {{ auth()->id() }}) {
+                    console.log('📞 Processing incoming call from different user');
+                    
+                    // Show notification for incoming call
+                    if (window.notificationService) {
+                        console.log('📞 Showing notification for incoming call from:', data.fromUserName);
+                        window.notificationService.showIncomingCallNotification(
+                            data.fromUserName,
+                            data.fromUserId,
+                            {{ $trade->id }}
+                        );
+                    }
+                    
+                    await handleVideoCallOffer(data);
+                } else {
+                    console.log('📞 Ignoring call from self');
+                }
+            })
+            .error((error) => {
+                console.error('❌ Error listening to video-call-offer:', error);
+            });
+
+        window.Echo.private('trade.{{ $trade->id }}')
+            .listen('video-call-answer', async function(data) {
+                console.log('📞 Received video call answer:', data);
+                console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
+                
+                if (data.toUserId === {{ auth()->id() }}) {
+                    console.log('📞 Processing answer for current user');
+                    await handleVideoCallAnswer(data);
+                } else {
+                    console.log('📞 Ignoring answer for different user');
+                }
+            })
+            .error((error) => {
+                console.error('❌ Error listening to video-call-answer:', error);
+            });
+
+        window.Echo.private('trade.{{ $trade->id }}')
+            .listen('video-call-ice-candidate', async function(data) {
+                console.log('📞 Received ICE candidate:', data);
+                console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
+                
+                if (data.toUserId === {{ auth()->id() }}) {
+                    console.log('📞 Processing ICE candidate for current user');
+                    await handleIceCandidate(data);
+                } else {
+                    console.log('📞 Ignoring ICE candidate for different user');
+                }
+            })
+            .error((error) => {
+                console.error('❌ Error listening to video-call-ice-candidate:', error);
+            });
+
+        window.Echo.private('trade.{{ $trade->id }}')
+            .listen('video-call-end', function(data) {
+                console.log('📞 Video call ended:', data);
+                console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
+                
+                if (data.fromUserId !== {{ auth()->id() }}) {
+                    console.log('📞 Processing call end from different user');
+                    handleVideoCallEnd(data);
+                } else {
+                    console.log('📞 Ignoring call end from self');
+                }
+            })
+            .error((error) => {
+                console.error('❌ Error listening to video-call-end:', error);
+            });
+            
+        console.log('✅ Video call listeners initialized successfully');
+        videoCallListenersInitialized = true;
+        
+        // Also initialize presence listeners
+        initializePresenceListeners();
+    }
+
     // Wait for Pusher to be available before initializing video call listeners
     let pusherWaitAttempts = 0;
     const maxPusherWaitAttempts = 20; // 10 seconds max wait time
@@ -49,6 +144,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         waitForPusherAndInitialize();
     });
+    
+    // Also try to initialize when Echo becomes available (fallback)
+    const checkEchoInterval = setInterval(() => {
+        if (typeof window.Echo !== 'undefined' && !videoCallListenersInitialized) {
+            console.log('🔄 Echo became available, initializing listeners...');
+            initializeVideoCallListeners();
+            clearInterval(checkEchoInterval);
+        }
+    }, 1000);
+    
+    // Clear interval after 30 seconds
+    setTimeout(() => {
+        clearInterval(checkEchoInterval);
+    }, 30000);
 </script>
 <style>
     @keyframes pulse {
@@ -1470,96 +1579,6 @@ if (window.Echo) {
             console.error('❌ Pusher connection error:', error);
         });
     }
-    
-    // Initialize video call listeners when Pusher is ready
-    let videoCallListenersInitialized = false;
-    
-    function initializeVideoCallListeners() {
-        if (videoCallListenersInitialized) {
-            console.log('⚠️ Video call listeners already initialized, skipping...');
-            return;
-        }
-        
-        console.log('🔧 Setting up video call listeners...');
-        
-        window.Echo.private('trade.{{ $trade->id }}')
-            .listen('video-call-offer', async function(data) {
-                console.log('📞 Received video call offer:', data);
-                console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
-                
-                if (data.fromUserId !== {{ auth()->id() }}) {
-                    console.log('📞 Processing incoming call from different user');
-                    
-                    // Show notification for incoming call
-                    if (window.notificationService) {
-                        console.log('📞 Showing notification for incoming call from:', data.fromUserName);
-                        window.notificationService.showIncomingCallNotification(
-                            data.fromUserName,
-                            data.fromUserId,
-                            {{ $trade->id }}
-                        );
-                    }
-                    
-                    await handleVideoCallOffer(data);
-                } else {
-                    console.log('📞 Ignoring call from self');
-                }
-            })
-            .error((error) => {
-                console.error('❌ Error listening to video-call-offer:', error);
-            });
-
-        window.Echo.private('trade.{{ $trade->id }}')
-            .listen('video-call-answer', async function(data) {
-                console.log('📞 Received video call answer:', data);
-                console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
-                
-                if (data.toUserId === {{ auth()->id() }}) {
-                    console.log('📞 Processing answer for current user');
-                    await handleVideoCallAnswer(data);
-                } else {
-                    console.log('📞 Ignoring answer for different user');
-                }
-            })
-            .error((error) => {
-                console.error('❌ Error listening to video-call-answer:', error);
-            });
-
-        window.Echo.private('trade.{{ $trade->id }}')
-            .listen('video-call-ice-candidate', async function(data) {
-                console.log('📞 Received ICE candidate:', data);
-                console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
-                
-                if (data.toUserId === {{ auth()->id() }}) {
-                    console.log('📞 Processing ICE candidate for current user');
-                    await handleIceCandidate(data);
-                } else {
-                    console.log('📞 Ignoring ICE candidate for different user');
-                }
-            })
-            .error((error) => {
-                console.error('❌ Error listening to video-call-ice-candidate:', error);
-            });
-
-        window.Echo.private('trade.{{ $trade->id }}')
-            .listen('video-call-end', function(data) {
-                console.log('📞 Video call ended:', data);
-                console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
-                
-                if (data.fromUserId !== {{ auth()->id() }}) {
-                    console.log('📞 Processing call end from different user');
-                    handleVideoCallEnd(data);
-                } else {
-                    console.log('📞 Ignoring call end from self');
-                }
-            })
-            .error((error) => {
-                console.error('❌ Error listening to video-call-end:', error);
-            });
-            
-        console.log('✅ Video call listeners initialized successfully');
-        videoCallListenersInitialized = true;
-    }
 
     // Handle incoming offer
     async function handleVideoCallOffer(data) {
@@ -1678,24 +1697,28 @@ if (window.Echo) {
             userId: {{ auth()->id() }},
             echoAvailable: typeof window.Echo !== 'undefined',
             pusherAvailable: typeof window.Pusher !== 'undefined',
-            connectionState: window.Echo ? window.Echo.connector.pusher.connection.state : 'unknown'
+            connectionState: window.Echo && window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection ? window.Echo.connector.pusher.connection.state : 'unknown'
         };
     };
 
-    // Listen for user presence events
-    window.Echo.channel('trade-{{ $trade->id }}')
-        .listen('user-joined', function(data) {
-            console.log('User joined:', data);
-            handleUserJoined(data);
-        });
+    // Listen for user presence events (moved inside Pusher initialization)
+    function initializePresenceListeners() {
+        if (typeof window.Echo !== 'undefined') {
+            window.Echo.channel('trade-{{ $trade->id }}')
+                .listen('user-joined', function(data) {
+                    console.log('User joined:', data);
+                    handleUserJoined(data);
+                });
 
-    window.Echo.channel('trade-{{ $trade->id }}')
-        .listen('user-left', function(data) {
-            console.log('User left:', data);
-            handleUserLeft(data);
-        });
-} else {
-    console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
+            window.Echo.channel('trade-{{ $trade->id }}')
+                .listen('user-left', function(data) {
+                    console.log('User left:', data);
+                    handleUserLeft(data);
+                });
+        } else {
+            console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
+        }
+    }
     updateConnectionStatus('error');
 }
 
