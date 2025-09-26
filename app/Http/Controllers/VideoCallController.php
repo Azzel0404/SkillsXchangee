@@ -39,6 +39,7 @@ class VideoCallController extends Controller
                 $trade->id,
                 $user->id,
                 $user->firstname . ' ' . $user->lastname,
+                $otherUser->id,
                 $request->offer,
                 $request->callId
             );

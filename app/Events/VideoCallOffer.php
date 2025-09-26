@@ -17,17 +17,19 @@ class VideoCallOffer implements ShouldBroadcast
     public $tradeId;
     public $fromUserId;
     public $fromUserName;
+    public $toUserId;
     public $offer;
     public $callId;
 
     /**
      * Create a new event instance.
      */
-    public function __construct($tradeId, $fromUserId, $fromUserName, $offer, $callId)
+    public function __construct($tradeId, $fromUserId, $fromUserName, $toUserId, $offer, $callId)
     {
         $this->tradeId = $tradeId;
         $this->fromUserId = $fromUserId;
         $this->fromUserName = $fromUserName;
+        $this->toUserId = $toUserId;
         $this->offer = $offer;
         $this->callId = $callId;
     }

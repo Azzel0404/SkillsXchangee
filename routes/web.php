@@ -30,6 +30,10 @@ Route::get('/test-video-permissions', function () {
     return response()->file(public_path('test-video-permissions.html'));
 });
 
+Route::get('/test-video-call-debug', function () {
+    return response()->file(public_path('test-video-call-debug.html'));
+});
+
 Route::get('/debug', function () {
     return response()->json([
         'app_env' => app()->environment(),

@@ -875,64 +875,8 @@ if (window.Echo) {
             updateProgress();
         });
 
-    // Listen for video call events
-    const privateChannel = window.Echo.private('trade.{{ $trade->id }}');
-    console.log('📡 Subscribing to private channel: trade.{{ $trade->id }}');
-    
-    // Add subscription error handling
-    privateChannel.error((error) => {
-        console.error('❌ Private channel subscription error:', error);
-    });
-    
-    privateChannel
-        .listen('video-call-offer', async function(data) {
-            console.log('📞 Received video call offer:', data);
-            console.log('📞 Current user ID:', window.authUserId);
-            console.log('📞 From user ID:', data.fromUserId);
-            console.log('📞 Notification service available:', !!window.notificationService);
-            
-            if (data.fromUserId !== window.authUserId) {
-                console.log('📞 Processing incoming call from different user');
-                // Show notification for incoming call
-                if (window.notificationService) {
-                    console.log('📞 Showing notification for incoming call');
-                    window.notificationService.showIncomingCallNotification(
-                        data.fromUserName || 'Unknown User',
-                        data.fromUserId,
-                        data.tradeId
-                    );
-                } else {
-                    console.log('❌ Notification service not available');
-                }
-                await handleVideoCallOffer(data);
-            } else {
-                console.log('📞 Ignoring call from self');
-            }
-        });
-
-    window.Echo.private('trade.{{ $trade->id }}')
-        .listen('video-call-answer', async function(data) {
-            console.log('Received video call answer:', data);
-            if (data.toUserId === window.authUserId) {
-                await handleVideoCallAnswer(data);
-            }
-        });
-
-    window.Echo.private('trade.{{ $trade->id }}')
-        .listen('video-call-ice-candidate', async function(data) {
-            console.log('Received ICE candidate:', data);
-            if (data.toUserId === window.authUserId) {
-                await handleIceCandidate(data);
-            }
-        });
-
-    window.Echo.private('trade.{{ $trade->id }}')
-        .listen('video-call-end', function(data) {
-            console.log('Received video call end:', data);
-            if (data.fromUserId !== window.authUserId) {
-                handleVideoCallEnd(data);
-            }
-        });
+    // Include the improved video call implementation
+    @include('chat.video-call-fixed-v2')
 
     // Listen for user presence events
     window.Echo.channel('trade-{{ $trade->id }}')
