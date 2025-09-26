@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -207,6 +208,9 @@ Route::get('/debug-users', function () {
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Broadcasting authentication route
+Broadcast::routes();
 
 // Debug route for skills
 Route::get('/debug-skills', function () {

@@ -27,6 +27,33 @@
     // Initialize video call listeners when Pusher is ready
     let videoCallListenersInitialized = false;
     
+    // Listen for user presence events
+    function initializePresenceListeners() {
+        if (typeof window.Echo !== 'undefined') {
+            try {
+                window.Echo.channel('trade-{{ $trade->id }}')
+                    .listen('user-joined', function(data) {
+                        console.log('User joined:', data);
+                        if (typeof handleUserJoined === 'function') {
+                            handleUserJoined(data);
+                        }
+                    });
+
+                window.Echo.channel('trade-{{ $trade->id }}')
+                    .listen('user-left', function(data) {
+                        console.log('User left:', data);
+                        if (typeof handleUserLeft === 'function') {
+                            handleUserLeft(data);
+                        }
+                    });
+            } catch (error) {
+                console.error('Error setting up presence listeners:', error);
+            }
+        } else {
+            console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
+        }
+    }
+    
     function initializeVideoCallListeners() {
         if (videoCallListenersInitialized) {
             console.log('⚠️ Video call listeners already initialized, skipping...');
@@ -1701,24 +1728,6 @@ if (window.Echo) {
         };
     };
 
-    // Listen for user presence events (moved inside Pusher initialization)
-    function initializePresenceListeners() {
-        if (typeof window.Echo !== 'undefined') {
-            window.Echo.channel('trade-{{ $trade->id }}')
-                .listen('user-joined', function(data) {
-                    console.log('User joined:', data);
-                    handleUserJoined(data);
-                });
-
-            window.Echo.channel('trade-{{ $trade->id }}')
-                .listen('user-left', function(data) {
-                    console.log('User left:', data);
-                    handleUserLeft(data);
-                });
-        } else {
-            console.error('Laravel Echo not available. Make sure Pusher is properly configured.');
-        }
-    }
     updateConnectionStatus('error');
 }
 
