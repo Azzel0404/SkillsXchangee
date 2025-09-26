@@ -397,6 +397,84 @@
         font-size: 0.75rem;
         opacity: 0.8;
     }
+
+    /* Dynamic Status Styles */
+    .call-status {
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+        padding: 10px 20px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+    }
+
+    .call-status.calling {
+        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .call-status.answering {
+        background: linear-gradient(45deg, #4ecdc4, #6dd5ed);
+        color: white;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+    }
+
+    .call-status.waiting {
+        background: linear-gradient(45deg, #ffd93d, #ffed4e);
+        color: #333;
+        box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+    }
+
+    .call-status.connected {
+        background: linear-gradient(45deg, #51cf66, #69db7c);
+        color: white;
+        box-shadow: 0 4px 15px rgba(81, 207, 102, 0.4);
+        animation: none;
+    }
+
+    .call-status.failed {
+        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .call-status.lost {
+        background: linear-gradient(45deg, #ffa726, #ffb74d);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
+    }
+
+    .call-status.ended {
+        background: linear-gradient(45deg, #78909c, #90a4ae);
+        color: white;
+        box-shadow: 0 4px 15px rgba(120, 144, 156, 0.4);
+        animation: none;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .call-timer {
+        font-size: 24px;
+        font-weight: 700;
+        color: #51cf66;
+        text-align: center;
+        margin: 10px 0;
+        font-family: 'Courier New', monospace;
+    }
 </style>
 
 <!-- Video Chat Modal -->
@@ -875,13 +953,27 @@ if (window.Echo) {
             updateProgress();
         });
 
-    // Video call functionality
+    // Video call functionality - Messenger style
+    let videoCallState = {
+        isActive: false,
+        isInitiator: false,
+        isConnected: false,
+        callId: null,
+        partnerId: null,
+        localStream: null,
+        remoteStream: null,
+        peerConnection: null,
+        startTime: null,
+        timer: null
+    };
+
     function openVideoChat() {
-        console.log('Opening video chat...');
+        console.log('🎥 Opening video chat...');
         const modal = document.getElementById('video-chat-modal');
         if (modal) {
             modal.style.display = 'flex';
-            initializeVideoChat();
+            // Automatically start the call like Messenger
+            startVideoCall();
         } else {
             console.error('Video chat modal not found');
             alert('Video chat is not available. Please refresh the page.');
@@ -889,20 +981,641 @@ if (window.Echo) {
     }
     
     function closeVideoChat() {
+        console.log('🛑 Closing video chat...');
         const modal = document.getElementById('video-chat-modal');
         if (modal) {
             modal.style.display = 'none';
         }
+        endVideoCall();
     }
     
-    function initializeVideoChat() {
-        console.log('Initializing video chat...');
-        // Basic video chat initialization
-        const statusElement = document.getElementById('video-status');
-        if (statusElement) {
-            statusElement.textContent = 'Video chat initialized. Click start to begin.';
+    async function startVideoCall() {
+        console.log('🚀 Starting video call automatically...');
+        
+        try {
+            // Get partner ID
+            const partnerId = getPartnerId();
+            if (!partnerId) {
+                alert('No partner found for this trade.');
+                return;
+            }
+            
+            videoCallState.isInitiator = true;
+            videoCallState.partnerId = partnerId;
+            videoCallState.callId = generateCallId();
+            
+            // Update UI to show calling state
+            updateCallStatus('Initializing...');
+            updateCallTimer('00:00');
+            
+            // Get user media
+            console.log('📹 Getting user media...');
+            updateCallStatus('Getting camera access...');
+            videoCallState.localStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 1280, height: 720 },
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+            
+            // Setup local video
+            const localVideo = document.getElementById('local-video');
+            if (localVideo) {
+                localVideo.srcObject = videoCallState.localStream;
+                localVideo.style.display = 'block';
+            }
+            
+            updateCallStatus('Setting up connection...');
+            
+            // Create peer connection
+            await createPeerConnection();
+            
+            // Add local stream to peer connection
+            videoCallState.localStream.getTracks().forEach(track => {
+                videoCallState.peerConnection.addTrack(track, videoCallState.localStream);
+            });
+            
+            // Create offer
+            console.log('📞 Creating offer...');
+            updateCallStatus('Creating offer...');
+            const offer = await videoCallState.peerConnection.createOffer();
+            await videoCallState.peerConnection.setLocalDescription(offer);
+            
+            // Send offer via Pusher
+            updateCallStatus('Calling...');
+            await sendVideoCallOffer(offer);
+            
+            videoCallState.isActive = true;
+            startCallTimer();
+            
+            // Set a timeout to show "waiting" status
+            setTimeout(() => {
+                if (videoCallState.isActive && !videoCallState.isConnected) {
+                    updateCallStatus('Waiting for answer...');
+                }
+            }, 5000);
+            
+            console.log('✅ Video call initiated successfully');
+            
+        } catch (error) {
+            console.error('❌ Error starting video call:', error);
+            alert('Failed to start video call: ' + error.message);
+            endVideoCall();
         }
     }
+    
+    async function createPeerConnection() {
+        console.log('🔗 Creating peer connection...');
+        
+        const iceServers = await fetchTurnCredentials();
+        const config = {
+            iceServers: iceServers,
+            iceCandidatePoolSize: 10,
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require',
+            iceTransportPolicy: 'all'
+        };
+        
+        videoCallState.peerConnection = new RTCPeerConnection(config);
+        
+        // Handle ICE candidates
+        videoCallState.peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                console.log('📡 Sending ICE candidate');
+                sendIceCandidate(event.candidate);
+            }
+        };
+        
+        // Handle remote stream
+        videoCallState.peerConnection.ontrack = (event) => {
+            console.log('📹 Received remote stream');
+            videoCallState.remoteStream = event.streams[0];
+            const remoteVideo = document.getElementById('remote-video');
+            if (remoteVideo) {
+                remoteVideo.srcObject = videoCallState.remoteStream;
+                remoteVideo.style.display = 'block';
+            }
+            updateCallStatus('Video connected');
+            videoCallState.isConnected = true;
+        };
+        
+        // Handle connection state changes
+        videoCallState.peerConnection.onconnectionstatechange = () => {
+            const state = videoCallState.peerConnection.connectionState;
+            console.log('🔗 Connection state:', state);
+            
+            switch (state) {
+                case 'connecting':
+                    updateCallStatus('Connecting...');
+                    break;
+                case 'connected':
+                    updateCallStatus('Connected');
+                    videoCallState.isConnected = true;
+                    break;
+                case 'disconnected':
+                    updateCallStatus('Disconnected');
+                    videoCallState.isConnected = false;
+                    break;
+                case 'failed':
+                    updateCallStatus('Connection failed');
+                    videoCallState.isConnected = false;
+                    // Try to reconnect after 3 seconds
+                    setTimeout(() => {
+                        if (videoCallState.isActive && !videoCallState.isConnected) {
+                            updateCallStatus('Reconnecting...');
+                            videoCallState.peerConnection.restartIce();
+                        }
+                    }, 3000);
+                    break;
+                case 'closed':
+                    updateCallStatus('Call ended');
+                    videoCallState.isConnected = false;
+                    break;
+            }
+        };
+        
+        // Handle ICE connection state changes
+        videoCallState.peerConnection.oniceconnectionstatechange = () => {
+            const state = videoCallState.peerConnection.iceConnectionState;
+            console.log('🧊 ICE connection state:', state);
+            
+            switch (state) {
+                case 'new':
+                    updateCallStatus('Establishing connection...');
+                    break;
+                case 'checking':
+                    updateCallStatus('Checking connection...');
+                    break;
+                case 'connected':
+                    updateCallStatus('Connected');
+                    break;
+                case 'completed':
+                    updateCallStatus('Connection established');
+                    break;
+                case 'failed':
+                    updateCallStatus('Connection failed');
+                    console.log('🔄 Restarting ICE...');
+                    videoCallState.peerConnection.restartIce();
+                    break;
+                case 'disconnected':
+                    updateCallStatus('Connection lost');
+                    break;
+                case 'closed':
+                    updateCallStatus('Call ended');
+                    break;
+            }
+        };
+    }
+    
+    async function fetchTurnCredentials() {
+        try {
+            console.log('🔄 Fetching TURN credentials...');
+            const apiKey = '511852cda421697270ed9af8b089038b39a7';
+            const response = await fetch(`https://skillxchange.metered.live/api/v1/turn/credentials?apiKey=${apiKey}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const iceServers = await response.json();
+            console.log('✅ TURN credentials fetched:', iceServers.length, 'servers');
+            return iceServers;
+            
+        } catch (error) {
+            console.error('❌ Error fetching TURN credentials:', error);
+            // Fallback servers
+            return [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun.relay.metered.ca:80' }
+            ];
+        }
+    }
+    
+    async function sendVideoCallOffer(offer) {
+        try {
+            console.log('📤 Sending video call offer...');
+            const response = await fetch(`/chat/{{ $trade->id }}/video-call/offer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    offer: offer,
+                    callId: videoCallState.callId
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            console.log('✅ Offer sent successfully');
+            
+        } catch (error) {
+            console.error('❌ Error sending offer:', error);
+            throw error;
+        }
+    }
+    
+    async function sendVideoCallAnswer(answer) {
+        try {
+            console.log('📤 Sending video call answer...');
+            const response = await fetch(`/chat/{{ $trade->id }}/video-call/answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    answer: answer,
+                    callId: videoCallState.callId,
+                    toUserId: videoCallState.partnerId
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            console.log('✅ Answer sent successfully');
+            
+        } catch (error) {
+            console.error('❌ Error sending answer:', error);
+            throw error;
+        }
+    }
+    
+    async function sendIceCandidate(candidate) {
+        try {
+            const response = await fetch(`/chat/{{ $trade->id }}/video-call/ice-candidate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    candidate: candidate,
+                    callId: videoCallState.callId,
+                    toUserId: videoCallState.partnerId
+                })
+            });
+            
+            if (!response.ok) {
+                console.warn('ICE candidate send failed:', response.status);
+            }
+            
+        } catch (error) {
+            console.warn('ICE candidate send error:', error);
+        }
+    }
+    
+    function endVideoCall() {
+        console.log('🛑 Ending video call...');
+        
+        // Stop local stream
+        if (videoCallState.localStream) {
+            videoCallState.localStream.getTracks().forEach(track => track.stop());
+            videoCallState.localStream = null;
+        }
+        
+        // Close peer connection
+        if (videoCallState.peerConnection) {
+            videoCallState.peerConnection.close();
+            videoCallState.peerConnection = null;
+        }
+        
+        // Clear video elements
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+        if (localVideo) localVideo.srcObject = null;
+        if (remoteVideo) remoteVideo.srcObject = null;
+        
+        // Stop timer
+        if (videoCallState.timer) {
+            clearInterval(videoCallState.timer);
+            videoCallState.timer = null;
+        }
+        
+        // Reset state
+        videoCallState.isActive = false;
+        videoCallState.isInitiator = false;
+        videoCallState.isConnected = false;
+        videoCallState.callId = null;
+        videoCallState.partnerId = null;
+        videoCallState.startTime = null;
+        videoCallState.localStream = null;
+        videoCallState.remoteStream = null;
+        
+        // Send end call event
+        if (videoCallState.callId) {
+            fetch(`/chat/{{ $trade->id }}/video-call/end`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    callId: videoCallState.callId
+                })
+            }).catch(error => console.warn('Error sending end call:', error));
+        }
+        
+        updateCallStatus('Call ended');
+    }
+    
+    function getPartnerId() {
+        const tradeOwnerId = {{ $trade->user_id }};
+        const currentUserId = {{ auth()->id() }};
+        
+        if (currentUserId === tradeOwnerId) {
+            // Current user is the trade owner, get the requester
+            const acceptedRequest = {!! json_encode($trade->requests()->where('status', 'accepted')->first()) !!};
+            return acceptedRequest ? acceptedRequest.requester_id : null;
+        } else {
+            // Current user is the requester, get the trade owner
+            return tradeOwnerId;
+        }
+    }
+    
+    function generateCallId() {
+        return 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    function updateCallStatus(status) {
+        const statusElement = document.getElementById('video-status');
+        if (statusElement) {
+            statusElement.textContent = status;
+            
+            // Add visual indicators based on status
+            statusElement.className = 'call-status';
+            
+            switch (status.toLowerCase()) {
+                case 'calling...':
+                    statusElement.className += ' calling';
+                    statusElement.innerHTML = '📞 ' + status;
+                    break;
+                case 'answering...':
+                    statusElement.className += ' answering';
+                    statusElement.innerHTML = '📱 ' + status;
+                    break;
+                case 'waiting for answer...':
+                    statusElement.className += ' waiting';
+                    statusElement.innerHTML = '⏳ ' + status;
+                    break;
+                case 'connected':
+                case 'video connected':
+                case 'connection established':
+                    statusElement.className += ' connected';
+                    statusElement.innerHTML = '✅ ' + status;
+                    break;
+                case 'connection failed':
+                    statusElement.className += ' failed';
+                    statusElement.innerHTML = '❌ ' + status;
+                    break;
+                case 'connection lost':
+                    statusElement.className += ' lost';
+                    statusElement.innerHTML = '⚠️ ' + status;
+                    break;
+                case 'call ended':
+                    statusElement.className += ' ended';
+                    statusElement.innerHTML = '📴 ' + status;
+                    break;
+                default:
+                    statusElement.innerHTML = '🔄 ' + status;
+            }
+        }
+        console.log('Call status:', status);
+    }
+    
+    function updateCallTimer(time) {
+        const timerElement = document.getElementById('call-timer');
+        if (timerElement) {
+            timerElement.textContent = time;
+        }
+    }
+    
+    function startCallTimer() {
+        videoCallState.startTime = Date.now();
+        videoCallState.timer = setInterval(() => {
+            const elapsed = Date.now() - videoCallState.startTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            updateCallTimer(String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0'));
+        }, 1000);
+    }
+
+    // Listen for video call events via Pusher
+    console.log('🔗 Setting up video call event listeners for trade {{ $trade->id }}');
+    console.log('🔗 Current user ID: {{ auth()->id() }}');
+    console.log('🔗 Echo available:', typeof window.Echo !== 'undefined');
+    console.log('🔗 Pusher available:', typeof window.Pusher !== 'undefined');
+    
+    // Check Echo connection status
+    if (window.Echo) {
+        console.log('🔗 Echo connection state:', window.Echo.connector.pusher.connection.state);
+        
+        // Listen for connection events
+        window.Echo.connector.pusher.connection.bind('connected', () => {
+            console.log('✅ Pusher connected for video calls');
+        });
+        
+        window.Echo.connector.pusher.connection.bind('disconnected', () => {
+            console.log('❌ Pusher disconnected');
+        });
+        
+        window.Echo.connector.pusher.connection.bind('error', (error) => {
+            console.error('❌ Pusher connection error:', error);
+        });
+    }
+    
+    window.Echo.private('trade.{{ $trade->id }}')
+        .listen('video-call-offer', async function(data) {
+            console.log('📞 Received video call offer:', data);
+            console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
+            
+            if (data.fromUserId !== {{ auth()->id() }}) {
+                console.log('📞 Processing incoming call from different user');
+                await handleVideoCallOffer(data);
+            } else {
+                console.log('📞 Ignoring call from self');
+            }
+        })
+        .error((error) => {
+            console.error('❌ Error listening to video-call-offer:', error);
+        });
+
+    window.Echo.private('trade.{{ $trade->id }}')
+        .listen('video-call-answer', async function(data) {
+            console.log('📞 Received video call answer:', data);
+            console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
+            
+            if (data.toUserId === {{ auth()->id() }}) {
+                console.log('📞 Processing answer for current user');
+                await handleVideoCallAnswer(data);
+            } else {
+                console.log('📞 Ignoring answer for different user');
+            }
+        })
+        .error((error) => {
+            console.error('❌ Error listening to video-call-answer:', error);
+        });
+
+    window.Echo.private('trade.{{ $trade->id }}')
+        .listen('video-call-ice-candidate', async function(data) {
+            console.log('📞 Received ICE candidate:', data);
+            console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
+            
+            if (data.toUserId === {{ auth()->id() }}) {
+                console.log('📞 Processing ICE candidate for current user');
+                await handleIceCandidate(data);
+            } else {
+                console.log('📞 Ignoring ICE candidate for different user');
+            }
+        })
+        .error((error) => {
+            console.error('❌ Error listening to video-call-ice-candidate:', error);
+        });
+
+    window.Echo.private('trade.{{ $trade->id }}')
+        .listen('video-call-end', function(data) {
+            console.log('📞 Video call ended:', data);
+            console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
+            
+            if (data.fromUserId !== {{ auth()->id() }}) {
+                console.log('📞 Processing call end from different user');
+                handleVideoCallEnd(data);
+            } else {
+                console.log('📞 Ignoring call end from self');
+            }
+        })
+        .error((error) => {
+            console.error('❌ Error listening to video-call-end:', error);
+        });
+
+    // Handle incoming offer
+    async function handleVideoCallOffer(data) {
+        console.log('📞 Handling video call offer:', data);
+        
+        try {
+            videoCallState.isInitiator = false;
+            videoCallState.partnerId = data.fromUserId;
+            videoCallState.callId = data.callId;
+            
+            updateCallStatus('Incoming call...');
+            
+            // Get user media
+            updateCallStatus('Getting camera access...');
+            videoCallState.localStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 1280, height: 720 },
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+            
+            // Setup local video
+            const localVideo = document.getElementById('local-video');
+            if (localVideo) {
+                localVideo.srcObject = videoCallState.localStream;
+                localVideo.style.display = 'block';
+            }
+            
+            updateCallStatus('Setting up connection...');
+            
+            // Create peer connection
+            await createPeerConnection();
+            
+            // Add local stream to peer connection
+            videoCallState.localStream.getTracks().forEach(track => {
+                videoCallState.peerConnection.addTrack(track, videoCallState.localStream);
+            });
+            
+            // Set remote description
+            updateCallStatus('Processing offer...');
+            await videoCallState.peerConnection.setRemoteDescription(data.offer);
+            
+            // Create answer
+            updateCallStatus('Creating answer...');
+            const answer = await videoCallState.peerConnection.createAnswer();
+            await videoCallState.peerConnection.setLocalDescription(answer);
+            
+            // Send answer
+            updateCallStatus('Answering...');
+            await sendVideoCallAnswer(answer);
+            
+            videoCallState.isActive = true;
+            startCallTimer();
+            
+        } catch (error) {
+            console.error('Error handling offer:', error);
+            alert('Failed to answer call: ' + error.message);
+            endVideoCall();
+        }
+    }
+
+    // Handle incoming answer
+    async function handleVideoCallAnswer(data) {
+        console.log('📞 Handling video call answer:', data);
+        
+        try {
+            await videoCallState.peerConnection.setRemoteDescription(data.answer);
+            updateCallStatus('Connected');
+            videoCallState.isConnected = true;
+            
+        } catch (error) {
+            console.error('Error handling answer:', error);
+        }
+    }
+
+    // Handle ICE candidate
+    async function handleIceCandidate(data) {
+        console.log('📞 Handling ICE candidate:', data);
+        
+        try {
+            await videoCallState.peerConnection.addIceCandidate(data.candidate);
+            
+        } catch (error) {
+            console.error('Error handling ICE candidate:', error);
+        }
+    }
+
+    // Handle call end
+    function handleVideoCallEnd(data) {
+        console.log('📞 Video call ended:', data);
+        endVideoCall();
+    }
+    
+    // Test function to verify event listening (can be called from browser console)
+    window.testVideoCallEvents = function() {
+        console.log('🧪 Testing video call event listening...');
+        console.log('🧪 Trade ID: {{ $trade->id }}');
+        console.log('🧪 User ID: {{ auth()->id() }}');
+        console.log('🧪 Echo available:', typeof window.Echo !== 'undefined');
+        console.log('🧪 Pusher available:', typeof window.Pusher !== 'undefined');
+        
+        if (window.Echo) {
+            console.log('🧪 Echo connection state:', window.Echo.connector.pusher.connection.state);
+            console.log('🧪 Pusher connection state:', window.Echo.connector.pusher.connection.state);
+        }
+        
+        // Test if we can access the private channel
+        try {
+            const channel = window.Echo.private('trade.{{ $trade->id }}');
+            console.log('🧪 Private channel created successfully');
+            console.log('🧪 Channel name: trade.{{ $trade->id }}');
+        } catch (error) {
+            console.error('🧪 Error creating private channel:', error);
+        }
+        
+        return {
+            tradeId: {{ $trade->id }},
+            userId: {{ auth()->id() }},
+            echoAvailable: typeof window.Echo !== 'undefined',
+            pusherAvailable: typeof window.Pusher !== 'undefined',
+            connectionState: window.Echo ? window.Echo.connector.pusher.connection.state : 'unknown'
+        };
+    };
 
     // Listen for user presence events
     window.Echo.channel('trade-{{ $trade->id }}')

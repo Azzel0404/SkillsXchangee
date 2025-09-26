@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Event Listening Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .log-entry.info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .log-entry.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .log-entry.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .log-entry.warning {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+        
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        
+        .test-button:hover {
+            background: #2563eb;
+        }
+        
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .user-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .user-card {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .user-card.active {
+            border-color: #51cf66;
+            background: #f8fff9;
+        }
+        
+        .user-card.inactive {
+            border-color: #ff6b6b;
+            background: #fff8f8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 User Event Listening Test</h1>
+        
+        <div class="test-section">
+            <h3>📡 Connection Status</h3>
+            <div id="connection-status" class="status info">Checking connection...</div>
+            <div id="pusher-status" class="status info">Checking Pusher...</div>
+            <div id="echo-status" class="status info">Checking Laravel Echo...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>👥 User Information</h3>
+            <div class="user-info">
+                <div class="user-card" id="user1-card">
+                    <h4>User 1 (You)</h4>
+                    <div id="user1-status">Unknown</div>
+                    <div id="user1-id">ID: Loading...</div>
+                </div>
+                <div class="user-card" id="user2-card">
+                    <h4>User 2 (Partner)</h4>
+                    <div id="user2-status">Unknown</div>
+                    <div id="user2-id">ID: Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 Event Listening Tests</h3>
+            <button class="test-button" onclick="testMessageEvents()">Test Message Events</button>
+            <button class="test-button" onclick="testVideoCallEvents()">Test Video Call Events</button>
+            <button class="test-button" onclick="testUserPresenceEvents()">Test User Presence</button>
+            <button class="test-button" onclick="testTaskEvents()">Test Task Events</button>
+            <button class="test-button" onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Event Log</h3>
+            <div id="event-log" class="log">
+                <div class="log-entry info">Event log initialized. Click test buttons to see events...</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 Debug Information</h3>
+            <div id="debug-info" class="log">
+                <div class="log-entry info">Loading debug information...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let pusher = null;
+        let echo = null;
+        let tradeId = null;
+        let userId = null;
+        let partnerId = null;
+        let eventLog = [];
+        
+        // Initialize the test
+        async function initializeTest() {
+            log('info', '🚀 Initializing user event listening test...');
+            
+            // Check if we're in a trade context
+            const urlParams = new URLSearchParams(window.location.search);
+            tradeId = urlParams.get('trade_id') || '1';
+            userId = urlParams.get('user_id') || '1';
+            partnerId = urlParams.get('partner_id') || '2';
+            
+            log('info', `📊 Test Parameters: Trade ID: ${tradeId}, User ID: ${userId}, Partner ID: ${partnerId}`);
+            
+            // Update user cards
+            document.getElementById('user1-id').textContent = `ID: ${userId}`;
+            document.getElementById('user2-id').textContent = `ID: ${partnerId}`;
+            
+            // Check Pusher availability
+            if (typeof window.Pusher !== 'undefined') {
+                document.getElementById('pusher-status').innerHTML = '<span class="status success">✅ Pusher Available</span>';
+                log('success', '✅ Pusher is available');
+            } else {
+                document.getElementById('pusher-status').innerHTML = '<span class="status error">❌ Pusher Not Available</span>';
+                log('error', '❌ Pusher is not available');
+            }
+            
+            // Check Laravel Echo availability
+            if (typeof window.Echo !== 'undefined') {
+                document.getElementById('echo-status').innerHTML = '<span class="status success">✅ Laravel Echo Available</span>';
+                log('success', '✅ Laravel Echo is available');
+            } else {
+                document.getElementById('echo-status').innerHTML = '<span class="status error">❌ Laravel Echo Not Available</span>';
+                log('error', '❌ Laravel Echo is not available');
+            }
+            
+            // Test connection
+            await testConnection();
+        }
+        
+        async function testConnection() {
+            try {
+                log('info', '🔗 Testing connection...');
+                
+                if (typeof window.Echo !== 'undefined') {
+                    // Test Echo connection
+                    const channel = window.Echo.channel(`trade-${tradeId}`);
+                    
+                    channel.listen('user-joined', function(data) {
+                        log('success', `👤 User joined event received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    channel.listen('user-left', function(data) {
+                        log('success', `👤 User left event received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    channel.listen('new-message', function(data) {
+                        log('success', `💬 New message event received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    channel.listen('task-updated', function(data) {
+                        log('success', `📋 Task updated event received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    // Test private channel for video calls
+                    const privateChannel = window.Echo.private(`trade.${tradeId}`);
+                    
+                    privateChannel.listen('video-call-offer', function(data) {
+                        log('success', `📞 Video call offer received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    privateChannel.listen('video-call-answer', function(data) {
+                        log('success', `📞 Video call answer received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    privateChannel.listen('video-call-ice-candidate', function(data) {
+                        log('success', `📞 ICE candidate received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    privateChannel.listen('video-call-end', function(data) {
+                        log('success', `📞 Video call end received: ${JSON.stringify(data)}`);
+                    });
+                    
+                    document.getElementById('connection-status').innerHTML = '<span class="status success">✅ Connected to channels</span>';
+                    log('success', '✅ Successfully connected to all channels');
+                    
+                } else {
+                    document.getElementById('connection-status').innerHTML = '<span class="status error">❌ Laravel Echo not available</span>';
+                    log('error', '❌ Laravel Echo is not available');
+                }
+                
+            } catch (error) {
+                document.getElementById('connection-status').innerHTML = '<span class="status error">❌ Connection failed</span>';
+                log('error', `❌ Connection failed: ${error.message}`);
+            }
+        }
+        
+        function testMessageEvents() {
+            log('info', '💬 Testing message events...');
+            
+            // Simulate receiving a message
+            setTimeout(() => {
+                const mockMessage = {
+                    message: {
+                        id: Date.now(),
+                        sender_id: partnerId,
+                        content: 'Test message from partner',
+                        created_at: new Date().toISOString()
+                    },
+                    sender_name: 'Test Partner',
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                
+                log('success', `💬 Simulated message event: ${JSON.stringify(mockMessage)}`);
+            }, 1000);
+        }
+        
+        function testVideoCallEvents() {
+            log('info', '📞 Testing video call events...');
+            
+            // Simulate video call offer
+            setTimeout(() => {
+                const mockOffer = {
+                    fromUserId: partnerId,
+                    toUserId: userId,
+                    offer: { type: 'offer', sdp: 'mock-sdp' },
+                    callId: 'test-call-' + Date.now()
+                };
+                
+                log('success', `📞 Simulated video call offer: ${JSON.stringify(mockOffer)}`);
+            }, 1000);
+            
+            // Simulate video call answer
+            setTimeout(() => {
+                const mockAnswer = {
+                    toUserId: userId,
+                    answer: { type: 'answer', sdp: 'mock-sdp' },
+                    callId: 'test-call-' + Date.now()
+                };
+                
+                log('success', `📞 Simulated video call answer: ${JSON.stringify(mockAnswer)}`);
+            }, 2000);
+        }
+        
+        function testUserPresenceEvents() {
+            log('info', '👤 Testing user presence events...');
+            
+            // Simulate user joined
+            setTimeout(() => {
+                const mockUserJoined = {
+                    user_id: partnerId,
+                    user_name: 'Test Partner',
+                    timestamp: new Date().toISOString()
+                };
+                
+                log('success', `👤 Simulated user joined: ${JSON.stringify(mockUserJoined)}`);
+            }, 1000);
+            
+            // Simulate user left
+            setTimeout(() => {
+                const mockUserLeft = {
+                    user_id: partnerId,
+                    user_name: 'Test Partner',
+                    timestamp: new Date().toISOString()
+                };
+                
+                log('success', `👤 Simulated user left: ${JSON.stringify(mockUserLeft)}`);
+            }, 2000);
+        }
+        
+        function testTaskEvents() {
+            log('info', '📋 Testing task events...');
+            
+            // Simulate task update
+            setTimeout(() => {
+                const mockTask = {
+                    id: 1,
+                    title: 'Test Task',
+                    status: 'completed',
+                    updated_at: new Date().toISOString()
+                };
+                
+                log('success', `📋 Simulated task update: ${JSON.stringify(mockTask)}`);
+            }, 1000);
+        }
+        
+        function log(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            const logContainer = document.getElementById('event-log');
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Also add to debug info
+            const debugContainer = document.getElementById('debug-info');
+            const debugEntry = document.createElement('div');
+            debugEntry.className = `log-entry ${type}`;
+            debugEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            debugContainer.appendChild(debugEntry);
+            debugContainer.scrollTop = debugContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('event-log').innerHTML = '<div class="log-entry info">Event log cleared...</div>';
+            document.getElementById('debug-info').innerHTML = '<div class="log-entry info">Debug info cleared...</div>';
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeTest);
+    </script>
+</body>
+</html>

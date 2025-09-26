@@ -46,6 +46,14 @@ Route::get('/test-console-errors', function () {
     return response()->file(public_path('test-console-errors.html'));
 });
 
+Route::get('/test-dynamic-status', function () {
+    return response()->file(public_path('test-dynamic-status.html'));
+});
+
+Route::get('/test-user-events', function () {
+    return response()->file(public_path('test-user-events.html'));
+});
+
 Route::get('/debug', function () {
     return response()->json([
         'app_env' => app()->environment(),
