@@ -3,7 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="test-csrf-token">
     <title>User Event Listening Test</title>
+    
+    <!-- Load Pusher and Laravel Echo libraries -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.15.3/dist/echo.iife.js"></script>
+    
+    <!-- Pusher Configuration -->
+    <script>
+        window.PUSHER_APP_KEY = '5c02e54d01ca577ae77e';
+        window.PUSHER_APP_CLUSTER = 'ap1';
+        
+        console.log('🔧 Pusher Configuration:');
+        console.log('🔑 Key:', window.PUSHER_APP_KEY);
+        console.log('🌐 Cluster:', window.PUSHER_APP_CLUSTER);
+        
+        // Initialize Laravel Echo
+        try {
+            window.Echo = new Echo({
+                broadcaster: 'pusher',
+                key: window.PUSHER_APP_KEY,
+                cluster: window.PUSHER_APP_CLUSTER,
+                forceTLS: true,
+                enabledTransports: ['ws', 'wss'],
+                authEndpoint: '/broadcasting/auth',
+                auth: {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                }
+            });
+            
+            console.log('✅ Laravel Echo initialized successfully');
+        } catch (error) {
+            console.error('❌ Failed to initialize Laravel Echo:', error);
+            window.Echo = null;
+        }
+    </script>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -185,6 +223,7 @@
             <button class="test-button" onclick="testVideoCallEvents()">Test Video Call Events</button>
             <button class="test-button" onclick="testUserPresenceEvents()">Test User Presence</button>
             <button class="test-button" onclick="testTaskEvents()">Test Task Events</button>
+            <button class="test-button" onclick="testRealEventSending()">Test Real Event Sending</button>
             <button class="test-button" onclick="clearLog()">Clear Log</button>
         </div>
         
@@ -293,8 +332,31 @@
                         log('success', `📞 Video call end received: ${JSON.stringify(data)}`);
                     });
                     
-                    document.getElementById('connection-status').innerHTML = '<span class="status success">✅ Connected to channels</span>';
-                    log('success', '✅ Successfully connected to all channels');
+                    // Add error handling for channels
+                    channel.error((error) => {
+                        log('error', `❌ Channel error: ${error.message}`);
+                    });
+                    
+                    privateChannel.error((error) => {
+                        log('error', `❌ Private channel error: ${error.message}`);
+                    });
+                    
+                    // Check connection status
+                    if (window.Echo.connector && window.Echo.connector.pusher) {
+                        const connectionState = window.Echo.connector.pusher.connection.state;
+                        log('info', `🔗 Pusher connection state: ${connectionState}`);
+                        
+                        if (connectionState === 'connected') {
+                            document.getElementById('connection-status').innerHTML = '<span class="status success">✅ Connected to channels</span>';
+                            log('success', '✅ Successfully connected to all channels');
+                        } else {
+                            document.getElementById('connection-status').innerHTML = '<span class="status warning">⚠️ Connecting to channels...</span>';
+                            log('warning', '⚠️ Connection in progress...');
+                        }
+                    } else {
+                        document.getElementById('connection-status').innerHTML = '<span class="status error">❌ Pusher connector not available</span>';
+                        log('error', '❌ Pusher connector not available');
+                    }
                     
                 } else {
                     document.getElementById('connection-status').innerHTML = '<span class="status error">❌ Laravel Echo not available</span>';
@@ -394,6 +456,61 @@
                 
                 log('success', `📋 Simulated task update: ${JSON.stringify(mockTask)}`);
             }, 1000);
+        }
+        
+        async function testRealEventSending() {
+            log('info', '🚀 Testing real event sending...');
+            
+            try {
+                // Test sending a real message event
+                const response = await fetch('/api/test-send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': 'test-csrf-token',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        trade_id: tradeId,
+                        message: 'Test message from event sender',
+                        sender_id: userId
+                    })
+                });
+                
+                if (response.ok) {
+                    log('success', '📤 Real message event sent successfully');
+                } else {
+                    log('error', `❌ Failed to send real message event: ${response.status}`);
+                }
+                
+            } catch (error) {
+                log('error', `❌ Error sending real event: ${error.message}`);
+            }
+            
+            // Test sending a real video call offer
+            try {
+                const response = await fetch(`/chat/${tradeId}/video-call/offer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': 'test-csrf-token',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        offer: { type: 'offer', sdp: 'test-sdp' },
+                        callId: 'test-call-' + Date.now()
+                    })
+                });
+                
+                if (response.ok) {
+                    log('success', '📤 Real video call offer sent successfully');
+                } else {
+                    log('error', `❌ Failed to send real video call offer: ${response.status}`);
+                }
+                
+            } catch (error) {
+                log('error', `❌ Error sending real video call offer: ${error.message}`);
+            }
         }
         
         function log(type, message) {
