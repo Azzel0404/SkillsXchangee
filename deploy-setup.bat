@@ -6,18 +6,18 @@ echo 🚀 Starting SkillsXchangee deployment setup...
 
 REM Check if we're in the right directory
 if not exist "composer.json" (
-    echo ❌ Error: composer.json not found. Please run this script from the backend directory.
+    echo ❌ Error: composer.json not found. Please run this script from the project root directory.
     pause
     exit /b 1
 )
 
-REM Step 1: Copy .env.backup to .env in backend directory
+REM Step 1: Copy .env.backup to .env in project root directory
 echo 📋 Setting up environment configuration...
-if exist "..\.env.backup" (
-    copy "..\.env.backup" ".env" >nul
-    echo ✅ Copied .env.backup to backend\.env
+if exist ".env.backup" (
+    copy ".env.backup" ".env" >nul
+    echo ✅ Copied .env.backup to .env
 ) else (
-    echo ❌ Error: .env.backup not found in parent directory
+    echo ❌ Error: .env.backup not found in current directory
     pause
     exit /b 1
 )
@@ -97,7 +97,7 @@ echo 3. Start your web server
 echo 4. Test the chat functionality
 echo.
 echo 🔧 Configuration files created:
-echo - backend\.env (with Pusher settings)
+echo - .env (with Pusher settings)
 echo - Frontend assets built in public\build\
 echo.
 echo 📊 Pusher Configuration:

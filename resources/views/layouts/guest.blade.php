@@ -5,6 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description"
+        content="SkillsXchangee - A legitimate educational platform for skill sharing and learning. Connect with others to exchange knowledge and develop new skills.">
+    <meta name="keywords" content="skill exchange, learning, education, knowledge sharing, legitimate platform">
+    <meta name="author" content="SkillsXchangee Team">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#3b82f6">
 
     <title>{{ config('app.name', 'SkillsXchange') }}</title>
 

@@ -22,6 +22,10 @@ Route::get('/test', function () {
     return 'Test route working!';
 });
 
+Route::get('/legitimacy', function () {
+    return response()->file(public_path('legitimacy.html'));
+});
+
 Route::get('/debug', function () {
     return response()->json([
         'app_env' => app()->environment(),

@@ -5,18 +5,18 @@ Write-Host "🚀 Starting SkillsXchangee deployment setup..." -ForegroundColor G
 
 # Check if we're in the right directory
 if (-not (Test-Path "composer.json")) {
-    Write-Host "❌ Error: composer.json not found. Please run this script from the backend directory." -ForegroundColor Red
+    Write-Host "❌ Error: composer.json not found. Please run this script from the project root directory." -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
 }
 
-# Step 1: Copy .env.backup to .env in backend directory
+# Step 1: Copy .env.backup to .env in project root directory
 Write-Host "📋 Setting up environment configuration..." -ForegroundColor Yellow
-if (Test-Path "..\.env.backup") {
-    Copy-Item "..\.env.backup" ".env"
-    Write-Host "✅ Copied .env.backup to backend\.env" -ForegroundColor Green
+if (Test-Path ".env.backup") {
+    Copy-Item ".env.backup" ".env"
+    Write-Host "✅ Copied .env.backup to .env" -ForegroundColor Green
 } else {
-    Write-Host "❌ Error: .env.backup not found in parent directory" -ForegroundColor Red
+    Write-Host "❌ Error: .env.backup not found in current directory" -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
 }
@@ -97,7 +97,7 @@ Write-Host "3. Start your web server"
 Write-Host "4. Test the chat functionality"
 Write-Host ""
 Write-Host "🔧 Configuration files created:" -ForegroundColor Cyan
-Write-Host "- backend\.env (with Pusher settings)"
+Write-Host "- .env (with Pusher settings)"
 Write-Host "- Frontend assets built in public\build\"
 Write-Host ""
 Write-Host "📊 Pusher Configuration:" -ForegroundColor Cyan

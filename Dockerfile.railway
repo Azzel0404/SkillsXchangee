@@ -24,19 +24,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy only necessary backend files for Railway (API only)
-COPY backend/composer.json backend/composer.lock ./
-COPY backend/package.json backend/package-lock.json ./
-COPY backend/artisan ./
-COPY backend/start.sh ./
-COPY backend/app/ ./app/
-COPY backend/bootstrap/ ./bootstrap/
-COPY backend/config/ ./config/
-COPY backend/database/ ./database/
-COPY backend/public/ ./public/
-COPY backend/resources/ ./resources/
-COPY backend/routes/ ./routes/
-COPY backend/storage/ ./storage/
+# Copy only necessary files for Railway (API only)
+COPY composer.json composer.lock ./
+COPY package.json package-lock.json ./
+COPY artisan ./
+COPY start.sh ./
+COPY app/ ./app/
+COPY bootstrap/ ./bootstrap/
+COPY config/ ./config/
+COPY database/ ./database/
+COPY public/ ./public/
+COPY resources/ ./resources/
+COPY routes/ ./routes/
+COPY storage/ ./storage/
 
 # Create proper .env file for build process
 RUN echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nDB_CONNECTION=mysql\nDB_HOST=mysql.railway.internal\nDB_PORT=3306\nDB_DATABASE=railway\nDB_USERNAME=root\nDB_PASSWORD=\nLOG_CHANNEL=stderr\nCACHE_DRIVER=file\nSESSION_DRIVER=file\nQUEUE_CONNECTION=sync\nMAIL_MAILER=log" > .env
