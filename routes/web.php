@@ -26,6 +26,10 @@ Route::get('/legitimacy', function () {
     return response()->file(public_path('legitimacy.html'));
 });
 
+Route::get('/test-video-permissions', function () {
+    return response()->file(public_path('test-video-permissions.html'));
+});
+
 Route::get('/debug', function () {
     return response()->json([
         'app_env' => app()->environment(),

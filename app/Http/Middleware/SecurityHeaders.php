@@ -20,19 +20,22 @@ class SecurityHeaders
 
         // Add security headers to help establish trust with security tools
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
         
-        // Content Security Policy to prevent XSS attacks
+        // Permissions Policy - Allow camera and microphone for video calls
+        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()');
+        
+        // Content Security Policy - Allow necessary external resources and video call functionality
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " .
-               "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " .
-               "img-src 'self' data: https:; " .
-               "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " .
-               "connect-src 'self' wss: https:; " .
-               "frame-src 'none';";
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net https://js.pusher.com; " .
+               "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
+               "img-src 'self' data: https: blob:; " .
+               "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
+               "connect-src 'self' wss: https: wss://*.pusher.com wss://*.pusherapp.com https://skillxchange.metered.live https://stun.l.google.com https://stun1.l.google.com https://stun.relay.metered.ca https://asia.relay.metered.ca; " .
+               "media-src 'self' blob:; " .
+               "frame-src 'self';";
         
         $response->headers->set('Content-Security-Policy', $csp);
         
