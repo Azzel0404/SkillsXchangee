@@ -238,8 +238,8 @@ Route::get('/test-broadcasting-final', function () {
     return response()->file(public_path('test-broadcasting-final.html'));
 });
 
-// Broadcasting authentication route (fallback)
-Broadcast::routes();
+// Broadcasting authentication route with auth middleware
+Broadcast::routes(['middleware' => ['auth']]);
 
 // Debug route for skills
 Route::get('/debug-skills', function () {

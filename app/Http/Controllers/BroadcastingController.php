@@ -14,53 +14,21 @@ class BroadcastingController extends Controller
     public function auth(Request $request)
     {
         try {
-            // Log the incoming request for debugging
-            Log::info('Broadcasting auth request received', [
-                'headers' => $request->headers->all(),
-                'body' => $request->all(),
-                'user_authenticated' => Auth::check(),
-                'user_id' => Auth::id(),
-                'session_id' => $request->session()->getId(),
-                'cookies' => $request->cookies->all()
-            ]);
-            
             $user = Auth::user();
-            
-            if (!$user) {
-                Log::warning('Broadcasting auth failed: User not authenticated');
-                // For now, let's allow unauthenticated users to access public channels
-                // This is a temporary fix to get video calls working
-                $channelName = $request->input('channel_name');
-                $socketId = $request->input('socket_id');
-                
-                // Only allow access to trade channels for now
-                if (str_starts_with($channelName, 'private-trade.') || str_starts_with($channelName, 'trade.')) {
-                    Log::info('Allowing unauthenticated access to trade channel', [
-                        'channel_name' => $channelName,
-                        'socket_id' => $socketId
-                    ]);
-                    
-                    // Generate Pusher auth signature
-                    $pusher = app('pusher');
-                    $auth = $pusher->socket_auth($channelName, $socketId);
-                    
-                    return response()->json($auth);
-                }
-                
-                return response()->json([
-                    'error' => 'Unauthorized',
-                    'message' => 'User not authenticated'
-                ], 401);
-            }
-            
             $channelName = $request->input('channel_name');
             $socketId = $request->input('socket_id');
             
             Log::info('Broadcasting auth request', [
-                'user_id' => $user->id,
+                'user_id' => $user ? $user->id : null,
                 'channel_name' => $channelName,
-                'socket_id' => $socketId
+                'socket_id' => $socketId,
+                'user_authenticated' => Auth::check()
             ]);
+            
+            if (!$user) {
+                Log::warning('Broadcasting auth failed: User not authenticated');
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
             
             // Handle private channels
             if (str_starts_with($channelName, 'private-')) {
