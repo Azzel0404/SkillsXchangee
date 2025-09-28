@@ -15,9 +15,10 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Firebase CDN for Video Calls -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- Firebase CDN for Video Calls (v12) -->
+    <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js"></script>
 
     <!-- Firebase Configuration -->
     <script src="{{ asset('firebase-config.js') }}"></script>

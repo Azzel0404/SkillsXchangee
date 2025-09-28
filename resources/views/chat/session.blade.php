@@ -925,6 +925,9 @@
                                     if (typeof firebase !== 'undefined' && firebase.database) {
                                         this.database = firebase.database();
                                         console.log('✅ Firebase database initialized for WebRTC signaling');
+                                    } else if (window.firebaseDatabase) {
+                                        this.database = window.firebaseDatabase;
+                                        console.log('✅ Firebase database initialized from global reference');
                                     } else {
                                         console.error('❌ Firebase not available for WebRTC signaling');
                                     }
