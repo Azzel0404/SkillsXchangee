@@ -4,15 +4,14 @@
  */
 
 const firebaseConfig = {
-    // Firebase project configuration for Skillsxchange
-    apiKey: "AIzaSyDKk5L6noLC1DcQcE2ihT199eoIrZkzclY",
-    authDomain: "skillsxchange-42c62.firebaseapp.com",
-    databaseURL: "https://skillsxchange-42c62-default-rtdb.firebaseio.com",
-    projectId: "skillsxchange-42c62",
-    storageBucket: "skillsxchange-42c62.firebasestorage.app",
-    messagingSenderId: "1096126152239",
-    appId: "1:1096126152239:web:a9ecf3f3df9e20dc4310da",
-    measurementId: "G-XYE1EJMOYG"
+    // Firebase project configuration for Skillsxchange (New Project)
+    apiKey: "AIzaSyDlx5VjhobiTlqtv69SciHifC7p_xgHELs",
+    authDomain: "skillsxchange-c2604.firebaseapp.com",
+    databaseURL: "https://skillsxchange-c2604-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "skillsxchange-c2604",
+    storageBucket: "skillsxchange-c2604.firebasestorage.app",
+    messagingSenderId: "478530945561",
+    appId: "1:478530945561:web:646441ceeb5d5c71c02088"
 };
 
 // Export for use in other files
