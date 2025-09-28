@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Video Call Test - All Features</title>
+    <title>Unified Video Call Test - All Features</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -109,11 +109,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎯 Comprehensive Video Call Test - All Features</h1>
+        <h1>🎯 Unified Video Call Test - All Features</h1>
         
         <div id="overall-status" class="status info">
             <span class="status-indicator yellow"></span>
-            Ready to run comprehensive video call tests
+            Ready to run unified video call tests
         </div>
         
         <div class="controls">
@@ -170,29 +170,10 @@
         </div>
 
         <div class="test-section">
-            <h4>🔒 Security Warning & Firebase Setup</h4>
-            <div class="warning">
-                <strong>⚠️ CRITICAL SECURITY ISSUE DETECTED:</strong><br>
-                Your Firebase Realtime Database has public security rules! This means anyone can read/write to your database.<br><br>
-                <strong>To fix this, update your Firebase security rules to:</strong>
-                <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
-{
-  "rules": {
-    "video_rooms": {
-      "$roomId": {
-        ".read": "auth != null && (data.child('metadata/user1').val() == auth.uid || data.child('metadata/user2').val() == auth.uid)",
-        ".write": "auth != null && (data.child('metadata/user1').val() == auth.uid || data.child('metadata/user2').val() == auth.uid)"
-      }
-    }
-  }
-}
-                </pre>
-                <strong>Steps to fix:</strong>
-                <ol>
-                    <li>Go to Firebase Console → Realtime Database → Rules</li>
-                    <li>Replace the current rules with the secure rules above</li>
-                    <li>Click "Publish" to apply the changes</li>
-                </ol>
+            <h4>🔒 Security Status</h4>
+            <div id="security-warning" class="warning">
+                <strong>⚠️ Security Check Required:</strong><br>
+                This test will verify your Firebase security rules are properly configured.
             </div>
         </div>
     </div>
@@ -208,10 +189,12 @@
     <script src="/firebase-video-integration.js"></script>
 
     <script>
+        // Global Firebase instance to prevent duplicates
+        let globalFirebaseApp = null;
+        let globalDatabase = null;
         let firebaseVideoCall = null;
         let localStream = null;
         let remoteStream = null;
-        let peerConnection = null;
         let isInCall = false;
         let logElement = document.getElementById('log');
         let overallStatusElement = document.getElementById('overall-status');
@@ -240,7 +223,54 @@
             logElement.innerHTML = '';
         }
 
-        // Define updateCallStatus function (same as in chat session)
+        function updateFirebaseData(data) {
+            const firebaseDataElement = document.getElementById('firebase-data');
+            firebaseDataElement.innerHTML = JSON.stringify(data, null, 2);
+        }
+
+        // Centralized Firebase initialization to prevent duplicates
+        function initializeFirebase() {
+            if (globalFirebaseApp && globalDatabase) {
+                log('✅ Using existing global Firebase instance');
+                return { app: globalFirebaseApp, database: globalDatabase };
+            }
+
+            try {
+                log('🔥 Initializing global Firebase instance...');
+                
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+
+                if (typeof window.firebaseConfig === 'undefined') {
+                    throw new Error('Firebase config not available');
+                }
+
+                // Try to get existing app first
+                try {
+                    globalFirebaseApp = firebase.app();
+                    log('✅ Using existing Firebase app');
+                } catch (error) {
+                    if (error.code === 'app/duplicate-app') {
+                        globalFirebaseApp = firebase.app();
+                        log('✅ Using existing Firebase app (duplicate resolved)');
+                    } else {
+                        globalFirebaseApp = firebase.initializeApp(window.firebaseConfig);
+                        log('✅ Created new Firebase app');
+                    }
+                }
+
+                globalDatabase = firebase.database();
+                log('✅ Global Firebase instance initialized');
+                
+                return { app: globalFirebaseApp, database: globalDatabase };
+            } catch (error) {
+                log(`❌ Firebase initialization failed: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // Define updateCallStatus function
         function updateCallStatus(status) {
             const statusElement = document.getElementById('local-status');
             if (statusElement) {
@@ -254,28 +284,26 @@
             updateTestStatus('firebase', 'yellow', 'Testing...');
             
             try {
-                if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase SDK not loaded');
-                }
-                log('✅ Firebase SDK loaded');
-
-                if (typeof window.firebaseConfig === 'undefined') {
-                    throw new Error('Firebase config not available');
-                }
-                log('✅ Firebase config available');
-
-                const app = firebase.initializeApp(window.firebaseConfig);
-                const database = firebase.database();
-                log('✅ Firebase initialized successfully');
+                const { app, database } = initializeFirebase();
 
                 // Test database connection
                 const testRef = database.ref('test_connection');
                 await testRef.set({
                     timestamp: Date.now(),
-                    message: 'Connection test successful'
+                    message: 'Connection test successful',
+                    testId: Math.random().toString(36).substr(2, 9)
                 });
                 log('✅ Database write test successful');
 
+                // Test reading data back
+                const snapshot = await testRef.once('value');
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    log('✅ Database read test successful');
+                    updateFirebaseData(data);
+                }
+
+                // Clean up test data
                 await testRef.remove();
                 log('✅ Database cleanup successful');
 
@@ -298,7 +326,6 @@
                 if (typeof FirebaseVideoIntegration === 'undefined') {
                     throw new Error('FirebaseVideoIntegration class not available');
                 }
-                log('✅ FirebaseVideoIntegration class available');
 
                 // Create test instances for two users
                 const user1 = new FirebaseVideoIntegration({
@@ -410,8 +437,7 @@
             updateTestStatus('security', 'yellow', 'Testing...');
             
             try {
-                // Check if Firebase is accessible
-                const database = firebase.database();
+                const { database } = initializeFirebase();
                 
                 // Try to read from a test path
                 const testRef = database.ref('security_test');
@@ -541,7 +567,7 @@
         }
 
         async function runAllTests() {
-            log('🚀 Running all comprehensive tests...');
+            log('🚀 Running all unified tests...');
             updateOverallStatus('Running all tests...', 'info');
             
             const results = {
@@ -573,7 +599,7 @@
                 
                 if (passed === total) {
                     updateOverallStatus(`All tests passed! (${passed}/${total})`, 'success');
-                    log('🎉 All comprehensive tests completed successfully!');
+                    log('🎉 All unified tests completed successfully!');
                 } else {
                     updateOverallStatus(`Some tests failed (${passed}/${total})`, 'warning');
                     log(`⚠️ ${total - passed} test(s) failed. Check the log for details.`);
@@ -587,7 +613,7 @@
 
         // Auto-run tests on page load
         window.addEventListener('load', () => {
-            log('🚀 Comprehensive test page loaded');
+            log('🚀 Unified test page loaded');
             setTimeout(() => {
                 runAllTests();
             }, 1000);

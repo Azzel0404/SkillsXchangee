@@ -81,8 +81,14 @@ class FirebaseVideoIntegration {
                 this.app = firebase.app();
                 this.log('Using existing Firebase app');
             } catch (error) {
-                this.app = firebase.initializeApp(firebaseConfig);
-                this.log('Created new Firebase app');
+                // Check if the error is about duplicate app
+                if (error.code === 'app/duplicate-app') {
+                    this.app = firebase.app();
+                    this.log('Using existing Firebase app (duplicate resolved)');
+                } else {
+                    this.app = firebase.initializeApp(firebaseConfig);
+                    this.log('Created new Firebase app');
+                }
             }
             this.database = firebase.database();
             

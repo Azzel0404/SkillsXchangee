@@ -182,11 +182,7 @@
             statusDiv.className = `status ${type}`;
         }
         
-        function updateCallStatus(message) {
-            const statusDiv = document.getElementById('call-status');
-            statusDiv.textContent = message;
-            statusDiv.className = `status info`;
-        }
+        // updateCallStatus function removed - not needed for this test
         
         async function runAllTests() {
             log('🚀 Starting comprehensive video call tests...', 'info');
