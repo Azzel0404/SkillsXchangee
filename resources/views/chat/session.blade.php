@@ -919,17 +919,21 @@
                                 this.initFirebase();
                             }
                             
-                            initFirebase() {
+                            async initFirebase() {
                                 try {
-                                    // Check if Firebase is available
-                                    if (typeof firebase !== 'undefined' && firebase.database) {
-                                        this.database = firebase.database();
-                                        console.log('✅ Firebase database initialized for WebRTC signaling');
+                                    // Wait for Firebase compatibility layer
+                                    if (window.firebaseCompat) {
+                                        this.database = await window.firebaseCompat.init();
+                                        console.log('✅ Firebase database initialized via compatibility layer (v12)');
                                     } else if (window.firebaseDatabase) {
                                         this.database = window.firebaseDatabase;
-                                        console.log('✅ Firebase database initialized from global reference');
+                                        console.log('✅ Firebase database initialized from global reference (v12)');
+                                    } else if (typeof firebase !== 'undefined' && firebase.database) {
+                                        this.database = firebase.database();
+                                        console.log('✅ Firebase database initialized for WebRTC signaling (v8)');
                                     } else {
                                         console.error('❌ Firebase not available for WebRTC signaling');
+                                        console.log('🔍 Available globals:', Object.keys(window).filter(key => key.includes('firebase')));
                                     }
                                 } catch (error) {
                                     console.error('❌ Error initializing Firebase:', error);
@@ -1046,12 +1050,23 @@
                                 }
                                 
                                 try {
-                                    await this.database.ref(`calls/${this.callId}/offer`).set({
-                                        type: 'offer',
-                                        sdp: offer.sdp,
-                                        timestamp: Date.now(),
-                                        from: window.currentUserId || 'unknown'
-                                    });
+                                    // Use Firebase compatibility layer
+                                    if (window.firebaseCompat) {
+                                        await window.firebaseCompat.set(`calls/${this.callId}/offer`, {
+                                            type: 'offer',
+                                            sdp: offer.sdp,
+                                            timestamp: Date.now(),
+                                            from: window.currentUserId || 'unknown'
+                                        });
+                                    } else {
+                                        // Fallback to v8 syntax
+                                        await this.database.ref(`calls/${this.callId}/offer`).set({
+                                            type: 'offer',
+                                            sdp: offer.sdp,
+                                            timestamp: Date.now(),
+                                            from: window.currentUserId || 'unknown'
+                                        });
+                                    }
                                     
                                     console.log('✅ Offer sent to Firebase');
                                 } catch (error) {
@@ -1068,12 +1083,23 @@
                                 }
                                 
                                 try {
-                                    await this.database.ref(`calls/${this.callId}/answer`).set({
-                                        type: 'answer',
-                                        sdp: answer.sdp,
-                                        timestamp: Date.now(),
-                                        from: window.currentUserId || 'unknown'
-                                    });
+                                    // Use Firebase compatibility layer
+                                    if (window.firebaseCompat) {
+                                        await window.firebaseCompat.set(`calls/${this.callId}/answer`, {
+                                            type: 'answer',
+                                            sdp: answer.sdp,
+                                            timestamp: Date.now(),
+                                            from: window.currentUserId || 'unknown'
+                                        });
+                                    } else {
+                                        // Fallback to v8 syntax
+                                        await this.database.ref(`calls/${this.callId}/answer`).set({
+                                            type: 'answer',
+                                            sdp: answer.sdp,
+                                            timestamp: Date.now(),
+                                            from: window.currentUserId || 'unknown'
+                                        });
+                                    }
                                     
                                     console.log('✅ Answer sent to Firebase');
                                 } catch (error) {
@@ -1090,13 +1116,25 @@
                                 }
                                 
                                 try {
-                                    await this.database.ref(`calls/${this.callId}/candidates`).push({
-                                        candidate: candidate.candidate,
-                                        sdpMLineIndex: candidate.sdpMLineIndex,
-                                        sdpMid: candidate.sdpMid,
-                                        timestamp: Date.now(),
-                                        from: window.currentUserId || 'unknown'
-                                    });
+                                    // Use Firebase compatibility layer
+                                    if (window.firebaseCompat) {
+                                        await window.firebaseCompat.push(`calls/${this.callId}/candidates`, {
+                                            candidate: candidate.candidate,
+                                            sdpMLineIndex: candidate.sdpMLineIndex,
+                                            sdpMid: candidate.sdpMid,
+                                            timestamp: Date.now(),
+                                            from: window.currentUserId || 'unknown'
+                                        });
+                                    } else {
+                                        // Fallback to v8 syntax
+                                        await this.database.ref(`calls/${this.callId}/candidates`).push({
+                                            candidate: candidate.candidate,
+                                            sdpMLineIndex: candidate.sdpMLineIndex,
+                                            sdpMid: candidate.sdpMid,
+                                            timestamp: Date.now(),
+                                            from: window.currentUserId || 'unknown'
+                                        });
+                                    }
                                     
                                     console.log('✅ ICE candidate sent to Firebase');
                                 } catch (error) {
@@ -1112,27 +1150,53 @@
                                     return;
                                 }
                                 
-                                this.database.ref(`calls/${this.callId}/offer`).on('value', async (snapshot) => {
-                                    const offerData = snapshot.val();
-                                    if (offerData && offerData.sdp) {
-                                        console.log('📥 Received offer from Firebase');
-                                        
-                                        try {
-                                            await this.peerConnection.setRemoteDescription(offerData);
+                                // Use Firebase compatibility layer
+                                if (window.firebaseCompat) {
+                                    window.firebaseCompat.onValue(`calls/${this.callId}/offer`, async (snapshot) => {
+                                        const offerData = snapshot.val();
+                                        if (offerData && offerData.sdp) {
+                                            console.log('📥 Received offer from Firebase');
                                             
-                                            // Create answer
-                                            const answer = await this.peerConnection.createAnswer();
-                                            await this.peerConnection.setLocalDescription(answer);
-                                            
-                                            // Send answer
-                                            await this.sendAnswer(answer);
-                                            
-                                            console.log('✅ Answer created and sent');
-                                        } catch (error) {
-                                            console.error('❌ Error handling offer:', error);
+                                            try {
+                                                await this.peerConnection.setRemoteDescription(offerData);
+                                                
+                                                // Create answer
+                                                const answer = await this.peerConnection.createAnswer();
+                                                await this.peerConnection.setLocalDescription(answer);
+                                                
+                                                // Send answer
+                                                await this.sendAnswer(answer);
+                                                
+                                                console.log('✅ Answer created and sent');
+                                            } catch (error) {
+                                                console.error('❌ Error handling offer:', error);
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                } else {
+                                    // Fallback to v8 syntax
+                                    this.database.ref(`calls/${this.callId}/offer`).on('value', async (snapshot) => {
+                                        const offerData = snapshot.val();
+                                        if (offerData && offerData.sdp) {
+                                            console.log('📥 Received offer from Firebase');
+                                            
+                                            try {
+                                                await this.peerConnection.setRemoteDescription(offerData);
+                                                
+                                                // Create answer
+                                                const answer = await this.peerConnection.createAnswer();
+                                                await this.peerConnection.setLocalDescription(answer);
+                                                
+                                                // Send answer
+                                                await this.sendAnswer(answer);
+                                                
+                                                console.log('✅ Answer created and sent');
+                                            } catch (error) {
+                                                console.error('❌ Error handling offer:', error);
+                                            }
+                                        }
+                                    });
+                                }
                             }
                             
                             listenForAnswer() {
