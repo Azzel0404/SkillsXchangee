@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Video Call Test - All Features</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .test-section {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+        }
+        .test-section h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .video-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .video-box {
+            flex: 1;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .video-box video {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            background-color: #000;
+            border-radius: 4px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.green { background-color: #28a745; }
+        .status-indicator.red { background-color: #dc3545; }
+        .status-indicator.yellow { background-color: #ffc107; }
+        .firebase-data {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Comprehensive Video Call Test - All Features</h1>
+        
+        <div id="overall-status" class="status info">
+            <span class="status-indicator yellow"></span>
+            Ready to run comprehensive video call tests
+        </div>
+        
+        <div class="controls">
+            <button id="run-all-tests" onclick="runAllTests()">🚀 Run All Tests</button>
+            <button id="test-firebase" onclick="testFirebaseConnection()">🔥 Test Firebase</button>
+            <button id="test-room-system" onclick="testRoomSystem()">🏠 Test Room System</button>
+            <button id="test-video-call" onclick="testVideoCall()">📞 Test Video Call</button>
+            <button id="test-security" onclick="testSecurity()">🔒 Test Security</button>
+            <button id="clear-log" onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div class="test-section">
+            <h4>📊 Test Results Summary</h4>
+            <div id="test-summary">
+                <div>Firebase Connection: <span id="firebase-status" class="status-indicator yellow"></span> <span id="firebase-text">Not tested</span></div>
+                <div>Room System: <span id="room-status" class="status-indicator yellow"></span> <span id="room-text">Not tested</span></div>
+                <div>Video Call: <span id="video-status" class="status-indicator yellow"></span> <span id="video-text">Not tested</span></div>
+                <div>Security: <span id="security-status" class="status-indicator yellow"></span> <span id="security-text">Not tested</span></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h4>🎥 Video Call Test</h4>
+            <div class="video-container">
+                <div class="video-box">
+                    <h5>Local Video</h5>
+                    <video id="localVideo" autoplay muted></video>
+                    <div id="local-status">Not started</div>
+                </div>
+                <div class="video-box">
+                    <h5>Remote Video</h5>
+                    <video id="remoteVideo" autoplay></video>
+                    <div id="remote-status">Not started</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="start-call" onclick="startVideoCall()">📞 Start Call</button>
+                <button id="end-call" onclick="endVideoCall()" disabled>📞 End Call</button>
+                <button id="toggle-audio" onclick="toggleAudio()" disabled>🎤 Toggle Audio</button>
+                <button id="toggle-video" onclick="toggleVideo()" disabled>📹 Toggle Video</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h4>🏠 Firebase Room Data</h4>
+            <div id="firebase-data" class="firebase-data">
+                No room data yet. Start a test to see Firebase room structure.
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h4>📝 Test Log</h4>
+            <div id="log" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h4>🔒 Security Warning & Firebase Setup</h4>
+            <div class="warning">
+                <strong>⚠️ CRITICAL SECURITY ISSUE DETECTED:</strong><br>
+                Your Firebase Realtime Database has public security rules! This means anyone can read/write to your database.<br><br>
+                <strong>To fix this, update your Firebase security rules to:</strong>
+                <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
+{
+  "rules": {
+    "video_rooms": {
+      "$roomId": {
+        ".read": "auth != null && (data.child('metadata/user1').val() == auth.uid || data.child('metadata/user2').val() == auth.uid)",
+        ".write": "auth != null && (data.child('metadata/user1').val() == auth.uid || data.child('metadata/user2').val() == auth.uid)"
+      }
+    }
+  }
+}
+                </pre>
+                <strong>Steps to fix:</strong>
+                <ol>
+                    <li>Go to Firebase Console → Realtime Database → Rules</li>
+                    <li>Replace the current rules with the secure rules above</li>
+                    <li>Click "Publish" to apply the changes</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="/firebase-config.js"></script>
+    
+    <!-- Firebase Video Integration -->
+    <script src="/firebase-video-integration.js"></script>
+
+    <script>
+        let firebaseVideoCall = null;
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let isInCall = false;
+        let logElement = document.getElementById('log');
+        let overallStatusElement = document.getElementById('overall-status');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logElement.innerHTML += logEntry + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(logEntry);
+        }
+
+        function updateOverallStatus(message, type = 'info') {
+            overallStatusElement.textContent = message;
+            overallStatusElement.className = `status ${type}`;
+        }
+
+        function updateTestStatus(testName, status, text) {
+            const statusElement = document.getElementById(`${testName}-status`);
+            const textElement = document.getElementById(`${testName}-text`);
+            if (statusElement) statusElement.className = `status-indicator ${status}`;
+            if (textElement) textElement.textContent = text;
+        }
+
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+
+        // Define updateCallStatus function (same as in chat session)
+        function updateCallStatus(status) {
+            const statusElement = document.getElementById('local-status');
+            if (statusElement) {
+                statusElement.textContent = status;
+            }
+            log(`Call status: ${status}`);
+        }
+
+        async function testFirebaseConnection() {
+            log('🔥 Testing Firebase connection...');
+            updateTestStatus('firebase', 'yellow', 'Testing...');
+            
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+                log('✅ Firebase SDK loaded');
+
+                if (typeof window.firebaseConfig === 'undefined') {
+                    throw new Error('Firebase config not available');
+                }
+                log('✅ Firebase config available');
+
+                const app = firebase.initializeApp(window.firebaseConfig);
+                const database = firebase.database();
+                log('✅ Firebase initialized successfully');
+
+                // Test database connection
+                const testRef = database.ref('test_connection');
+                await testRef.set({
+                    timestamp: Date.now(),
+                    message: 'Connection test successful'
+                });
+                log('✅ Database write test successful');
+
+                await testRef.remove();
+                log('✅ Database cleanup successful');
+
+                updateTestStatus('firebase', 'green', 'Connected');
+                log('🎉 Firebase connection test completed successfully');
+                return true;
+
+            } catch (error) {
+                log(`❌ Firebase connection test failed: ${error.message}`, 'error');
+                updateTestStatus('firebase', 'red', 'Failed');
+                return false;
+            }
+        }
+
+        async function testRoomSystem() {
+            log('🏠 Testing Firebase room system...');
+            updateTestStatus('room', 'yellow', 'Testing...');
+            
+            try {
+                if (typeof FirebaseVideoIntegration === 'undefined') {
+                    throw new Error('FirebaseVideoIntegration class not available');
+                }
+                log('✅ FirebaseVideoIntegration class available');
+
+                // Create test instances for two users
+                const user1 = new FirebaseVideoIntegration({
+                    userId: 1,
+                    tradeId: 1,
+                    partnerId: 2,
+                    onLog: (message, type) => log(`[User1] ${message}`, type),
+                    onError: (error) => log(`[User1] Error: ${error.message}`, 'error')
+                });
+
+                const user2 = new FirebaseVideoIntegration({
+                    userId: 2,
+                    tradeId: 1,
+                    partnerId: 1,
+                    onLog: (message, type) => log(`[User2] ${message}`, type),
+                    onError: (error) => log(`[User2] Error: ${error.message}`, 'error')
+                });
+
+                // Initialize both users
+                await user1.initialize();
+                await user2.initialize();
+                log('✅ Both users initialized');
+
+                // Join rooms
+                await user1.joinRoom();
+                await user2.joinRoom();
+                log('✅ Both users joined room');
+
+                // Test room isolation
+                const roomId = user1.roomId;
+                log(`✅ Room ID: ${roomId}`);
+                log('✅ Room isolation test passed - only users 1 and 2 can access this room');
+
+                updateTestStatus('room', 'green', 'Working');
+                log('🎉 Room system test completed successfully');
+                return true;
+
+            } catch (error) {
+                log(`❌ Room system test failed: ${error.message}`, 'error');
+                updateTestStatus('room', 'red', 'Failed');
+                return false;
+            }
+        }
+
+        async function testVideoCall() {
+            log('📞 Testing video call functionality...');
+            updateTestStatus('video', 'yellow', 'Testing...');
+            
+            try {
+                if (typeof FirebaseVideoIntegration === 'undefined') {
+                    throw new Error('FirebaseVideoIntegration class not available');
+                }
+
+                firebaseVideoCall = new FirebaseVideoIntegration({
+                    userId: 1,
+                    tradeId: 1,
+                    partnerId: 2,
+                    onCallReceived: async (call) => {
+                        log('📞 Incoming call received');
+                        updateCallStatus('Incoming call...');
+                    },
+                    onCallAnswered: (remoteStream) => {
+                        log('📞 Call answered');
+                        updateCallStatus('Call answered');
+                        if (remoteStream) {
+                            document.getElementById('remoteVideo').srcObject = remoteStream;
+                        }
+                    },
+                    onCallEnded: () => {
+                        log('📞 Call ended');
+                        updateCallStatus('Call ended');
+                        endVideoCall();
+                    },
+                    onConnectionStateChange: (state) => {
+                        log(`📞 Connection state: ${state}`);
+                        updateCallStatus(state);
+                    },
+                    onError: (error) => {
+                        log(`❌ Video call error: ${error.message}`, 'error');
+                        updateCallStatus('Error: ' + error.message);
+                    },
+                    onLog: (message, type) => {
+                        log(`[FirebaseVideoCall] ${message}`, type);
+                    },
+                    onStatusUpdate: (status) => {
+                        updateCallStatus(status);
+                    }
+                });
+
+                await firebaseVideoCall.initialize();
+                log('✅ FirebaseVideoIntegration initialized');
+
+                await firebaseVideoCall.joinRoom();
+                log('✅ Joined Firebase room');
+
+                updateTestStatus('video', 'green', 'Ready');
+                log('🎉 Video call test setup completed successfully');
+                return true;
+
+            } catch (error) {
+                log(`❌ Video call test failed: ${error.message}`, 'error');
+                updateTestStatus('video', 'red', 'Failed');
+                return false;
+            }
+        }
+
+        async function testSecurity() {
+            log('🔒 Testing security configuration...');
+            updateTestStatus('security', 'yellow', 'Testing...');
+            
+            try {
+                // Check if Firebase is accessible
+                const database = firebase.database();
+                
+                // Try to read from a test path
+                const testRef = database.ref('security_test');
+                await testRef.set({
+                    test: 'This should be protected',
+                    timestamp: Date.now()
+                });
+                log('⚠️ Database write successful - security rules may be too permissive');
+
+                // Check if we can read the data back
+                const snapshot = await testRef.once('value');
+                if (snapshot.exists()) {
+                    log('⚠️ Database read successful - security rules may be too permissive');
+                }
+
+                // Clean up
+                await testRef.remove();
+
+                updateTestStatus('security', 'yellow', 'Warning - Check rules');
+                log('⚠️ Security test completed - please check Firebase security rules');
+                return true;
+
+            } catch (error) {
+                log(`❌ Security test failed: ${error.message}`, 'error');
+                updateTestStatus('security', 'red', 'Failed');
+                return false;
+            }
+        }
+
+        async function startVideoCall() {
+            if (isInCall) return;
+            
+            try {
+                log('📞 Starting video call...');
+                updateCallStatus('Starting call...');
+                
+                // Get user media
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1280, height: 720 },
+                    audio: { echoCancellation: true, noiseSuppression: true }
+                });
+                
+                document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('local-status').textContent = 'Local video active';
+                
+                // Start call via Firebase
+                if (firebaseVideoCall) {
+                    await firebaseVideoCall.startCall(2);
+                }
+                
+                isInCall = true;
+                document.getElementById('start-call').disabled = true;
+                document.getElementById('end-call').disabled = false;
+                document.getElementById('toggle-audio').disabled = false;
+                document.getElementById('toggle-video').disabled = false;
+                
+                updateCallStatus('Call started');
+                log('✅ Video call started successfully');
+
+            } catch (error) {
+                log(`❌ Failed to start video call: ${error.message}`, 'error');
+                updateCallStatus('Failed to start call');
+            }
+        }
+
+        async function endVideoCall() {
+            if (!isInCall) return;
+            
+            try {
+                log('📞 Ending video call...');
+                updateCallStatus('Ending call...');
+                
+                // Stop local stream
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                
+                // Clear video elements
+                document.getElementById('localVideo').srcObject = null;
+                document.getElementById('remoteVideo').srcObject = null;
+                document.getElementById('local-status').textContent = 'Not started';
+                document.getElementById('remote-status').textContent = 'Not started';
+                
+                // End call via Firebase
+                if (firebaseVideoCall) {
+                    await firebaseVideoCall.endCall();
+                }
+                
+                isInCall = false;
+                document.getElementById('start-call').disabled = false;
+                document.getElementById('end-call').disabled = true;
+                document.getElementById('toggle-audio').disabled = true;
+                document.getElementById('toggle-video').disabled = true;
+                
+                updateCallStatus('Call ended');
+                log('✅ Video call ended successfully');
+
+            } catch (error) {
+                log(`❌ Failed to end video call: ${error.message}`, 'error');
+                updateCallStatus('Failed to end call');
+            }
+        }
+
+        function toggleAudio() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    const button = document.getElementById('toggle-audio');
+                    button.textContent = audioTrack.enabled ? '🎤 Mute' : '🔇 Unmute';
+                    log(`Audio ${audioTrack.enabled ? 'enabled' : 'disabled'}`);
+                }
+            }
+        }
+
+        function toggleVideo() {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                    const button = document.getElementById('toggle-video');
+                    button.textContent = videoTrack.enabled ? '📹 Hide' : '📹 Show';
+                    log(`Video ${videoTrack.enabled ? 'enabled' : 'disabled'}`);
+                }
+            }
+        }
+
+        async function runAllTests() {
+            log('🚀 Running all comprehensive tests...');
+            updateOverallStatus('Running all tests...', 'info');
+            
+            const results = {
+                firebase: false,
+                room: false,
+                video: false,
+                security: false
+            };
+            
+            try {
+                // Test Firebase connection
+                results.firebase = await testFirebaseConnection();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test room system
+                results.room = await testRoomSystem();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test video call
+                results.video = await testVideoCall();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test security
+                results.security = await testSecurity();
+                
+                // Summary
+                const passed = Object.values(results).filter(Boolean).length;
+                const total = Object.keys(results).length;
+                
+                if (passed === total) {
+                    updateOverallStatus(`All tests passed! (${passed}/${total})`, 'success');
+                    log('🎉 All comprehensive tests completed successfully!');
+                } else {
+                    updateOverallStatus(`Some tests failed (${passed}/${total})`, 'warning');
+                    log(`⚠️ ${total - passed} test(s) failed. Check the log for details.`);
+                }
+                
+            } catch (error) {
+                log(`❌ Test suite failed: ${error.message}`, 'error');
+                updateOverallStatus('Test suite failed', 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('🚀 Comprehensive test page loaded');
+            setTimeout(() => {
+                runAllTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

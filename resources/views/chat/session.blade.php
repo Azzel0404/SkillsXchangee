@@ -53,6 +53,53 @@
         }
     }
     
+    // Define updateCallStatus function before Firebase initialization
+    function updateCallStatus(status) {
+        const statusElement = document.getElementById('video-status');
+        if (statusElement) {
+            statusElement.textContent = status;
+            
+            // Add visual indicators based on status
+            statusElement.className = 'call-status';
+            
+            switch (status.toLowerCase()) {
+                case 'calling...':
+                    statusElement.className += ' calling';
+                    statusElement.innerHTML = '📞 ' + status;
+                    break;
+                case 'answering...':
+                    statusElement.className += ' answering';
+                    statusElement.innerHTML = '📱 ' + status;
+                    break;
+                case 'waiting for answer...':
+                    statusElement.className += ' waiting';
+                    statusElement.innerHTML = '⏳ ' + status;
+                    break;
+                case 'connected':
+                case 'video connected':
+                case 'connection established':
+                    statusElement.className += ' connected';
+                    statusElement.innerHTML = '✅ ' + status;
+                    break;
+                case 'connection failed':
+                    statusElement.className += ' failed';
+                    statusElement.innerHTML = '❌ ' + status;
+                    break;
+                case 'connection lost':
+                    statusElement.className += ' lost';
+                    statusElement.innerHTML = '⚠️ ' + status;
+                    break;
+                case 'call ended':
+                    statusElement.className += ' ended';
+                    statusElement.innerHTML = '📴 ' + status;
+                    break;
+                default:
+                    statusElement.innerHTML = '🔄 ' + status;
+            }
+        }
+        console.log('Call status:', status);
+    }
+
     function initializeVideoCallListeners() {
         if (videoCallListenersInitialized) {
             console.log('⚠️ Video call listeners already initialized, skipping...');
@@ -1263,51 +1310,6 @@ if (window.Echo) {
         return 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
     
-    function updateCallStatus(status) {
-        const statusElement = document.getElementById('video-status');
-        if (statusElement) {
-            statusElement.textContent = status;
-            
-            // Add visual indicators based on status
-            statusElement.className = 'call-status';
-            
-            switch (status.toLowerCase()) {
-                case 'calling...':
-                    statusElement.className += ' calling';
-                    statusElement.innerHTML = '📞 ' + status;
-                    break;
-                case 'answering...':
-                    statusElement.className += ' answering';
-                    statusElement.innerHTML = '📱 ' + status;
-                    break;
-                case 'waiting for answer...':
-                    statusElement.className += ' waiting';
-                    statusElement.innerHTML = '⏳ ' + status;
-                    break;
-                case 'connected':
-                case 'video connected':
-                case 'connection established':
-                    statusElement.className += ' connected';
-                    statusElement.innerHTML = '✅ ' + status;
-                    break;
-                case 'connection failed':
-                    statusElement.className += ' failed';
-                    statusElement.innerHTML = '❌ ' + status;
-                    break;
-                case 'connection lost':
-                    statusElement.className += ' lost';
-                    statusElement.innerHTML = '⚠️ ' + status;
-                    break;
-                case 'call ended':
-                    statusElement.className += ' ended';
-                    statusElement.innerHTML = '📴 ' + status;
-                    break;
-                default:
-                    statusElement.innerHTML = '🔄 ' + status;
-            }
-        }
-        console.log('Call status:', status);
-    }
     
     function updateCallTimer(time) {
         const timerElement = document.getElementById('call-timer');

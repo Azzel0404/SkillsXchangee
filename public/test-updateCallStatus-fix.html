@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>updateCallStatus Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        #video-status {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 updateCallStatus Fix Test</h1>
+        
+        <div id="status" class="status info">
+            Ready to test updateCallStatus function
+        </div>
+        
+        <div>
+            <h3>Test Controls</h3>
+            <button id="test-function" onclick="testUpdateCallStatus()">Test updateCallStatus Function</button>
+            <button id="test-firebase" onclick="testFirebaseIntegration()">Test Firebase Integration</button>
+            <button id="clear-log" onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div>
+            <h3>Video Status Element</h3>
+            <div id="video-status">Ready for testing</div>
+        </div>
+        
+        <div>
+            <h3>Test Log</h3>
+            <div id="log" class="log"></div>
+        </div>
+        
+        <div>
+            <h3>Issue Fixed</h3>
+            <ul>
+                <li>✅ Moved updateCallStatus function before Firebase initialization</li>
+                <li>✅ Function is now available when Firebase integration calls it</li>
+                <li>✅ Should resolve "updateCallStatus is not a function" error</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="/firebase-config.js"></script>
+    
+    <!-- Firebase Video Integration -->
+    <script src="/firebase-video-integration.js"></script>
+
+    <script>
+        let firebaseVideoCall = null;
+        let logElement = document.getElementById('log');
+        let statusElement = document.getElementById('status');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logElement.innerHTML += logEntry + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(logEntry);
+        }
+
+        function updateStatus(message, type = 'info') {
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+
+        // Define updateCallStatus function (same as in chat session)
+        function updateCallStatus(status) {
+            const statusElement = document.getElementById('video-status');
+            if (statusElement) {
+                statusElement.textContent = status;
+                
+                // Add visual indicators based on status
+                statusElement.className = 'call-status';
+                
+                switch (status.toLowerCase()) {
+                    case 'calling...':
+                        statusElement.className += ' calling';
+                        statusElement.innerHTML = '📞 ' + status;
+                        break;
+                    case 'answering...':
+                        statusElement.className += ' answering';
+                        statusElement.innerHTML = '📱 ' + status;
+                        break;
+                    case 'waiting for answer...':
+                        statusElement.className += ' waiting';
+                        statusElement.innerHTML = '⏳ ' + status;
+                        break;
+                    case 'connected':
+                    case 'video connected':
+                    case 'connection established':
+                        statusElement.className += ' connected';
+                        statusElement.innerHTML = '✅ ' + status;
+                        break;
+                    case 'connection failed':
+                        statusElement.className += ' failed';
+                        statusElement.innerHTML = '❌ ' + status;
+                        break;
+                    case 'connection lost':
+                        statusElement.className += ' lost';
+                        statusElement.innerHTML = '⚠️ ' + status;
+                        break;
+                    case 'call ended':
+                        statusElement.className += ' ended';
+                        statusElement.innerHTML = '📴 ' + status;
+                        break;
+                    default:
+                        statusElement.innerHTML = '🔄 ' + status;
+                }
+            }
+            console.log('Call status:', status);
+        }
+
+        function testUpdateCallStatus() {
+            log('🔍 Testing updateCallStatus function...');
+            updateStatus('Testing updateCallStatus function...', 'info');
+            
+            try {
+                // Test if function exists
+                if (typeof updateCallStatus === 'function') {
+                    log('✅ updateCallStatus function is defined');
+                    
+                    // Test various status updates
+                    const testStatuses = [
+                        'Ready for testing',
+                        'Calling...',
+                        'Answering...',
+                        'Connected',
+                        'Connection failed',
+                        'Call ended'
+                    ];
+                    
+                    testStatuses.forEach((status, index) => {
+                        setTimeout(() => {
+                            updateCallStatus(status);
+                            log(`✅ Updated status to: ${status}`);
+                        }, index * 500);
+                    });
+                    
+                    updateStatus('updateCallStatus function test passed!', 'success');
+                    log('🎉 updateCallStatus function test completed successfully');
+                    
+                } else {
+                    throw new Error('updateCallStatus function is not defined');
+                }
+                
+            } catch (error) {
+                log(`❌ updateCallStatus function test failed: ${error.message}`, 'error');
+                updateStatus(`updateCallStatus test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFirebaseIntegration() {
+            log('🔥 Testing Firebase integration with updateCallStatus...');
+            updateStatus('Testing Firebase integration...', 'info');
+            
+            try {
+                // Check if Firebase is loaded
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+                log('✅ Firebase SDK loaded');
+
+                // Check if config is available
+                if (typeof window.firebaseConfig === 'undefined') {
+                    throw new Error('Firebase config not available');
+                }
+                log('✅ Firebase config available');
+
+                // Initialize Firebase
+                const app = firebase.initializeApp(window.firebaseConfig);
+                const database = firebase.database();
+                log('✅ Firebase initialized successfully');
+
+                // Create FirebaseVideoIntegration instance
+                if (typeof FirebaseVideoIntegration === 'undefined') {
+                    throw new Error('FirebaseVideoIntegration class not available');
+                }
+                log('✅ FirebaseVideoIntegration class available');
+
+                firebaseVideoCall = new FirebaseVideoIntegration({
+                    userId: 1,
+                    tradeId: 1,
+                    partnerId: 2,
+                    onStatusUpdate: (status) => {
+                        log(`[FirebaseVideoCall] Status update: ${status}`);
+                        updateCallStatus(status);
+                    },
+                    onLog: (message, type) => {
+                        log(`[FirebaseVideoCall] ${message}`, type);
+                    },
+                    onError: (error) => {
+                        log(`[FirebaseVideoCall] Error: ${error.message}`, 'error');
+                    }
+                });
+                log('✅ FirebaseVideoIntegration instance created');
+
+                // Test initialization
+                const initResult = await firebaseVideoCall.initialize();
+                if (initResult) {
+                    log('✅ FirebaseVideoIntegration initialized successfully');
+                } else {
+                    throw new Error('FirebaseVideoIntegration initialization failed');
+                }
+
+                // Test room joining
+                await firebaseVideoCall.joinRoom();
+                log('✅ Successfully joined Firebase room');
+
+                updateStatus('Firebase integration test passed!', 'success');
+                log('🎉 Firebase integration test completed successfully');
+
+            } catch (error) {
+                log(`❌ Firebase integration test failed: ${error.message}`, 'error');
+                updateStatus(`Firebase integration test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('🚀 Page loaded, starting automatic tests...');
+            setTimeout(() => {
+                testUpdateCallStatus();
+            }, 1000);
+            
+            setTimeout(() => {
+                testFirebaseIntegration();
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

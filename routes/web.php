@@ -40,6 +40,12 @@ Route::get('/test-video-call-fixes', function () {
     return response()->file(public_path('test-video-call-fixes.html'));
 });
 
+// Comprehensive test route - All video call tests in one place
+Route::get('/test-video-call', function () {
+    return response()->file(public_path('test-video-call-comprehensive.html'));
+});
+
+// Legacy test routes (kept for backward compatibility)
 Route::get('/test-video-call-complete', function () {
     return response()->file(public_path('test-video-call-complete.html'));
 });
@@ -50,6 +56,10 @@ Route::get('/test-firebase-room-system', function () {
 
 Route::get('/test-video-call-debug-fixed', function () {
     return response()->file(public_path('test-video-call-debug-fixed.html'));
+});
+
+Route::get('/test-updateCallStatus-fix', function () {
+    return response()->file(public_path('test-updateCallStatus-fix.html'));
 });
 
 Route::get('/video-call-api-alternatives', function () {
