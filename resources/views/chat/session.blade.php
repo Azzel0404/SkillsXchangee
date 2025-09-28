@@ -916,6 +916,10 @@
                                 this.localStream = null;
                                 this.remoteStream = null;
                                 
+                                // ICE candidate buffering
+                                this.iceCandidateBuffer = [];
+                                this.remoteDescriptionSet = false;
+                                
                                 this.initFirebase();
                             }
                             
@@ -937,12 +941,34 @@
                                 }
                             }
                             
+                            // Process buffered ICE candidates
+                            async processBufferedIceCandidates() {
+                                console.log(`🔄 Processing ${this.iceCandidateBuffer.length} buffered ICE candidates...`);
+                                
+                                while (this.iceCandidateBuffer.length > 0) {
+                                    const candidateData = this.iceCandidateBuffer.shift();
+                                    
+                                    try {
+                                        await this.peerConnection.addIceCandidate(candidateData);
+                                        console.log('✅ Buffered ICE candidate processed successfully');
+                                    } catch (error) {
+                                        console.error('❌ Error processing buffered ICE candidate:', error);
+                                    }
+                                }
+                                
+                                console.log('✅ All buffered ICE candidates processed');
+                            }
+                            
                             async startCall(partnerId) {
                                 console.log('🚀 Starting WebRTC call with partner:', partnerId);
                                 
                                 this.partnerId = partnerId;
                                 this.callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                                 this.isInitiator = true;
+                                
+                                // Reset buffering state
+                                this.iceCandidateBuffer = [];
+                                this.remoteDescriptionSet = false;
                                 
                                 try {
                                     // Get local stream
@@ -975,6 +1001,10 @@
                                 
                                 this.callId = callId;
                                 this.isInitiator = false;
+                                
+                                // Reset buffering state
+                                this.iceCandidateBuffer = [];
+                                this.remoteDescriptionSet = false;
                                 
                                 try {
                                     // Get local stream
@@ -1125,6 +1155,13 @@
                                         try {
                                             await this.peerConnection.setRemoteDescription(offerData);
                                             
+                                            // Mark remote description as set
+                                            this.remoteDescriptionSet = true;
+                                            console.log('✅ Remote description set, processing buffered ICE candidates...');
+                                            
+                                            // Process any buffered ICE candidates
+                                            await this.processBufferedIceCandidates();
+                                            
                                             // Create answer
                                             const answer = await this.peerConnection.createAnswer();
                                             await this.peerConnection.setLocalDescription(answer);
@@ -1155,6 +1192,14 @@
                                         
                                         try {
                                             await this.peerConnection.setRemoteDescription(answerData);
+                                            
+                                            // Mark remote description as set
+                                            this.remoteDescriptionSet = true;
+                                            console.log('✅ Remote description set, processing buffered ICE candidates...');
+                                            
+                                            // Process any buffered ICE candidates
+                                            await this.processBufferedIceCandidates();
+                                            
                                             console.log('✅ Answer processed successfully');
                                         } catch (error) {
                                             console.error('❌ Error handling answer:', error);
@@ -1176,11 +1221,19 @@
                                     if (candidateData && candidateData.candidate) {
                                         console.log('🧊 Received ICE candidate from Firebase');
                                         
-                                        try {
-                                            await this.peerConnection.addIceCandidate(candidateData);
-                                            console.log('✅ ICE candidate processed successfully');
-                                        } catch (error) {
-                                            console.error('❌ Error handling ICE candidate:', error);
+                                        // Check if remote description is set
+                                        if (this.remoteDescriptionSet) {
+                                            // Remote description is set, add candidate immediately
+                                            try {
+                                                await this.peerConnection.addIceCandidate(candidateData);
+                                                console.log('✅ ICE candidate processed immediately');
+                                            } catch (error) {
+                                                console.error('❌ Error handling ICE candidate:', error);
+                                            }
+                                        } else {
+                                            // Remote description not set yet, buffer the candidate
+                                            this.iceCandidateBuffer.push(candidateData);
+                                            console.log(`🔄 ICE candidate buffered (${this.iceCandidateBuffer.length} total buffered)`);
                                         }
                                     }
                                 });
