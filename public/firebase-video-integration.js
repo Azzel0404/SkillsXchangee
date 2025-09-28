@@ -33,6 +33,8 @@ class FirebaseVideoIntegration {
         this.onConnectionStateChange = options.onConnectionStateChange || (() => {});
         this.onError = options.onError || (() => {});
         this.onLog = options.onLog || (() => {});
+        this.onStatusUpdate = options.onStatusUpdate || (() => {});
+        this.onParticipantUpdate = options.onParticipantUpdate || (() => {});
         
         // WebRTC Configuration
         this.config = {
@@ -152,6 +154,9 @@ class FirebaseVideoIntegration {
             this.callId = `call_${Date.now()}_${this.userId}`;
             this.isInitiator = true;
             
+            // Update status
+            this.onStatusUpdate?.('Getting camera access...');
+            
             // Get user media
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 video: { width: 1280, height: 720 },
@@ -159,6 +164,7 @@ class FirebaseVideoIntegration {
             });
             
             this.log('✅ Local stream obtained');
+            this.onStatusUpdate?.('Setting up connection...');
             
             // Create peer connection
             await this.createPeerConnection();
@@ -169,10 +175,12 @@ class FirebaseVideoIntegration {
             });
             
             // Create offer
+            this.onStatusUpdate?.('Creating offer...');
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
             
             this.log('✅ Offer created');
+            this.onStatusUpdate?.('Sending offer...');
             
             // Send offer via Firebase
             await this.sendOffer(offer);
@@ -181,10 +189,12 @@ class FirebaseVideoIntegration {
             this.startCallTimer();
             
             this.log('✅ Video call initiated successfully');
+            this.onStatusUpdate?.('Call initiated, waiting for answer...');
             return true;
             
         } catch (error) {
             this.log(`❌ Error starting call: ${error.message}`, 'error');
+            this.onStatusUpdate?.(`Error: ${error.message}`);
             this.onError(error);
             return false;
         }

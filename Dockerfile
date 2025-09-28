@@ -34,6 +34,9 @@ RUN npm install
 # Build assets (skip if build fails)
 RUN npm run build || echo "Asset build failed, continuing with fallback CSS"
 
+# Ensure Firebase files are accessible
+RUN chmod 644 public/firebase-config.js public/firebase-video-integration.js public/firebase-video-call.js
+
 # Application key will be generated at runtime in start.sh
 
 # Expose port

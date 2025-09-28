@@ -1,61 +1,110 @@
-# Railway-specific dockerignore - only for backend
+# Railway-specific .dockerignore
+# Optimized for Railway deployment with Firebase
+
+# Node modules and logs
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Git
 .git
 .gitignore
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+.env.testing
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+
+# Test files (keep Firebase test files)
+test-*.html
+debug-*.html
+*test*.html
+
+# Documentation (keep essential ones)
 README.md
-frontend/
-render.yaml
-railway.toml
-Dockerfile
-Dockerfile.railway
-.dockerignore
-.dockerignore.railway
+*.md
+!FIREBASE_MIGRATION_GUIDE.md
+!FIREBASE_VIDEO_CALL_SETUP.md
 
-# Backend files to exclude
-backend/node_modules/
-backend/vendor/
-backend/storage/logs/*
-backend/storage/framework/cache/*
-backend/storage/framework/sessions/*
-backend/storage/framework/views/*
-backend/bootstrap/cache/*
-backend/.env
-backend/.env.example
-backend/.env.local
-backend/.env.production
-backend/.env.staging
-backend/.env.testing
-backend/coverage/
-backend/.phpunit.result.cache
-backend/.phpunit.cache
-backend/tests/
-backend/.editorconfig
-backend/.gitattributes
-backend/.gitignore
-backend/buildpacks.txt
-backend/composer-setup.php
-backend/composer.phar
-backend/DEPLOYMENT.md
-backend/DEPLOYMENT_CHECKLIST.md
-backend/deploy.sh
-backend/deployment-status.md
-backend/Procfile
-backend/README.md
-backend/README_VIDEO_CHAT.md
-backend/test-db.php
-backend/test-mysql-connection.php
-backend/test-postgres-connection.php
-backend/.dockerignore
+# Development files
+composer.phar
+composer-setup.php
+clear_skills.php
+clear_skills.sql
 
-# Ensure these essential files are NOT ignored
-!backend/composer.json
-!backend/package.json
-!backend/start.sh
-!backend/artisan
-!backend/app/
-!backend/bootstrap/
-!backend/config/
-!backend/database/
-!backend/public/
-!backend/resources/
-!backend/routes/
-!backend/storage/
+# Old WebSocket files (no longer needed)
+start-websocket-server.*
+test-websocket-*
+test-pusher-*
+test-broadcasting-*
+test-video-call-*
+test-answer-exchange.html
+test-camera-mirror.html
+test-chat-*.html
+test-message-sending.html
+test-mysql-connection.php
+test-skills.html
+test-ice-candidate-fix.html
+test-https-assets.html
+test-notification-fix.html
+test-pusher-timing-fix.html
+test-video-call-*.html
+debug-chat-js.html
+debug-video-call.html
+
+# Keep Firebase files (essential for deployment)
+!public/firebase-config.js
+!public/firebase-video-integration.js
+!public/firebase-video-call.js
+!public/test-firebase-integration.html
+!public/test-firebase-video-call.html
+
+# Keep essential deployment files
+!build-render.sh
+!start-render.sh
+!deploy.sh
+!deploy-setup.*
+!build-assets.*
+!setup-env.*
+!start.sh
+!Procfile
+!railway.toml
+!render.yaml
+!Dockerfile*
+!.dockerignore*
+
+# Coverage and testing
+coverage
+.nyc_output
+.phpunit.result.cache
+.phpunit.cache
+tests/
+
+# Temporary files
+*.tmp
+*.temp

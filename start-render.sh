@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# SkillsXchange Render Deployment Script with WebSocket Support
-echo "Starting SkillsXchange on Render with WebSocket support..."
+# SkillsXchange Render Deployment Script with Firebase Video Calling
+echo "Starting SkillsXchange on Render with Firebase video calling..."
 
 # Set proper permissions
 chmod -R 755 storage bootstrap/cache
+
+# Ensure Firebase files are accessible
+chmod 644 public/firebase-config.js public/firebase-video-integration.js public/firebase-video-call.js
 
 # Clear and cache configurations
 php artisan config:clear
@@ -17,25 +20,8 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Start WebSocket server in background
-echo "Starting WebSocket signaling server on port 8080..."
-php artisan websocket:start --port=8080 &
-WEBSOCKET_PID=$!
-
-# Function to cleanup on exit
-cleanup() {
-    echo "Cleaning up processes..."
-    if [ ! -z "$WEBSOCKET_PID" ]; then
-        kill $WEBSOCKET_PID 2>/dev/null || true
-    fi
-    exit 0
-}
-
-# Set trap to cleanup on script exit
-trap cleanup EXIT INT TERM
-
-# Wait a moment for WebSocket server to start
-sleep 2
+# No WebSocket server needed - Firebase handles video call signaling
+echo "Firebase video calling enabled - no WebSocket server needed"
 
 # Start the main application
 echo "Starting main application on port $PORT..."
