@@ -36,6 +36,10 @@ Route::get('/test-video-call-debug', function () {
     return response()->file(public_path('test-video-call-debug.html'));
 });
 
+Route::get('/test-video-call-fixes', function () {
+    return response()->file(public_path('test-video-call-fixes.html'));
+});
+
 Route::get('/video-call-api-alternatives', function () {
     return response()->file(public_path('video-call-api-alternatives.html'));
 });
@@ -430,6 +434,13 @@ Route::middleware('auth')->group(function () {
         // Video call routes (Firebase-based - no server endpoints needed)
         // All video call signaling is now handled by Firebase Realtime Database
         // The VideoCallController is kept for backward compatibility but not used
+        
+        // Legacy video call routes for backward compatibility
+        Route::post('/chat/{trade}/video-call/offer', [\App\Http\Controllers\VideoCallController::class, 'sendOffer'])->name('video-call.offer');
+        Route::post('/chat/{trade}/video-call/answer', [\App\Http\Controllers\VideoCallController::class, 'sendAnswer'])->name('video-call.answer');
+        Route::post('/chat/{trade}/video-call/ice-candidate', [\App\Http\Controllers\VideoCallController::class, 'sendIceCandidate'])->name('video-call.ice-candidate');
+        Route::post('/chat/{trade}/video-call/end', [\App\Http\Controllers\VideoCallController::class, 'endCall'])->name('video-call.end');
+        Route::get('/chat/{trade}/video-call/messages', [\App\Http\Controllers\VideoCallController::class, 'pollMessages'])->name('video-call.messages');
     });
     
     // Admin functionality (moved from /admin to main dashboard) - Restricted to admin users only

@@ -12,6 +12,7 @@
     
     // Firebase Video Call Integration
     let firebaseVideoCall = null;
+    let videoCallListenersInitialized = false;
     let videoCallState = {
         isActive: false,
         isConnected: false,
@@ -59,6 +60,7 @@
         }
         
         console.log('🔧 Setting up video call listeners...');
+        videoCallListenersInitialized = true;
         
         try {
             window.Echo.private('trade.{{ $trade->id }}')

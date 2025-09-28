@@ -15,6 +15,16 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Firebase CDN for Video Calls -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script src="{{ asset('firebase-config.js') }}"></script>
+
+    <!-- Firebase Video Integration -->
+    <script src="{{ asset('firebase-video-integration.js') }}"></script>
+
     <!-- Fallback for Pusher and Laravel Echo if Vite fails -->
     <script>
         // Check if Echo is loaded after Vite
