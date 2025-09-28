@@ -34,6 +34,9 @@ export default defineConfig({
         'process.env.MIX_PUSHER_APP_KEY': JSON.stringify(process.env.VITE_PUSHER_APP_KEY),
         'process.env.MIX_PUSHER_APP_CLUSTER': JSON.stringify(process.env.VITE_PUSHER_APP_CLUSTER),
     },
+    optimizeDeps: {
+        include: ['firebase/app', 'firebase/database']
+    },
     server: {
         hmr: {
             host: 'localhost',
