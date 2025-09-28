@@ -15,8 +15,13 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Firebase v12 Compatibility Layer -->
-    <script type="module" src="{{ asset('firebase-v12-compat.js') }}"></script>
+    <!-- Firebase v9 CDN (Compatibility Version) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="{{ asset('firebase-config.js') }}"></script>
 
     <!-- Firebase Video Integration -->
     <script src="{{ asset('firebase-video-integration.js') }}"></script>
