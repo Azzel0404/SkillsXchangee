@@ -65,15 +65,33 @@ class FirebaseVideoIntegration {
         try {
             this.log('🔥 Initializing Firebase video integration...');
             
-            // Import Firebase modules
-            const { initializeApp } = await import('./firebase/app.js');
-            const { getDatabase, ref, set, onValue, off, remove, push } = await import('./firebase/database.js');
-            const { firebaseConfig } = await import('./firebase-config.js');
+            // Check if Firebase is available globally
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase SDK not loaded. Please include Firebase CDN scripts.');
+            }
             
-            // Initialize Firebase
-            this.app = initializeApp(firebaseConfig);
-            this.database = getDatabase(this.app);
-            this.roomRef = ref(this.database, `rooms/trade_${this.tradeId}`);
+            // Get Firebase config
+            const firebaseConfig = window.firebaseConfig || {
+                apiKey: "AIzaSyDKk5L6noLC1DcQcE2ihT199eoIrZkzclY",
+                authDomain: "skillsxchange-42c62.firebaseapp.com",
+                databaseURL: "https://skillsxchange-42c62-default-rtdb.firebaseio.com",
+                projectId: "skillsxchange-42c62",
+                storageBucket: "skillsxchange-42c62.firebasestorage.app",
+                messagingSenderId: "1096126152239",
+                appId: "1:1096126152239:web:a9ecf3f3df9e20dc4310da",
+                measurementId: "G-XYE1EJMOYG"
+            };
+            
+            // Initialize Firebase (check if already exists)
+            try {
+                this.app = firebase.app();
+                this.log('Using existing Firebase app');
+            } catch (error) {
+                this.app = firebase.initializeApp(firebaseConfig);
+                this.log('Created new Firebase app');
+            }
+            this.database = firebase.database();
+            this.roomRef = this.database.ref(`rooms/trade_${this.tradeId}`);
             
             // Join the room
             await this.joinRoom();
@@ -93,9 +111,8 @@ class FirebaseVideoIntegration {
     
     // Join Firebase room
     async joinRoom() {
-        const { set } = await import('./firebase/database.js');
-        const userRef = ref(this.database, `rooms/trade_${this.tradeId}/users/${this.userId}`);
-        await set(userRef, {
+        const userRef = this.database.ref(`rooms/trade_${this.tradeId}/users/${this.userId}`);
+        await userRef.set({
             userId: this.userId,
             status: 'online',
             joinedAt: Date.now()
@@ -105,10 +122,9 @@ class FirebaseVideoIntegration {
     
     // Setup Firebase listeners for call events
     setupFirebaseListeners() {
-        const { onValue } = await import('./firebase/database.js');
-        const callsRef = ref(this.database, `rooms/trade_${this.tradeId}/calls`);
+        const callsRef = this.database.ref(`rooms/trade_${this.tradeId}/calls`);
         
-        onValue(callsRef, (snapshot) => {
+        callsRef.on('value', (snapshot) => {
             const calls = snapshot.val();
             if (!calls) return;
             
@@ -300,9 +316,8 @@ class FirebaseVideoIntegration {
     
     // Send offer via Firebase
     async sendOffer(offer) {
-        const { set } = await import('./firebase/database.js');
-        const callRef = ref(this.database, `rooms/trade_${this.tradeId}/calls/${this.callId}`);
-        await set(callRef, {
+        const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}`);
+        await callRef.set({
             type: 'offer',
             fromUserId: this.userId,
             toUserId: this.partnerId,
@@ -315,9 +330,8 @@ class FirebaseVideoIntegration {
     
     // Send answer via Firebase
     async sendAnswer(answer) {
-        const { set } = await import('./firebase/database.js');
-        const callRef = ref(this.database, `rooms/trade_${this.tradeId}/calls/${this.callId}`);
-        await set(callRef, {
+        const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}`);
+        await callRef.set({
             type: 'answer',
             fromUserId: this.userId,
             toUserId: this.partnerId,
@@ -330,9 +344,8 @@ class FirebaseVideoIntegration {
     
     // Send ICE candidate via Firebase
     async sendIceCandidate(candidate) {
-        const { set } = await import('./firebase/database.js');
-        const callRef = ref(this.database, `rooms/trade_${this.tradeId}/calls/${this.callId}_ice_${Date.now()}`);
-        await set(callRef, {
+        const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}_ice_${Date.now()}`);
+        await callRef.set({
             type: 'ice-candidate',
             fromUserId: this.userId,
             toUserId: this.partnerId,
@@ -392,9 +405,8 @@ class FirebaseVideoIntegration {
         
         // Send end call signal via Firebase
         if (this.callId && this.partnerId) {
-            const { set } = await import('./firebase/database.js');
-            const callRef = ref(this.database, `rooms/trade_${this.tradeId}/calls/${this.callId}_end`);
-            await set(callRef, {
+            const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}_end`);
+            await callRef.set({
                 type: 'end-call',
                 fromUserId: this.userId,
                 toUserId: this.partnerId,
@@ -488,8 +500,7 @@ class FirebaseVideoIntegration {
     // Cleanup
     cleanup() {
         if (this.roomRef) {
-            const { off } = await import('./firebase/database.js');
-            off(this.roomRef);
+            this.roomRef.off();
         }
         this.endCall();
     }

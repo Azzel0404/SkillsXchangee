@@ -31,14 +31,33 @@
         try {
             console.log('🔥 Initializing enhanced Firebase video call integration...');
             
-            // Import Firebase modules
-            const { initializeApp } = await import('/firebase/app.js');
-            const { getDatabase, ref, set, onValue, off, remove, push } = await import('/firebase/database.js');
-            const { firebaseConfig } = await import('/firebase-config.js');
+            // Check if Firebase is available globally
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase SDK not loaded. Please include Firebase CDN scripts.');
+            }
             
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const database = getDatabase(app);
+            // Get Firebase config
+            const firebaseConfig = window.firebaseConfig || {
+                apiKey: "AIzaSyDKk5L6noLC1DcQcE2ihT199eoIrZkzclY",
+                authDomain: "skillsxchange-42c62.firebaseapp.com",
+                databaseURL: "https://skillsxchange-42c62-default-rtdb.firebaseio.com",
+                projectId: "skillsxchange-42c62",
+                storageBucket: "skillsxchange-42c62.firebasestorage.app",
+                messagingSenderId: "1096126152239",
+                appId: "1:1096126152239:web:a9ecf3f3df9e20dc4310da",
+                measurementId: "G-XYE1EJMOYG"
+            };
+            
+            // Initialize Firebase (check if already exists)
+            let app;
+            try {
+                app = firebase.app();
+                console.log('Using existing Firebase app');
+            } catch (error) {
+                app = firebase.initializeApp(firebaseConfig);
+                console.log('Created new Firebase app');
+            }
+            const database = firebase.database();
             
             // Create enhanced video call UI
             videoCallUI = new EnhancedVideoCallUI('video-call-container', {
@@ -331,9 +350,13 @@
     </div>
 </button>
 
+<!-- Include Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <!-- Include Enhanced UI and Firebase Integration -->
-<script type="module" src="/enhanced-video-call-ui.js"></script>
-<script type="module" src="/firebase-video-integration.js"></script>
+<script src="/enhanced-video-call-ui.js"></script>
+<script src="/firebase-video-integration.js"></script>
 
 <!-- Enhanced Video Call Styles -->
 <style>
