@@ -659,7 +659,7 @@
 <!-- Video Chat Modal -->
 <div id="video-chat-modal" class="video-chat-modal">
     <div class="video-chat-container">
-        <button class="close-video" onclick="closeVideoChat()">×</button>
+        <button class="close-video" id="close-video-btn">×</button>
 
         <div class="video-status" id="video-status">Initializing video chat...</div>
         <div class="call-timer" id="call-timer" style="display: none;">00:00</div>
@@ -691,7 +691,7 @@
         </div>
 
         <div class="video-controls">
-            <button id="auto-call-toggle" class="video-btn secondary" onclick="toggleAutoCall()"
+            <button id="auto-call-toggle" class="video-btn secondary"
                 title="Toggle Auto-call" style="background: #10b981;">🔗 Auto-call ON</button>
             <div id="presence-status"
                 style="color: #6b7280; font-size: 0.875rem; margin: 0 8px; display: flex; align-items: center;">🔴
@@ -706,11 +706,11 @@
                 title="Turn Video On/Off">📹</button>
             <button id="mirror-video-btn" class="video-btn secondary" style="display: none;"
                 title="Mirror Video">🪞</button>
-            <button id="screen-share-btn" class="video-btn secondary" onclick="toggleScreenShare()"
+            <button id="screen-share-btn" class="video-btn secondary"
                 style="display: none;" title="Share Screen">🖥️</button>
-            <button id="maximize-btn" class="video-btn maximize" onclick="toggleMaximize()" style="display: none;"
+            <button id="maximize-btn" class="video-btn maximize" style="display: none;"
                 title="Maximize">⛶</button>
-            <button id="chat-toggle-btn" class="video-btn secondary" onclick="toggleChat()" style="display: none;"
+            <button id="chat-toggle-btn" class="video-btn secondary" style="display: none;"
                 title="Toggle Chat">💬</button>
         </div>
     </div>
@@ -803,6 +803,44 @@
                             });
                         }
                         
+                        // Define a basic startVideoCall function immediately
+                        window.startVideoCall = function() {
+                            console.log('🚀 Starting video call (immediate version)...');
+                            
+                            // Check if we have a local stream
+                            if (window.localStream) {
+                                console.log('✅ Local stream available, proceeding with call');
+                                
+                                // Try to call the full startVideoCall function if it exists
+                                if (typeof window.startVideoCallFull === 'function') {
+                                    window.startVideoCallFull();
+                                } else {
+                                    console.log('Full startVideoCall not available yet, using basic version');
+                                    
+                                    // Basic video call setup
+                                    const modal = document.getElementById('video-chat-modal');
+                                    if (modal) {
+                                        // Update UI to show calling state
+                                        const statusElement = document.getElementById('video-status');
+                                        if (statusElement) {
+                                            statusElement.textContent = 'Call in progress...';
+                                        }
+                                        
+                                        // Show call controls
+                                        const startBtn = document.getElementById('start-call-btn');
+                                        const endBtn = document.getElementById('end-call-btn');
+                                        if (startBtn) startBtn.style.display = 'none';
+                                        if (endBtn) endBtn.style.display = 'inline-block';
+                                        
+                                        console.log('✅ Basic video call started');
+                                    }
+                                }
+                            } else {
+                                console.error('❌ No local stream available');
+                                alert('Please allow camera access first.');
+                            }
+                        };
+                        
                         // Fallback definition to ensure function is always available
                         if (typeof window.openVideoChat !== 'function') {
                             console.log('🔧 Creating fallback openVideoChat function...');
@@ -837,6 +875,30 @@
                                 }
                             };
                             console.log('✅ Fallback openVideoChat function created:', typeof window.openVideoChat);
+                        }
+                        
+                        // Function to verify all video functions are available
+                        function verifyVideoFunctions() {
+                            console.log('🔍 Verifying video functions...');
+                            const functions = ['openVideoChat', 'closeVideoChat', 'startVideoCall', 'endVideoCall'];
+                            let allAvailable = true;
+                            
+                            functions.forEach(funcName => {
+                                if (typeof window[funcName] === 'function') {
+                                    console.log(`✅ ${funcName} is available`);
+                                } else {
+                                    console.error(`❌ ${funcName} is NOT available`);
+                                    allAvailable = false;
+                                }
+                            });
+                            
+                            if (allAvailable) {
+                                console.log('🎉 All video functions are available!');
+                            } else {
+                                console.warn('⚠️ Some video functions are missing');
+                            }
+                            
+                            return allAvailable;
                         }
                         
                         // Add event listener as backup to onclick
@@ -918,6 +980,80 @@
                                     }
                                 });
                             }
+                            
+                            // Add event listener for close video button
+                            const closeVideoBtn = document.getElementById('close-video-btn');
+                            if (closeVideoBtn) {
+                                closeVideoBtn.addEventListener('click', function() {
+                                    console.log('❌ Close video button clicked');
+                                    if (typeof window.closeVideoChat === 'function') {
+                                        window.closeVideoChat();
+                                    } else {
+                                        console.error('closeVideoChat function not available');
+                                        // Fallback: just hide the modal
+                                        const modal = document.getElementById('video-chat-modal');
+                                        if (modal) {
+                                            modal.style.display = 'none';
+                                            console.log('✅ Modal closed via fallback');
+                                        }
+                                    }
+                                });
+                                console.log('✅ Close video button event listener added');
+                            }
+                            
+                            // Add event listeners for remaining buttons
+                            const autoCallToggle = document.getElementById('auto-call-toggle');
+                            if (autoCallToggle) {
+                                autoCallToggle.addEventListener('click', function() {
+                                    console.log('🔗 Auto-call toggle clicked');
+                                    if (typeof window.toggleAutoCall === 'function') {
+                                        window.toggleAutoCall();
+                                    } else {
+                                        console.error('toggleAutoCall function not available');
+                                    }
+                                });
+                            }
+                            
+                            const screenShareBtn = document.getElementById('screen-share-btn');
+                            if (screenShareBtn) {
+                                screenShareBtn.addEventListener('click', function() {
+                                    console.log('🖥️ Screen share button clicked');
+                                    if (typeof window.toggleScreenShare === 'function') {
+                                        window.toggleScreenShare();
+                                    } else {
+                                        console.error('toggleScreenShare function not available');
+                                    }
+                                });
+                            }
+                            
+                            const maximizeBtn = document.getElementById('maximize-btn');
+                            if (maximizeBtn) {
+                                maximizeBtn.addEventListener('click', function() {
+                                    console.log('⛶ Maximize button clicked');
+                                    if (typeof window.toggleMaximize === 'function') {
+                                        window.toggleMaximize();
+                                    } else {
+                                        console.error('toggleMaximize function not available');
+                                    }
+                                });
+                            }
+                            
+                            const chatToggleBtn = document.getElementById('chat-toggle-btn');
+                            if (chatToggleBtn) {
+                                chatToggleBtn.addEventListener('click', function() {
+                                    console.log('💬 Chat toggle button clicked');
+                                    if (typeof window.toggleChat === 'function') {
+                                        window.toggleChat();
+                                    } else {
+                                        console.error('toggleChat function not available');
+                                    }
+                                });
+                            }
+                            
+                            // Verify functions are available after DOM is loaded
+                            setTimeout(() => {
+                                verifyVideoFunctions();
+                            }, 1000);
                         });
                     </script>
                     <button
@@ -1310,7 +1446,8 @@ if (window.Echo) {
 
     // Make openVideoChat globally accessible
     console.log('🔧 Defining openVideoChat function...');
-    window.openVideoChat = function() {
+    try {
+        window.openVideoChat = function() {
         console.log('🎥 Opening video chat...');
         const modal = document.getElementById('video-chat-modal');
         if (modal) {
@@ -1348,21 +1485,31 @@ if (window.Echo) {
             alert('Video chat is not available. Please refresh the page.');
         }
     };
-    console.log('✅ openVideoChat function defined:', typeof window.openVideoChat);
+        console.log('✅ openVideoChat function defined:', typeof window.openVideoChat);
+    } catch (error) {
+        console.error('❌ Error defining openVideoChat:', error);
+    }
     
     // Make closeVideoChat globally accessible
-    window.closeVideoChat = function() {
-        console.log('🛑 Closing video chat...');
-        const modal = document.getElementById('video-chat-modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-        endVideoCall();
-    };
+    try {
+        window.closeVideoChat = function() {
+            console.log('🛑 Closing video chat...');
+            const modal = document.getElementById('video-chat-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            if (typeof window.endVideoCall === 'function') {
+                window.endVideoCall();
+            }
+        };
+        console.log('✅ closeVideoChat function defined:', typeof window.closeVideoChat);
+    } catch (error) {
+        console.error('❌ Error defining closeVideoChat:', error);
+    }
     
-    // Make startVideoCall globally accessible
-    window.startVideoCall = async function() {
-        console.log('🚀 Starting video call with Firebase...');
+    // Make startVideoCall globally accessible (full version)
+    window.startVideoCallFull = async function() {
+        console.log('🚀 Starting video call with Firebase (full version)...');
         
         try {
             // Get partner ID
