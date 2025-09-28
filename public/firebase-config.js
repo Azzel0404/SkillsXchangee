@@ -1,23 +1,23 @@
-/**
- * Firebase Configuration for SkillsXchangee
- * This file contains the Firebase configuration for video calling
- */
-
-// Firebase configuration
+// Firebase Configuration
+// Replace the placeholder values with your actual Firebase project credentials
 const firebaseConfig = {
-    apiKey: "AIzaSyDlx5VjhobiTlqtv69SciHifC7p_xgHELs",
-    authDomain: "skillsxchange-c2604.firebaseapp.com",
-    databaseURL: "https://skillsxchange-c2604-default-rtdb.firebaseio.com",
-    projectId: "skillsxchange-c2604",
-    storageBucket: "skillsxchange-c2604.firebasestorage.app",
-    messagingSenderId: "478530945561",
-    appId: "1:478530945561:web:646441ceeb5d5c71c02088"
+    apiKey: "your-api-key-here",
+    authDomain: "skillsxchange-26855.firebaseapp.com",
+    databaseURL: "https://skillsxchange-26855-default-rtdb.asia-southeast1.firebaseapp.com/",
+    projectId: "skillsxchange-26855",
+    storageBucket: "skillsxchange-26855.appspot.com",
+    messagingSenderId: "your-messaging-sender-id",
+    appId: "your-app-id-here"
 };
 
-// Make config available globally
-window.firebaseConfig = firebaseConfig;
-
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = firebaseConfig;
+// Initialize Firebase
+try {
+    if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        console.log('✅ Firebase initialized successfully from firebase-config.js');
+    } else {
+        console.error('❌ Firebase not loaded. Make sure Firebase CDN is included.');
+    }
+} catch (error) {
+    console.error('❌ Error initializing Firebase:', error);
 }

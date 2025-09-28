@@ -1866,11 +1866,11 @@ if (window.Echo) {
     // Make closeVideoChat globally accessible
     try {
         window.closeVideoChat = function() {
-            console.log('🛑 Closing video chat...');
-            const modal = document.getElementById('video-chat-modal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+        console.log('🛑 Closing video chat...');
+        const modal = document.getElementById('video-chat-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
             if (typeof window.endVideoCall === 'function') {
                 window.endVideoCall();
             }
