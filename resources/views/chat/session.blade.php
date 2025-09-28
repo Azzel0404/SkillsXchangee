@@ -804,42 +804,415 @@
                         }
                         
                         // Define a basic startVideoCall function immediately
-                        window.startVideoCall = function() {
+                        window.startVideoCall = async function() {
                             console.log('🚀 Starting video call (immediate version)...');
                             
                             // Check if we have a local stream
                             if (window.localStream) {
                                 console.log('✅ Local stream available, proceeding with call');
                                 
-                                // Try to call the full startVideoCall function if it exists
-                                if (typeof window.startVideoCallFull === 'function') {
-                                    window.startVideoCallFull();
-                                } else {
-                                    console.log('Full startVideoCall not available yet, using basic version');
+                                // Update UI to show calling state
+                                const modal = document.getElementById('video-chat-modal');
+                                if (modal) {
+                                    const statusElement = document.getElementById('video-status');
+                                    if (statusElement) {
+                                        statusElement.textContent = 'Starting call...';
+                                    }
                                     
-                                    // Basic video call setup
-                                    const modal = document.getElementById('video-chat-modal');
-                                    if (modal) {
-                                        // Update UI to show calling state
+                                    // Show call controls
+                                    const startBtn = document.getElementById('start-call-btn');
+                                    const endBtn = document.getElementById('end-call-btn');
+                                    if (startBtn) startBtn.style.display = 'none';
+                                    if (endBtn) endBtn.style.display = 'inline-block';
+                                }
+                                
+                                // Start WebRTC call using Firebase signaling
+                                if (window.webrtcSignaling) {
+                                    // For now, use a dummy partner ID - you'll need to get the actual partner ID
+                                    const partnerId = window.partnerId || 'partner_' + Math.random().toString(36).substr(2, 9);
+                                    const success = await window.webrtcSignaling.startCall(partnerId);
+                                    
+                                    if (success) {
+                                        console.log('✅ WebRTC call started successfully');
+                                        
+                                        // Listen for answer
+                                        window.webrtcSignaling.listenForAnswer();
+                                        
+                                        // Update status
                                         const statusElement = document.getElementById('video-status');
                                         if (statusElement) {
                                             statusElement.textContent = 'Call in progress...';
                                         }
-                                        
-                                        // Show call controls
-                                        const startBtn = document.getElementById('start-call-btn');
-                                        const endBtn = document.getElementById('end-call-btn');
-                                        if (startBtn) startBtn.style.display = 'none';
-                                        if (endBtn) endBtn.style.display = 'inline-block';
-                                        
-                                        console.log('✅ Basic video call started');
+                                    } else {
+                                        console.error('❌ Failed to start WebRTC call');
+                                        alert('Failed to start video call. Please try again.');
                                     }
+                                } else {
+                                    console.error('❌ WebRTC signaling not available');
+                                    alert('Video call service not available. Please refresh the page.');
                                 }
                             } else {
                                 console.error('❌ No local stream available');
                                 alert('Please allow camera access first.');
                             }
                         };
+                        
+                        // Define closeVideoChat function immediately
+                        window.closeVideoChat = function() {
+                            console.log('🛑 Closing video chat...');
+                            const modal = document.getElementById('video-chat-modal');
+                            if (modal) {
+                                modal.style.display = 'none';
+                            }
+                            if (typeof window.endVideoCall === 'function') {
+                                window.endVideoCall();
+                            }
+                        };
+                        
+                        // Define endVideoCall function immediately
+                        window.endVideoCall = function() {
+                            console.log('🛑 Ending video call...');
+                            
+                            // End WebRTC call
+                            if (window.webrtcSignaling) {
+                                window.webrtcSignaling.endCall();
+                            }
+                            
+                            // Stop local stream
+                            if (window.localStream) {
+                                window.localStream.getTracks().forEach(track => track.stop());
+                                window.localStream = null;
+                            }
+                            
+                            // Clear remote video
+                            const remoteVideo = document.getElementById('remote-video');
+                            if (remoteVideo) {
+                                remoteVideo.srcObject = null;
+                                remoteVideo.style.display = 'none';
+                            }
+                            
+                            // Reset UI
+                            const startBtn = document.getElementById('start-call-btn');
+                            const endBtn = document.getElementById('end-call-btn');
+                            if (startBtn) startBtn.style.display = 'inline-block';
+                            if (endBtn) endBtn.style.display = 'none';
+                            
+                            const statusElement = document.getElementById('video-status');
+                            if (statusElement) {
+                                statusElement.textContent = 'Call ended';
+                            }
+                            
+                            console.log('✅ Video call ended');
+                        };
+                        
+                        // Firebase WebRTC Signaling Class
+                        class FirebaseWebRTCSignaling {
+                            constructor() {
+                                this.database = null;
+                                this.callId = null;
+                                this.partnerId = null;
+                                this.isInitiator = false;
+                                this.peerConnection = null;
+                                this.localStream = null;
+                                this.remoteStream = null;
+                                
+                                this.initFirebase();
+                            }
+                            
+                            initFirebase() {
+                                try {
+                                    // Check if Firebase is available
+                                    if (typeof firebase !== 'undefined' && firebase.database) {
+                                        this.database = firebase.database();
+                                        console.log('✅ Firebase database initialized for WebRTC signaling');
+                                    } else {
+                                        console.error('❌ Firebase not available for WebRTC signaling');
+                                    }
+                                } catch (error) {
+                                    console.error('❌ Error initializing Firebase:', error);
+                                }
+                            }
+                            
+                            async startCall(partnerId) {
+                                console.log('🚀 Starting WebRTC call with partner:', partnerId);
+                                
+                                this.partnerId = partnerId;
+                                this.callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                                this.isInitiator = true;
+                                
+                                try {
+                                    // Get local stream
+                                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                                        video: true,
+                                        audio: true
+                                    });
+                                    
+                                    // Set up peer connection
+                                    await this.setupPeerConnection();
+                                    
+                                    // Create offer
+                                    const offer = await this.peerConnection.createOffer();
+                                    await this.peerConnection.setLocalDescription(offer);
+                                    
+                                    // Send offer to Firebase
+                                    await this.sendOffer(offer);
+                                    
+                                    console.log('✅ WebRTC call initiated successfully');
+                                    return true;
+                                    
+                                } catch (error) {
+                                    console.error('❌ Error starting WebRTC call:', error);
+                                    return false;
+                                }
+                            }
+                            
+                            async answerCall(callId) {
+                                console.log('📞 Answering WebRTC call:', callId);
+                                
+                                this.callId = callId;
+                                this.isInitiator = false;
+                                
+                                try {
+                                    // Get local stream
+                                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                                        video: true,
+                                        audio: true
+                                    });
+                                    
+                                    // Set up peer connection
+                                    await this.setupPeerConnection();
+                                    
+                                    // Listen for offer
+                                    this.listenForOffer();
+                                    
+                                    console.log('✅ WebRTC call answering setup complete');
+                                    return true;
+                                    
+                                } catch (error) {
+                                    console.error('❌ Error answering WebRTC call:', error);
+                                    return false;
+                                }
+                            }
+                            
+                            async setupPeerConnection() {
+                                console.log('🔧 Setting up peer connection...');
+                                
+                                const configuration = {
+                                    iceServers: [
+                                        { urls: 'stun:stun.l.google.com:19302' },
+                                        { urls: 'stun:stun1.l.google.com:19302' }
+                                    ]
+                                };
+                                
+                                this.peerConnection = new RTCPeerConnection(configuration);
+                                
+                                // Add local stream
+                                if (this.localStream) {
+                                    this.localStream.getTracks().forEach(track => {
+                                        this.peerConnection.addTrack(track, this.localStream);
+                                    });
+                                }
+                                
+                                // Handle remote stream
+                                this.peerConnection.ontrack = (event) => {
+                                    console.log('📹 Remote stream received');
+                                    this.remoteStream = event.streams[0];
+                                    this.displayRemoteStream();
+                                };
+                                
+                                // Handle ICE candidates
+                                this.peerConnection.onicecandidate = (event) => {
+                                    if (event.candidate) {
+                                        console.log('🧊 Sending ICE candidate');
+                                        this.sendIceCandidate(event.candidate);
+                                    }
+                                };
+                                
+                                // Listen for ICE candidates
+                                this.listenForIceCandidates();
+                                
+                                console.log('✅ Peer connection setup complete');
+                            }
+                            
+                            async sendOffer(offer) {
+                                console.log('📤 Sending offer to Firebase...');
+                                
+                                if (!this.database) {
+                                    console.error('❌ Firebase database not available');
+                                    return;
+                                }
+                                
+                                try {
+                                    await this.database.ref(`calls/${this.callId}/offer`).set({
+                                        type: 'offer',
+                                        sdp: offer.sdp,
+                                        timestamp: Date.now(),
+                                        from: window.currentUserId || 'unknown'
+                                    });
+                                    
+                                    console.log('✅ Offer sent to Firebase');
+                                } catch (error) {
+                                    console.error('❌ Error sending offer:', error);
+                                }
+                            }
+                            
+                            async sendAnswer(answer) {
+                                console.log('📤 Sending answer to Firebase...');
+                                
+                                if (!this.database) {
+                                    console.error('❌ Firebase database not available');
+                                    return;
+                                }
+                                
+                                try {
+                                    await this.database.ref(`calls/${this.callId}/answer`).set({
+                                        type: 'answer',
+                                        sdp: answer.sdp,
+                                        timestamp: Date.now(),
+                                        from: window.currentUserId || 'unknown'
+                                    });
+                                    
+                                    console.log('✅ Answer sent to Firebase');
+                                } catch (error) {
+                                    console.error('❌ Error sending answer:', error);
+                                }
+                            }
+                            
+                            async sendIceCandidate(candidate) {
+                                console.log('🧊 Sending ICE candidate to Firebase...');
+                                
+                                if (!this.database) {
+                                    console.error('❌ Firebase database not available');
+                                    return;
+                                }
+                                
+                                try {
+                                    await this.database.ref(`calls/${this.callId}/candidates`).push({
+                                        candidate: candidate.candidate,
+                                        sdpMLineIndex: candidate.sdpMLineIndex,
+                                        sdpMid: candidate.sdpMid,
+                                        timestamp: Date.now(),
+                                        from: window.currentUserId || 'unknown'
+                                    });
+                                    
+                                    console.log('✅ ICE candidate sent to Firebase');
+                                } catch (error) {
+                                    console.error('❌ Error sending ICE candidate:', error);
+                                }
+                            }
+                            
+                            listenForOffer() {
+                                console.log('👂 Listening for offer...');
+                                
+                                if (!this.database) {
+                                    console.error('❌ Firebase database not available');
+                                    return;
+                                }
+                                
+                                this.database.ref(`calls/${this.callId}/offer`).on('value', async (snapshot) => {
+                                    const offerData = snapshot.val();
+                                    if (offerData && offerData.sdp) {
+                                        console.log('📥 Received offer from Firebase');
+                                        
+                                        try {
+                                            await this.peerConnection.setRemoteDescription(offerData);
+                                            
+                                            // Create answer
+                                            const answer = await this.peerConnection.createAnswer();
+                                            await this.peerConnection.setLocalDescription(answer);
+                                            
+                                            // Send answer
+                                            await this.sendAnswer(answer);
+                                            
+                                            console.log('✅ Answer created and sent');
+                                        } catch (error) {
+                                            console.error('❌ Error handling offer:', error);
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            listenForAnswer() {
+                                console.log('👂 Listening for answer...');
+                                
+                                if (!this.database) {
+                                    console.error('❌ Firebase database not available');
+                                    return;
+                                }
+                                
+                                this.database.ref(`calls/${this.callId}/answer`).on('value', async (snapshot) => {
+                                    const answerData = snapshot.val();
+                                    if (answerData && answerData.sdp) {
+                                        console.log('📥 Received answer from Firebase');
+                                        
+                                        try {
+                                            await this.peerConnection.setRemoteDescription(answerData);
+                                            console.log('✅ Answer processed successfully');
+                                        } catch (error) {
+                                            console.error('❌ Error handling answer:', error);
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            listenForIceCandidates() {
+                                console.log('👂 Listening for ICE candidates...');
+                                
+                                if (!this.database) {
+                                    console.error('❌ Firebase database not available');
+                                    return;
+                                }
+                                
+                                this.database.ref(`calls/${this.callId}/candidates`).on('child_added', async (snapshot) => {
+                                    const candidateData = snapshot.val();
+                                    if (candidateData && candidateData.candidate) {
+                                        console.log('🧊 Received ICE candidate from Firebase');
+                                        
+                                        try {
+                                            await this.peerConnection.addIceCandidate(candidateData);
+                                            console.log('✅ ICE candidate processed successfully');
+                                        } catch (error) {
+                                            console.error('❌ Error handling ICE candidate:', error);
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            displayRemoteStream() {
+                                const remoteVideo = document.getElementById('remote-video');
+                                if (remoteVideo && this.remoteStream) {
+                                    remoteVideo.srcObject = this.remoteStream;
+                                    remoteVideo.style.display = 'block';
+                                    console.log('✅ Remote video stream displayed');
+                                }
+                            }
+                            
+                            endCall() {
+                                console.log('🛑 Ending WebRTC call...');
+                                
+                                if (this.peerConnection) {
+                                    this.peerConnection.close();
+                                    this.peerConnection = null;
+                                }
+                                
+                                if (this.localStream) {
+                                    this.localStream.getTracks().forEach(track => track.stop());
+                                    this.localStream = null;
+                                }
+                                
+                                this.remoteStream = null;
+                                
+                                // Clean up Firebase listeners
+                                if (this.database && this.callId) {
+                                    this.database.ref(`calls/${this.callId}`).off();
+                                }
+                                
+                                console.log('✅ WebRTC call ended');
+                            }
+                        }
+                        
+                        // Initialize WebRTC signaling
+                        window.webrtcSignaling = new FirebaseWebRTCSignaling();
                         
                         // Fallback definition to ensure function is always available
                         if (typeof window.openVideoChat !== 'function') {
