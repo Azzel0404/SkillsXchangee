@@ -29,11 +29,11 @@ class SecurityHeaders
         
         // Content Security Policy - Allow necessary external resources and video call functionality
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net https://js.pusher.com; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net https://js.pusher.com https://www.gstatic.com; " .
                "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
                "img-src 'self' data: https: blob:; " .
                "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
-               "connect-src 'self' wss: https: wss://*.pusher.com wss://*.pusherapp.com https://skillxchange.metered.live https://stun.l.google.com https://stun1.l.google.com https://stun.relay.metered.ca https://asia.relay.metered.ca; " .
+               "connect-src 'self' wss: https: wss://*.pusher.com wss://*.pusherapp.com https://skillxchange.metered.live https://stun.l.google.com https://stun1.l.google.com https://stun.relay.metered.ca https://asia.relay.metered.ca https://*.firebaseio.com https://*.firebasedatabase.app; " .
                "media-src 'self' blob:; " .
                "frame-src 'self';";
         
