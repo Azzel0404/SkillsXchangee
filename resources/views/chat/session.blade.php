@@ -1146,7 +1146,8 @@ if (window.Echo) {
         timer: null
     };
 
-    function openVideoChat() {
+    // Make openVideoChat globally accessible
+    window.openVideoChat = function() {
         console.log('🎥 Opening video chat...');
         const modal = document.getElementById('video-chat-modal');
         if (modal) {
@@ -1157,16 +1158,17 @@ if (window.Echo) {
             console.error('Video chat modal not found');
             alert('Video chat is not available. Please refresh the page.');
         }
-    }
+    };
     
-    function closeVideoChat() {
+    // Make closeVideoChat globally accessible
+    window.closeVideoChat = function() {
         console.log('🛑 Closing video chat...');
         const modal = document.getElementById('video-chat-modal');
         if (modal) {
             modal.style.display = 'none';
         }
         endVideoCall();
-    }
+    };
     
     async function startVideoCall() {
         console.log('🚀 Starting video call with Firebase...');
@@ -2914,9 +2916,6 @@ async function initializePeerConnection() {
 
 // All duplicate functions removed - using the ones defined earlier
     
-    if (isMaximized && maximizedVideo === videoType) {
-// All duplicate functions removed - using the ones defined earlier
-    }
 
 // All duplicate functions removed - using the ones defined earlier
 
