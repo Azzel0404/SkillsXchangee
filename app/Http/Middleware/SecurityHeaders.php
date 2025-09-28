@@ -29,7 +29,7 @@ class SecurityHeaders
         
         // Content Security Policy - Allow necessary external resources and video call functionality
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net https://js.pusher.com https://www.gstatic.com; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net https://js.pusher.com https://www.gstatic.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com; " .
                "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
                "img-src 'self' data: https: blob:; " .
                "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
