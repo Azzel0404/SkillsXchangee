@@ -760,6 +760,49 @@
                     
                     <!-- Ensure openVideoChat is defined immediately -->
                     <script>
+                        // Initialize camera function
+                        function initializeCamera() {
+                            console.log('📹 Initializing camera...');
+                            
+                            // Check if getUserMedia is supported
+                            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                                console.error('❌ Camera not supported');
+                                alert('Camera is not supported in this browser. Please use a modern browser.');
+                                return;
+                            }
+                            
+                            // Request camera access
+                            navigator.mediaDevices.getUserMedia({ 
+                                video: { 
+                                    width: { ideal: 1280 },
+                                    height: { ideal: 720 },
+                                    facingMode: 'user'
+                                }, 
+                                audio: true 
+                            })
+                            .then(function(stream) {
+                                console.log('✅ Camera access granted');
+                                
+                                // Find local video element
+                                const localVideo = document.getElementById('local-video');
+                                if (localVideo) {
+                                    localVideo.srcObject = stream;
+                                    localVideo.style.display = 'block';
+                                    localVideo.play();
+                                    console.log('✅ Local video stream started');
+                                } else {
+                                    console.error('❌ Local video element not found');
+                                }
+                                
+                                // Store stream globally for later use
+                                window.localStream = stream;
+                            })
+                            .catch(function(error) {
+                                console.error('❌ Camera access denied:', error);
+                                alert('Camera access is required for video calls. Please allow camera access and try again.');
+                            });
+                        }
+                        
                         // Fallback definition to ensure function is always available
                         if (typeof window.openVideoChat !== 'function') {
                             console.log('🔧 Creating fallback openVideoChat function...');
@@ -768,11 +811,25 @@
                                 const modal = document.getElementById('video-chat-modal');
                                 if (modal) {
                                     modal.style.display = 'flex';
+                                    
+                                    // Initialize camera immediately
+                                    initializeCamera();
+                                    
                                     // Try to call startVideoCall if it exists
-                                    if (typeof startVideoCall === 'function') {
-                                        startVideoCall();
+                                    if (typeof window.startVideoCall === 'function') {
+                                        window.startVideoCall();
                                     } else {
                                         console.log('startVideoCall not available yet, will be called when ready');
+                                        // Set up a retry mechanism
+                                        const retryInterval = setInterval(() => {
+                                            if (typeof window.startVideoCall === 'function') {
+                                                clearInterval(retryInterval);
+                                                window.startVideoCall();
+                                            }
+                                        }, 100);
+                                        
+                                        // Stop retrying after 5 seconds
+                                        setTimeout(() => clearInterval(retryInterval), 5000);
                                     }
                                 } else {
                                     console.error('Video chat modal not found');
@@ -1194,8 +1251,34 @@ if (window.Echo) {
         const modal = document.getElementById('video-chat-modal');
         if (modal) {
             modal.style.display = 'flex';
+            
+            // Initialize camera immediately
+            if (typeof initializeCamera === 'function') {
+                initializeCamera();
+            } else {
+                console.log('initializeCamera not available, using fallback');
+                // Fallback camera initialization
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                        .then(stream => {
+                            const localVideo = document.getElementById('local-video');
+                            if (localVideo) {
+                                localVideo.srcObject = stream;
+                                localVideo.style.display = 'block';
+                                localVideo.play();
+                            }
+                            window.localStream = stream;
+                        })
+                        .catch(error => console.error('Camera error:', error));
+                }
+            }
+            
             // Automatically start the call like Messenger
-            startVideoCall();
+            if (typeof window.startVideoCall === 'function') {
+                window.startVideoCall();
+            } else {
+                console.log('startVideoCall not available yet');
+            }
         } else {
             console.error('Video chat modal not found');
             alert('Video chat is not available. Please refresh the page.');
@@ -1213,7 +1296,8 @@ if (window.Echo) {
         endVideoCall();
     };
     
-    async function startVideoCall() {
+    // Make startVideoCall globally accessible
+    window.startVideoCall = async function() {
         console.log('🚀 Starting video call with Firebase...');
         
         try {
