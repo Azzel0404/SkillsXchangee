@@ -696,15 +696,15 @@
             <div id="presence-status"
                 style="color: #6b7280; font-size: 0.875rem; margin: 0 8px; display: flex; align-items: center;">🔴
                 Partner is offline</div>
-            <button id="start-call-btn" class="video-btn primary" onclick="startVideoCall()"
+            <button id="start-call-btn" class="video-btn primary"
                 title="Start Call">📞</button>
-            <button id="end-call-btn" class="video-btn danger" onclick="endVideoCall()" style="display: none;"
+            <button id="end-call-btn" class="video-btn danger" style="display: none;"
                 title="End Call">📞</button>
-            <button id="toggle-audio-btn" class="video-btn success" onclick="toggleAudio()" style="display: none;"
+            <button id="toggle-audio-btn" class="video-btn success" style="display: none;"
                 title="Mute/Unmute">🎤</button>
-            <button id="toggle-video-btn" class="video-btn success" onclick="toggleVideo()" style="display: none;"
+            <button id="toggle-video-btn" class="video-btn success" style="display: none;"
                 title="Turn Video On/Off">📹</button>
-            <button id="mirror-video-btn" class="video-btn secondary" onclick="toggleMirror()" style="display: none;"
+            <button id="mirror-video-btn" class="video-btn secondary" style="display: none;"
                 title="Mirror Video">🪞</button>
             <button id="screen-share-btn" class="video-btn secondary" onclick="toggleScreenShare()"
                 style="display: none;" title="Share Screen">🖥️</button>
@@ -853,6 +853,70 @@
                                     }
                                 });
                                 console.log('✅ Video call button event listener added');
+                            }
+                            
+                            // Add event listener for start call button
+                            const startCallBtn = document.getElementById('start-call-btn');
+                            if (startCallBtn) {
+                                startCallBtn.addEventListener('click', function() {
+                                    console.log('📞 Start call button clicked via event listener');
+                                    if (typeof window.startVideoCall === 'function') {
+                                        window.startVideoCall();
+                                    } else {
+                                        console.error('startVideoCall function not available');
+                                        alert('Start video call function not available. Please refresh the page.');
+                                    }
+                                });
+                                console.log('✅ Start call button event listener added');
+                            }
+                            
+                            // Add event listeners for other video call buttons
+                            const endCallBtn = document.getElementById('end-call-btn');
+                            if (endCallBtn) {
+                                endCallBtn.addEventListener('click', function() {
+                                    console.log('📞 End call button clicked');
+                                    if (typeof window.endVideoCall === 'function') {
+                                        window.endVideoCall();
+                                    } else {
+                                        console.error('endVideoCall function not available');
+                                    }
+                                });
+                            }
+                            
+                            const toggleAudioBtn = document.getElementById('toggle-audio-btn');
+                            if (toggleAudioBtn) {
+                                toggleAudioBtn.addEventListener('click', function() {
+                                    console.log('🎤 Toggle audio button clicked');
+                                    if (typeof window.toggleAudio === 'function') {
+                                        window.toggleAudio();
+                                    } else {
+                                        console.error('toggleAudio function not available');
+                                    }
+                                });
+                            }
+                            
+                            const toggleVideoBtn = document.getElementById('toggle-video-btn');
+                            if (toggleVideoBtn) {
+                                toggleVideoBtn.addEventListener('click', function() {
+                                    console.log('📹 Toggle video button clicked');
+                                    if (typeof window.toggleVideo === 'function') {
+                                        window.toggleVideo();
+                                    } else {
+                                        console.error('toggleVideo function not available');
+                                    }
+                                });
+                            }
+                            
+                            const mirrorVideoBtn = document.getElementById('mirror-video-btn');
+                            if (mirrorVideoBtn) {
+                                mirrorVideoBtn.addEventListener('click', function() {
+                                    console.log('🪞 Mirror video button clicked');
+                                    if (typeof window.toggleMirror === 'function') {
+                                        window.toggleMirror();
+                                    } else {
+                                        console.error('toggleMirror function not available');
+                                    }
+                                });
                             }
                         });
                     </script>
@@ -1388,7 +1452,8 @@ if (window.Echo) {
     
     // ICE candidate signaling is now handled by Firebase integration
     
-    function endVideoCall() {
+    // Make endVideoCall globally accessible
+    window.endVideoCall = function() {
         console.log('🛑 Ending video call...');
         
         // Use Firebase to end the call
