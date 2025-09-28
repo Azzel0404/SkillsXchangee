@@ -2729,8 +2729,12 @@ async function startVideoCall() {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         
-        // Send offer to other user
-        await sendVideoCallOffer(offer);
+        // Send offer to other user via Firebase
+        if (firebaseVideoCall) {
+            await firebaseVideoCall.startCall({{ $partner->id }});
+        } else {
+            console.error('Firebase video call not initialized');
+        }
         
         // Update UI
         document.getElementById('video-status').textContent = 'Calling...';
@@ -2883,9 +2887,9 @@ async function initializePeerConnection() {
         if (event.candidate) {
             console.log('ICE candidate generated:', event.candidate.type, event.candidate.protocol, event.candidate.address);
             // Only send ICE candidates if we have a valid call setup
-            if (currentCallId && otherUserId) {
-                // Send ICE candidate in background without blocking
-                sendIceCandidate(event.candidate).catch(error => {
+            if (currentCallId && otherUserId && firebaseVideoCall) {
+                // Send ICE candidate via Firebase in background without blocking
+                firebaseVideoCall.sendIceCandidate(event.candidate).catch(error => {
                     console.warn('ICE candidate send failed (non-critical):', error);
                 });
             } else {
@@ -3097,7 +3101,10 @@ async function handleVideoCallOffer(data) {
         // Create and send answer
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        await sendVideoCallAnswer(answer);
+        // Answer is handled by Firebase integration
+        if (firebaseVideoCall) {
+            await firebaseVideoCall.answerCall(data.offer);
+        }
         
         // Update UI
         if (isAutoCallEnabled) {
@@ -3160,7 +3167,10 @@ window.handleIncomingCall = async function(callerId, tradeId) {
         // Create and send answer
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        await sendVideoCallAnswer(answer);
+        // Answer is handled by Firebase integration
+        if (firebaseVideoCall) {
+            await firebaseVideoCall.answerCall(pendingOffer.offer);
+        }
         
         // Update UI
         document.getElementById('video-status').textContent = 'Call in progress...';

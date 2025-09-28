@@ -7,7 +7,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyDlx5VjhobiTlqtv69SciHifC7p_xgHELs",
     authDomain: "skillsxchange-c2604.firebaseapp.com",
-    databaseURL: "https://skillsxchange-c2604-default-rtdb.asia-southeast1.firebaseio.com",
+    databaseURL: "https://skillsxchange-c2604-default-rtdb.firebaseio.com",
     projectId: "skillsxchange-c2604",
     storageBucket: "skillsxchange-c2604.firebasestorage.app",
     messagingSenderId: "478530945561",

@@ -48,6 +48,10 @@ Route::get('/test-firebase-room-system', function () {
     return response()->file(public_path('test-firebase-room-system.html'));
 });
 
+Route::get('/test-video-call-debug-fixed', function () {
+    return response()->file(public_path('test-video-call-debug-fixed.html'));
+});
+
 Route::get('/video-call-api-alternatives', function () {
     return response()->file(public_path('video-call-api-alternatives.html'));
 });
