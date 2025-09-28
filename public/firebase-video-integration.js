@@ -70,17 +70,11 @@ class FirebaseVideoIntegration {
                 throw new Error('Firebase SDK not loaded. Please include Firebase CDN scripts.');
             }
             
-            // Get Firebase config
-            const firebaseConfig = window.firebaseConfig || {
-                apiKey: "AIzaSyDKk5L6noLC1DcQcE2ihT199eoIrZkzclY",
-                authDomain: "skillsxchange-42c62.firebaseapp.com",
-                databaseURL: "https://skillsxchange-42c62-default-rtdb.firebaseio.com",
-                projectId: "skillsxchange-42c62",
-                storageBucket: "skillsxchange-42c62.firebasestorage.app",
-                messagingSenderId: "1096126152239",
-                appId: "1:1096126152239:web:a9ecf3f3df9e20dc4310da",
-                measurementId: "G-XYE1EJMOYG"
-            };
+            // Get Firebase config from global variable
+            const firebaseConfig = window.firebaseConfig;
+            if (!firebaseConfig) {
+                throw new Error('Firebase configuration not found. Please ensure firebase-config.js is loaded.');
+            }
             
             // Initialize Firebase (check if already exists)
             try {
@@ -91,7 +85,10 @@ class FirebaseVideoIntegration {
                 this.log('Created new Firebase app');
             }
             this.database = firebase.database();
-            this.roomRef = this.database.ref(`rooms/trade_${this.tradeId}`);
+            
+            // Create a unique room for this trade with only 2 users
+            this.roomId = `trade_${this.tradeId}_${Math.min(this.userId, this.partnerId)}_${Math.max(this.userId, this.partnerId)}`;
+            this.roomRef = this.database.ref(`video_rooms/${this.roomId}`);
             
             // Join the room
             await this.joinRoom();
@@ -99,7 +96,7 @@ class FirebaseVideoIntegration {
             // Setup Firebase listeners
             this.setupFirebaseListeners();
             
-            this.log('✅ Firebase video integration initialized successfully');
+            this.log(`✅ Firebase video integration initialized successfully for room: ${this.roomId}`);
             return true;
             
         } catch (error) {
@@ -111,18 +108,34 @@ class FirebaseVideoIntegration {
     
     // Join Firebase room
     async joinRoom() {
-        const userRef = this.database.ref(`rooms/trade_${this.tradeId}/users/${this.userId}`);
+        // Add user to the room with validation
+        const userRef = this.roomRef.child(`users/${this.userId}`);
         await userRef.set({
             userId: this.userId,
             status: 'online',
-            joinedAt: Date.now()
+            joinedAt: Date.now(),
+            lastSeen: Date.now()
         });
-        this.log(`Joined room: trade_${this.tradeId}`);
+        
+        // Set up room metadata
+        const roomMetaRef = this.roomRef.child('metadata');
+        await roomMetaRef.set({
+            tradeId: this.tradeId,
+            user1: Math.min(this.userId, this.partnerId),
+            user2: Math.max(this.userId, this.partnerId),
+            createdAt: Date.now(),
+            maxUsers: 2
+        });
+        
+        this.log(`Joined room: ${this.roomId}`);
+        
+        // Set up user presence cleanup
+        this.setupPresenceCleanup();
     }
     
     // Setup Firebase listeners for call events
     setupFirebaseListeners() {
-        const callsRef = this.database.ref(`rooms/trade_${this.tradeId}/calls`);
+        const callsRef = this.roomRef.child('calls');
         
         callsRef.on('value', (snapshot) => {
             const calls = snapshot.val();
@@ -159,6 +172,17 @@ class FirebaseVideoIntegration {
                     this.handleCallEnd();
                 }
             });
+        });
+        
+        // Listen for user presence changes
+        const usersRef = this.roomRef.child('users');
+        usersRef.on('value', (snapshot) => {
+            const users = snapshot.val();
+            if (users) {
+                const userCount = Object.keys(users).length;
+                this.log(`👥 Room has ${userCount} users`);
+                this.onParticipantUpdate?.(users);
+            }
         });
     }
     
@@ -316,7 +340,7 @@ class FirebaseVideoIntegration {
     
     // Send offer via Firebase
     async sendOffer(offer) {
-        const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}`);
+        const callRef = this.roomRef.child(`calls/${this.callId}`);
         await callRef.set({
             type: 'offer',
             fromUserId: this.userId,
@@ -330,7 +354,7 @@ class FirebaseVideoIntegration {
     
     // Send answer via Firebase
     async sendAnswer(answer) {
-        const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}`);
+        const callRef = this.roomRef.child(`calls/${this.callId}`);
         await callRef.set({
             type: 'answer',
             fromUserId: this.userId,
@@ -344,7 +368,7 @@ class FirebaseVideoIntegration {
     
     // Send ICE candidate via Firebase
     async sendIceCandidate(candidate) {
-        const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}_ice_${Date.now()}`);
+        const callRef = this.roomRef.child(`calls/${this.callId}_ice_${Date.now()}`);
         await callRef.set({
             type: 'ice-candidate',
             fromUserId: this.userId,
@@ -405,7 +429,7 @@ class FirebaseVideoIntegration {
         
         // Send end call signal via Firebase
         if (this.callId && this.partnerId) {
-            const callRef = this.database.ref(`rooms/trade_${this.tradeId}/calls/${this.callId}_end`);
+            const callRef = this.roomRef.child(`calls/${this.callId}_end`);
             await callRef.set({
                 type: 'end-call',
                 fromUserId: this.userId,
@@ -442,6 +466,22 @@ class FirebaseVideoIntegration {
         this.remoteStream = null;
         
         this.log('✅ Call ended');
+    }
+    
+    // Setup presence cleanup
+    setupPresenceCleanup() {
+        // Update last seen every 30 seconds
+        this.presenceInterval = setInterval(() => {
+            if (this.roomRef) {
+                const userRef = this.roomRef.child(`users/${this.userId}`);
+                userRef.update({ lastSeen: Date.now() });
+            }
+        }, 30000);
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            this.cleanup();
+        });
     }
     
     // Start call timer
@@ -499,10 +539,23 @@ class FirebaseVideoIntegration {
     
     // Cleanup
     cleanup() {
+        // Stop presence updates
+        if (this.presenceInterval) {
+            clearInterval(this.presenceInterval);
+            this.presenceInterval = null;
+        }
+        
+        // Remove user from room
         if (this.roomRef) {
+            const userRef = this.roomRef.child(`users/${this.userId}`);
+            userRef.remove();
             this.roomRef.off();
         }
+        
+        // End call if active
         this.endCall();
+        
+        this.log('🧹 Cleanup completed');
     }
 }
 

@@ -59,117 +59,73 @@
             return;
         }
         
-        console.log('🔧 Setting up video call listeners...');
+        console.log('🔧 Setting up Firebase video call listeners...');
         videoCallListenersInitialized = true;
         
         try {
-            window.Echo.private('trade.{{ $trade->id }}')
-                .listen('video-call-offer', async function(data) {
-                    console.log('📞 Received video call offer:', data);
-                    console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
-                    
-                    if (data.fromUserId !== {{ auth()->id() }}) {
-                        console.log('📞 Processing incoming call from different user');
+            // Initialize Firebase video call integration
+            if (typeof FirebaseVideoIntegration !== 'undefined') {
+                firebaseVideoCall = new FirebaseVideoIntegration({
+                    userId: {{ auth()->id() }},
+                    tradeId: {{ $trade->id }},
+                    partnerId: {{ $partner->id }},
+                    onCallReceived: async (call) => {
+                        console.log('📞 Incoming call received via Firebase:', call);
                         
                         // Show notification for incoming call
                         if (window.notificationService) {
-                            console.log('📞 Showing notification for incoming call from:', data.fromUserName);
+                            console.log('📞 Showing notification for incoming call from:', call.fromUserId);
                             window.notificationService.showIncomingCallNotification(
-                                data.fromUserName,
-                                data.fromUserId,
+                                'Partner',
+                                call.fromUserId,
                                 {{ $trade->id }}
                             );
                         }
                         
-                        await handleVideoCallOffer(data);
-                    } else {
-                        console.log('📞 Ignoring call from self');
+                        await handleVideoCallOffer(call);
+                    },
+                    onCallAnswered: (remoteStream) => {
+                        console.log('📞 Call answered via Firebase');
+                        handleVideoCallAnswer({ answer: null, remoteStream: remoteStream });
+                    },
+                    onCallEnded: () => {
+                        console.log('📞 Call ended via Firebase');
+                        handleVideoCallEnd({});
+                    },
+                    onConnectionStateChange: (state) => {
+                        console.log('📞 Connection state changed:', state);
+                        updateCallStatus(state);
+                    },
+                    onError: (error) => {
+                        console.error('❌ Firebase video call error:', error);
+                        updateCallStatus('Error: ' + error.message);
+                    },
+                    onLog: (message, type) => {
+                        console.log(`[FirebaseVideoCall] ${message}`);
+                    },
+                    onStatusUpdate: (status) => {
+                        updateCallStatus(status);
                     }
-                })
-                .error((error) => {
-                    console.error('❌ Error listening to video-call-offer:', error);
-                    if (error.type === 'AuthError') {
-                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
-                        // Start HTTP polling as fallback
+                });
+                
+                // Initialize Firebase
+                firebaseVideoCall.initialize().then(success => {
+                    if (success) {
+                        console.log('✅ Firebase video call integration initialized successfully');
+                    } else {
+                        console.error('❌ Failed to initialize Firebase video call integration');
+                        // Fallback to HTTP polling
                         startVideoCallPolling();
                     }
                 });
+            } else {
+                console.error('❌ FirebaseVideoIntegration not available, falling back to HTTP polling');
+                startVideoCallPolling();
+            }
         } catch (error) {
-            console.error('❌ Error setting up video-call-offer listener:', error);
+            console.error('❌ Error setting up Firebase video call listeners:', error);
             console.warn('⚠️ Switching to HTTP polling fallback');
             startVideoCallPolling();
-        }
-
-        try {
-            window.Echo.private('trade.{{ $trade->id }}')
-                .listen('video-call-answer', async function(data) {
-                    console.log('📞 Received video call answer:', data);
-                    console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
-                    
-                    if (data.toUserId === {{ auth()->id() }}) {
-                        console.log('📞 Processing answer for current user');
-                        await handleVideoCallAnswer(data);
-                    } else {
-                        console.log('📞 Ignoring answer for different user');
-                    }
-                })
-                .error((error) => {
-                    console.error('❌ Error listening to video-call-answer:', error);
-                    if (error.type === 'AuthError') {
-                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
-                        startVideoCallPolling();
-                    }
-                });
-        } catch (error) {
-            console.error('❌ Error setting up video-call-answer listener:', error);
-        }
-
-        try {
-            window.Echo.private('trade.{{ $trade->id }}')
-                .listen('video-call-ice-candidate', async function(data) {
-                    console.log('📞 Received ICE candidate:', data);
-                    console.log('📞 Current user ID: {{ auth()->id() }}, To user ID:', data.toUserId);
-                    
-                    if (data.toUserId === {{ auth()->id() }}) {
-                        console.log('📞 Processing ICE candidate for current user');
-                        await handleIceCandidate(data);
-                    } else {
-                        console.log('📞 Ignoring ICE candidate for different user');
-                    }
-                })
-                .error((error) => {
-                    console.error('❌ Error listening to video-call-ice-candidate:', error);
-                    if (error.type === 'AuthError') {
-                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
-                        startVideoCallPolling();
-                    }
-                });
-        } catch (error) {
-            console.error('❌ Error setting up video-call-ice-candidate listener:', error);
-        }
-
-        try {
-            window.Echo.private('trade.{{ $trade->id }}')
-                .listen('video-call-end', function(data) {
-                    console.log('📞 Video call ended:', data);
-                    console.log('📞 Current user ID: {{ auth()->id() }}, From user ID:', data.fromUserId);
-                    
-                    if (data.fromUserId !== {{ auth()->id() }}) {
-                        console.log('📞 Processing call end from different user');
-                        handleVideoCallEnd(data);
-                    } else {
-                        console.log('📞 Ignoring call end from self');
-                    }
-                })
-                .error((error) => {
-                    console.error('❌ Error listening to video-call-end:', error);
-                    if (error.type === 'AuthError') {
-                        console.warn('⚠️ Authentication error - switching to HTTP polling fallback');
-                        startVideoCallPolling();
-                    }
-                });
-        } catch (error) {
-            console.error('❌ Error setting up video-call-end listener:', error);
         }
             
         console.log('✅ Video call listeners initialized successfully');
@@ -177,63 +133,15 @@
         
         // Also initialize presence listeners
         initializePresenceListeners();
-        
-        // Check if Pusher is working, if not start polling fallback
-        setTimeout(() => {
-            if (typeof window.Echo !== 'undefined' && window.Echo.connector && window.Echo.connector.pusher) {
-                const connectionState = window.Echo.connector.pusher.connection.state;
-                if (connectionState !== 'connected' && connectionState !== 'connecting') {
-                    console.warn('⚠️ Pusher connection not stable, starting polling fallback');
-                    startVideoCallPolling();
-                }
-            } else {
-                console.warn('⚠️ Pusher not available, starting polling fallback');
-                startVideoCallPolling();
-            }
-        }, 5000); // Check after 5 seconds
     }
 
-    // Wait for Pusher to be available before initializing video call listeners
-    let pusherWaitAttempts = 0;
-    const maxPusherWaitAttempts = 20; // 10 seconds max wait time
-    
-    function waitForPusherAndInitialize() {
-        pusherWaitAttempts++;
-        
-        if (typeof window.Echo !== 'undefined' && window.Echo.connector && window.Echo.connector.pusher) {
-            console.log('✅ Pusher is ready, initializing video call listeners');
-            initializeVideoCallListeners();
-        } else if (pusherWaitAttempts < maxPusherWaitAttempts) {
-            console.log(`⏳ Waiting for Pusher to be available... (attempt ${pusherWaitAttempts}/${maxPusherWaitAttempts})`);
-            setTimeout(waitForPusherAndInitialize, 500);
-        } else {
-            console.error('❌ Pusher failed to load after maximum wait time. Video calls may not work properly.');
-            // Try to initialize anyway in case Echo is available but connector isn't
-            if (typeof window.Echo !== 'undefined') {
-                console.log('⚠️ Attempting to initialize with available Echo...');
-                initializeVideoCallListeners();
-            }
-        }
-    }
-    
-    // Start waiting for Pusher when DOM is ready
+    // Initialize Firebase video call listeners when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-        waitForPusherAndInitialize();
-    });
-    
-    // Also try to initialize when Echo becomes available (fallback)
-    const checkEchoInterval = setInterval(() => {
-        if (typeof window.Echo !== 'undefined' && !videoCallListenersInitialized) {
-            console.log('🔄 Echo became available, initializing listeners...');
+        // Wait a bit for Firebase to load
+        setTimeout(() => {
             initializeVideoCallListeners();
-            clearInterval(checkEchoInterval);
-        }
-    }, 1000);
-    
-    // Clear interval after 30 seconds
-    setTimeout(() => {
-        clearInterval(checkEchoInterval);
-    }, 30000);
+        }, 1000);
+    });
 </script>
 <style>
     @keyframes pulse {
@@ -1214,7 +1122,7 @@ if (window.Echo) {
     }
     
     async function startVideoCall() {
-        console.log('🚀 Starting video call automatically...');
+        console.log('🚀 Starting video call with Firebase...');
         
         try {
             // Get partner ID
@@ -1224,60 +1132,46 @@ if (window.Echo) {
                 return;
             }
             
-            videoCallState.isInitiator = true;
-            videoCallState.partnerId = partnerId;
-            videoCallState.callId = generateCallId();
+            // Check if Firebase video call is available
+            if (!firebaseVideoCall) {
+                console.error('❌ Firebase video call not initialized');
+                alert('Video call service not available. Please refresh the page.');
+                return;
+            }
             
             // Update UI to show calling state
             updateCallStatus('Initializing...');
             updateCallTimer('00:00');
             
-            // Get user media
-            console.log('📹 Getting user media...');
-            updateCallStatus('Getting camera access...');
-            videoCallState.localStream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 1280, height: 720 },
-                audio: { echoCancellation: true, noiseSuppression: true }
-            });
+            // Start the call using Firebase
+            const success = await firebaseVideoCall.startCall(partnerId);
             
-            // Setup local video
-            const localVideo = document.getElementById('local-video');
-            if (localVideo) {
-                localVideo.srcObject = videoCallState.localStream;
-                localVideo.style.display = 'block';
-            }
-            
-            updateCallStatus('Setting up connection...');
-            
-            // Create peer connection
-            await createPeerConnection();
-            
-            // Add local stream to peer connection
-            videoCallState.localStream.getTracks().forEach(track => {
-                videoCallState.peerConnection.addTrack(track, videoCallState.localStream);
-            });
-            
-            // Create offer
-            console.log('📞 Creating offer...');
-            updateCallStatus('Creating offer...');
-            const offer = await videoCallState.peerConnection.createOffer();
-            await videoCallState.peerConnection.setLocalDescription(offer);
-            
-            // Send offer via Pusher
-            updateCallStatus('Calling...');
-            await sendVideoCallOffer(offer);
-            
-            videoCallState.isActive = true;
-            startCallTimer();
-            
-            // Set a timeout to show "waiting" status
-            setTimeout(() => {
-                if (videoCallState.isActive && !videoCallState.isConnected) {
-                    updateCallStatus('Waiting for answer...');
+            if (success) {
+                // Setup local video display
+                const localVideo = document.getElementById('local-video');
+                if (localVideo && firebaseVideoCall.localStream) {
+                    localVideo.srcObject = firebaseVideoCall.localStream;
+                    localVideo.style.display = 'block';
                 }
-            }, 5000);
-            
-            console.log('✅ Video call initiated successfully');
+                
+                videoCallState.isActive = true;
+                videoCallState.isInitiator = true;
+                videoCallState.partnerId = partnerId;
+                videoCallState.callId = firebaseVideoCall.callId;
+                
+                startCallTimer();
+                
+                // Set a timeout to show "waiting" status
+                setTimeout(() => {
+                    if (videoCallState.isActive && !videoCallState.isConnected) {
+                        updateCallStatus('Waiting for answer...');
+                    }
+                }, 5000);
+                
+                console.log('✅ Video call initiated successfully with Firebase');
+            } else {
+                throw new Error('Failed to start video call with Firebase');
+            }
             
         } catch (error) {
             console.error('❌ Error starting video call:', error);
@@ -1286,108 +1180,7 @@ if (window.Echo) {
         }
     }
     
-    async function createPeerConnection() {
-        console.log('🔗 Creating peer connection...');
-        
-        const iceServers = await fetchTurnCredentials();
-        const config = {
-            iceServers: iceServers,
-            iceCandidatePoolSize: 10,
-            bundlePolicy: 'max-bundle',
-            rtcpMuxPolicy: 'require',
-            iceTransportPolicy: 'all'
-        };
-        
-        videoCallState.peerConnection = new RTCPeerConnection(config);
-        
-        // Handle ICE candidates
-        videoCallState.peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                console.log('📡 Sending ICE candidate');
-                sendIceCandidate(event.candidate);
-            }
-        };
-        
-        // Handle remote stream
-        videoCallState.peerConnection.ontrack = (event) => {
-            console.log('📹 Received remote stream');
-            videoCallState.remoteStream = event.streams[0];
-            const remoteVideo = document.getElementById('remote-video');
-            if (remoteVideo) {
-                remoteVideo.srcObject = videoCallState.remoteStream;
-                remoteVideo.style.display = 'block';
-            }
-            updateCallStatus('Video connected');
-            videoCallState.isConnected = true;
-        };
-        
-        // Handle connection state changes
-        videoCallState.peerConnection.onconnectionstatechange = () => {
-            const state = videoCallState.peerConnection.connectionState;
-            console.log('🔗 Connection state:', state);
-            
-            switch (state) {
-                case 'connecting':
-                    updateCallStatus('Connecting...');
-                    break;
-                case 'connected':
-                    updateCallStatus('Connected');
-                    videoCallState.isConnected = true;
-                    break;
-                case 'disconnected':
-                    updateCallStatus('Disconnected');
-                    videoCallState.isConnected = false;
-                    break;
-                case 'failed':
-                    updateCallStatus('Connection failed');
-                    videoCallState.isConnected = false;
-                    // Try to reconnect after 3 seconds
-                    setTimeout(() => {
-                        if (videoCallState.isActive && !videoCallState.isConnected) {
-                            updateCallStatus('Reconnecting...');
-                            videoCallState.peerConnection.restartIce();
-                        }
-                    }, 3000);
-                    break;
-                case 'closed':
-                    updateCallStatus('Call ended');
-                    videoCallState.isConnected = false;
-                    break;
-            }
-        };
-        
-        // Handle ICE connection state changes
-        videoCallState.peerConnection.oniceconnectionstatechange = () => {
-            const state = videoCallState.peerConnection.iceConnectionState;
-            console.log('🧊 ICE connection state:', state);
-            
-            switch (state) {
-                case 'new':
-                    updateCallStatus('Establishing connection...');
-                    break;
-                case 'checking':
-                    updateCallStatus('Checking connection...');
-                    break;
-                case 'connected':
-                    updateCallStatus('Connected');
-                    break;
-                case 'completed':
-                    updateCallStatus('Connection established');
-                    break;
-                case 'failed':
-                    updateCallStatus('Connection failed');
-                    console.log('🔄 Restarting ICE...');
-                    videoCallState.peerConnection.restartIce();
-                    break;
-                case 'disconnected':
-                    updateCallStatus('Connection lost');
-                    break;
-                case 'closed':
-                    updateCallStatus('Call ended');
-                    break;
-            }
-        };
-    }
+    // Peer connection creation is now handled by Firebase integration
     
     async function fetchTurnCredentials() {
         try {
@@ -1414,101 +1207,17 @@ if (window.Echo) {
         }
     }
     
-    async function sendVideoCallOffer(offer) {
-        try {
-            console.log('📤 Sending video call offer...');
-            const response = await fetch(`/chat/{{ $trade->id }}/video-call/offer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    offer: offer,
-                    callId: videoCallState.callId
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            console.log('✅ Offer sent successfully');
-            
-        } catch (error) {
-            console.error('❌ Error sending offer:', error);
-            throw error;
-        }
-    }
+    // Video call signaling is now handled by Firebase integration
+    // No need for HTTP-based signaling functions
     
-    async function sendVideoCallAnswer(answer) {
-        try {
-            console.log('📤 Sending video call answer...');
-            const response = await fetch(`/chat/{{ $trade->id }}/video-call/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    answer: answer,
-                    callId: videoCallState.callId,
-                    toUserId: videoCallState.partnerId
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            console.log('✅ Answer sent successfully');
-            
-        } catch (error) {
-            console.error('❌ Error sending answer:', error);
-            throw error;
-        }
-    }
-    
-    async function sendIceCandidate(candidate) {
-        try {
-            const response = await fetch(`/chat/{{ $trade->id }}/video-call/ice-candidate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    candidate: candidate,
-                    callId: videoCallState.callId,
-                    toUserId: videoCallState.partnerId
-                })
-            });
-            
-            if (!response.ok) {
-                console.warn('ICE candidate send failed:', response.status);
-            }
-            
-        } catch (error) {
-            console.warn('ICE candidate send error:', error);
-        }
-    }
+    // ICE candidate signaling is now handled by Firebase integration
     
     function endVideoCall() {
         console.log('🛑 Ending video call...');
         
-        // Stop local stream
-        if (videoCallState.localStream) {
-            videoCallState.localStream.getTracks().forEach(track => track.stop());
-            videoCallState.localStream = null;
-        }
-        
-        // Close peer connection
-        if (videoCallState.peerConnection) {
-            videoCallState.peerConnection.close();
-            videoCallState.peerConnection = null;
+        // Use Firebase to end the call
+        if (firebaseVideoCall) {
+            firebaseVideoCall.endCall();
         }
         
         // Clear video elements
@@ -1532,21 +1241,6 @@ if (window.Echo) {
         videoCallState.startTime = null;
         videoCallState.localStream = null;
         videoCallState.remoteStream = null;
-        
-        // Send end call event
-        if (videoCallState.callId) {
-            fetch(`/chat/{{ $trade->id }}/video-call/end`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    callId: videoCallState.callId
-                })
-            }).catch(error => console.warn('Error sending end call:', error));
-        }
         
         updateCallStatus('Call ended');
     }
@@ -1661,51 +1355,32 @@ if (window.Echo) {
         console.log('📞 Handling video call offer:', data);
         
         try {
-            videoCallState.isInitiator = false;
-            videoCallState.partnerId = data.fromUserId;
-            videoCallState.callId = data.callId;
-            
-            updateCallStatus('Incoming call...');
-            
-            // Get user media
-            updateCallStatus('Getting camera access...');
-            videoCallState.localStream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 1280, height: 720 },
-                audio: { echoCancellation: true, noiseSuppression: true }
-            });
-            
-            // Setup local video
-            const localVideo = document.getElementById('local-video');
-            if (localVideo) {
-                localVideo.srcObject = videoCallState.localStream;
-                localVideo.style.display = 'block';
+            // Use Firebase to answer the call
+            if (firebaseVideoCall) {
+                const success = await firebaseVideoCall.answerCall(data.offer);
+                
+                if (success) {
+                    // Setup local video display
+                    const localVideo = document.getElementById('local-video');
+                    if (localVideo && firebaseVideoCall.localStream) {
+                        localVideo.srcObject = firebaseVideoCall.localStream;
+                        localVideo.style.display = 'block';
+                    }
+                    
+                    videoCallState.isActive = true;
+                    videoCallState.isInitiator = false;
+                    videoCallState.partnerId = data.fromUserId;
+                    videoCallState.callId = data.callId;
+                    
+                    startCallTimer();
+                    
+                    console.log('✅ Video call answered successfully with Firebase');
+                } else {
+                    throw new Error('Failed to answer call with Firebase');
+                }
+            } else {
+                throw new Error('Firebase video call not available');
             }
-            
-            updateCallStatus('Setting up connection...');
-            
-            // Create peer connection
-            await createPeerConnection();
-            
-            // Add local stream to peer connection
-            videoCallState.localStream.getTracks().forEach(track => {
-                videoCallState.peerConnection.addTrack(track, videoCallState.localStream);
-            });
-            
-            // Set remote description
-            updateCallStatus('Processing offer...');
-            await videoCallState.peerConnection.setRemoteDescription(data.offer);
-            
-            // Create answer
-            updateCallStatus('Creating answer...');
-            const answer = await videoCallState.peerConnection.createAnswer();
-            await videoCallState.peerConnection.setLocalDescription(answer);
-            
-            // Send answer
-            updateCallStatus('Answering...');
-            await sendVideoCallAnswer(answer);
-            
-            videoCallState.isActive = true;
-            startCallTimer();
             
         } catch (error) {
             console.error('Error handling offer:', error);
@@ -1719,7 +1394,16 @@ if (window.Echo) {
         console.log('📞 Handling video call answer:', data);
         
         try {
-            await videoCallState.peerConnection.setRemoteDescription(data.answer);
+            // If we have a remote stream from Firebase, display it
+            if (data.remoteStream) {
+                const remoteVideo = document.getElementById('remote-video');
+                if (remoteVideo) {
+                    remoteVideo.srcObject = data.remoteStream;
+                    remoteVideo.style.display = 'block';
+                }
+                videoCallState.remoteStream = data.remoteStream;
+            }
+            
             updateCallStatus('Connected');
             videoCallState.isConnected = true;
             
@@ -3285,163 +2969,9 @@ async function initializePeerConnection() {
     };
 }
 
-// Signaling functions
-async function sendVideoCallOffer(offer) {
-    try {
-        // Try WebSocket first if available
-        if (window.videoWebSocket && window.videoWebSocket.readyState === WebSocket.OPEN) {
-            window.videoWebSocket.send(JSON.stringify({
-                type: 'video-call-offer',
-                toUserId: window.partnerId,
-                offer: offer,
-                callId: window.currentCallId
-            }));
-            console.log('Offer sent via WebSocket');
-            return;
-        }
-        
-        // Fallback to HTTP
-        const baseUrl = window.location.origin;
-        const url = baseUrl + '/chat/{{ $trade->id }}/video-call/offer';
-        console.log('Offer URL:', url);
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                offer: offer,
-                callId: currentCallId
-            }),
-            credentials: 'same-origin' // Important for CORS
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Offer sent successfully:', result);
-    } catch (error) {
-        console.error('Error sending offer:', error);
-        document.getElementById('video-status').textContent = 'Error sending call. Please try again.';
-    }
-}
+// All signaling functions are now handled by Firebase integration
 
-async function sendVideoCallAnswer(answer) {
-    try {
-        // Try WebSocket first if available
-        if (window.videoWebSocket && window.videoWebSocket.readyState === WebSocket.OPEN) {
-            window.videoWebSocket.send(JSON.stringify({
-                type: 'video-call-answer',
-                toUserId: window.partnerId,
-                answer: answer,
-                callId: window.currentCallId
-            }));
-            console.log('Answer sent via WebSocket');
-            return;
-        }
-        
-        // Fallback to HTTP
-        const baseUrl = window.location.origin;
-        const url = baseUrl + '/chat/{{ $trade->id }}/video-call/answer';
-        console.log('Answer URL:', url);
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                answer: answer,
-                callId: currentCallId,
-                toUserId: otherUserId
-            }),
-            credentials: 'same-origin' // Important for CORS
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Answer sent successfully:', result);
-    } catch (error) {
-        console.error('Error sending answer:', error);
-    }
-}
-
-async function sendIceCandidate(candidate, retryCount = 0) {
-    const maxRetries = 3;
-    const retryDelay = 1000; // 1 second
-    
-    try {
-        // Validate required variables before making the request
-        if (!otherUserId || !currentCallId) {
-            console.warn('Cannot send ICE candidate: missing otherUserId or currentCallId', {
-                otherUserId: otherUserId,
-                currentCallId: currentCallId
-            });
-            return;
-        }
-
-        console.log('Sending ICE candidate to user:', otherUserId, 'for call:', currentCallId);
-        
-        // Generate absolute URL for production compatibility
-        const baseUrl = window.location.origin;
-        const url = baseUrl + '/chat/{{ $trade->id }}/video-call/ice-candidate';
-        console.log('ICE candidate URL:', url);
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                candidate: candidate,
-                callId: currentCallId,
-                toUserId: otherUserId
-            }),
-            credentials: 'same-origin' // Important for CORS
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log('ICE candidate sent successfully:', result);
-        return true;
-        
-    } catch (error) {
-        console.error('Error sending ICE candidate:', error);
-        
-        // Retry logic for network errors
-        if (retryCount < maxRetries && (error.name === 'TypeError' || error.message.includes('Failed to fetch'))) {
-            console.log(`Retrying ICE candidate send (attempt ${retryCount + 1}/${maxRetries})...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
-            return sendIceCandidate(candidate, retryCount + 1);
-        }
-        
-        // Don't throw the error to prevent breaking the WebRTC connection process
-        // ICE candidates are not critical for connection establishment
-        console.warn('ICE candidate sending failed after retries, continuing with connection...');
-        return false;
-    }
-}
+// ICE candidate signaling is now handled by Firebase integration
 
 async function endVideoCall() {
     if (currentCallId) {

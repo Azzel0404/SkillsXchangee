@@ -40,6 +40,14 @@ Route::get('/test-video-call-fixes', function () {
     return response()->file(public_path('test-video-call-fixes.html'));
 });
 
+Route::get('/test-video-call-complete', function () {
+    return response()->file(public_path('test-video-call-complete.html'));
+});
+
+Route::get('/test-firebase-room-system', function () {
+    return response()->file(public_path('test-firebase-room-system.html'));
+});
+
 Route::get('/video-call-api-alternatives', function () {
     return response()->file(public_path('video-call-api-alternatives.html'));
 });
