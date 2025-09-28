@@ -756,8 +756,49 @@
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <button id="video-call-btn"
-                        style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;"
-                        onclick="openVideoChat()">📷</button>
+                        style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">📷</button>
+                    
+                    <!-- Ensure openVideoChat is defined immediately -->
+                    <script>
+                        // Fallback definition to ensure function is always available
+                        if (typeof window.openVideoChat !== 'function') {
+                            console.log('🔧 Creating fallback openVideoChat function...');
+                            window.openVideoChat = function() {
+                                console.log('🎥 Opening video chat (fallback)...');
+                                const modal = document.getElementById('video-chat-modal');
+                                if (modal) {
+                                    modal.style.display = 'flex';
+                                    // Try to call startVideoCall if it exists
+                                    if (typeof startVideoCall === 'function') {
+                                        startVideoCall();
+                                    } else {
+                                        console.log('startVideoCall not available yet, will be called when ready');
+                                    }
+                                } else {
+                                    console.error('Video chat modal not found');
+                                    alert('Video chat is not available. Please refresh the page.');
+                                }
+                            };
+                            console.log('✅ Fallback openVideoChat function created:', typeof window.openVideoChat);
+                        }
+                        
+                        // Add event listener as backup to onclick
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const videoCallBtn = document.getElementById('video-call-btn');
+                            if (videoCallBtn) {
+                                videoCallBtn.addEventListener('click', function() {
+                                    console.log('🎥 Video call button clicked via event listener');
+                                    if (typeof window.openVideoChat === 'function') {
+                                        window.openVideoChat();
+                                    } else {
+                                        console.error('openVideoChat function still not available');
+                                        alert('Video chat function not available. Please refresh the page.');
+                                    }
+                                });
+                                console.log('✅ Video call button event listener added');
+                            }
+                        });
+                    </script>
                     <button
                         style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">🎤</button>
                     <button
@@ -1147,6 +1188,7 @@ if (window.Echo) {
     };
 
     // Make openVideoChat globally accessible
+    console.log('🔧 Defining openVideoChat function...');
     window.openVideoChat = function() {
         console.log('🎥 Opening video chat...');
         const modal = document.getElementById('video-chat-modal');
@@ -1159,6 +1201,7 @@ if (window.Echo) {
             alert('Video chat is not available. Please refresh the page.');
         }
     };
+    console.log('✅ openVideoChat function defined:', typeof window.openVideoChat);
     
     // Make closeVideoChat globally accessible
     window.closeVideoChat = function() {
