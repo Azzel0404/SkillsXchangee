@@ -2554,19 +2554,7 @@ let isInitiator = false;
 let otherUserId = null;
 let pendingOffer = null; // Store the offer data for notification handling
 
-// Video chat modal functions
-function openVideoChat() {
-    document.getElementById('video-chat-modal').style.display = 'flex';
-    initializeVideoChat();
-}
-
-function closeVideoChat() {
-    document.getElementById('video-chat-modal').style.display = 'none';
-    if (isCallActive) {
-        endVideoCall();
-    }
-    resetVideoChat();
-}
+// Video chat modal functions - removed duplicates, using the ones defined earlier in the file
 
 function resetVideoChat() {
     // Reset UI
@@ -2929,7 +2917,6 @@ async function initializePeerConnection() {
     if (isMaximized && maximizedVideo === videoType) {
 // All duplicate functions removed - using the ones defined earlier
     }
-}
 
 // All duplicate functions removed - using the ones defined earlier
 
