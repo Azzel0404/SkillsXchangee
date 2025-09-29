@@ -284,6 +284,22 @@ Route::get('/test-trade/{trade}', function (\App\Models\Trade $trade) {
     return view('trades.test', compact('trade', 'user'));
 });
 
+// Session management routes
+Route::middleware('auth')->group(function () {
+    // Session management endpoints
+    Route::post('/user/keep-alive', [App\Http\Controllers\SessionController::class, 'keepAlive'])->name('session.keep-alive');
+    Route::get('/user/session-status', [App\Http\Controllers\SessionController::class, 'getStatus'])->name('session.status');
+    Route::get('/user/active-sessions', [App\Http\Controllers\SessionController::class, 'getActiveSessions'])->name('session.active');
+    Route::delete('/user/sessions/{sessionId}', [App\Http\Controllers\SessionController::class, 'invalidateSession'])->name('session.invalidate');
+    Route::post('/user/logout-all', [App\Http\Controllers\SessionController::class, 'forceLogoutAll'])->name('session.logout-all');
+    
+    // Admin session management
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/session-stats', [App\Http\Controllers\SessionController::class, 'getStats'])->name('admin.session.stats');
+        Route::post('/admin/session-cleanup', [App\Http\Controllers\SessionController::class, 'cleanupExpired'])->name('admin.session.cleanup');
+    });
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();

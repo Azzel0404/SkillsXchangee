@@ -78,9 +78,9 @@
     <!-- Always include Bootstrap JS for reliability -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Session Monitor -->
+    <!-- Enhanced Session Monitor -->
     @auth
-    <script src="{{ asset('js/session-monitor.js') }}"></script>
+    <script src="{{ asset('js/session-monitor-enhanced.js') }}"></script>
     @endauth
 </head>
 
