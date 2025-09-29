@@ -81,7 +81,12 @@ class SessionMonitoringService
                 return true;
             }
             
-            $lifetime = config('session.lifetime', 60) * 60;
+            // For persistent sessions, only check if session is marked as persistent
+            if (Session::get('persistent_session', false)) {
+                return false; // Persistent sessions don't expire automatically
+            }
+            
+            $lifetime = config('session.lifetime', 525600) * 60; // 1 year default
             $lastActivity = $sessionData['last_activity'] ?? 0;
             
             return (time() - $lastActivity) > $lifetime;

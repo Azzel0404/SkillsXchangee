@@ -7,12 +7,13 @@
 
     // Configuration
     const CONFIG = {
-        SESSION_LIFETIME_MINUTES: 60, // Must match config/session.php
-        WARNING_THRESHOLD_MINUTES: 5, // Warn 5 minutes before expiration
-        REFRESH_INTERVAL_SECONDS: 30, // Check session every 30 seconds
-        KEEP_ALIVE_INTERVAL_SECONDS: 300, // Send keep-alive every 5 minutes
+        SESSION_LIFETIME_MINUTES: 525600, // 1 year - sessions persist until logout
+        WARNING_THRESHOLD_MINUTES: 0, // No warnings - sessions don't expire automatically
+        REFRESH_INTERVAL_SECONDS: 300, // Check session every 5 minutes (reduced frequency)
+        KEEP_ALIVE_INTERVAL_SECONDS: 1800, // Send keep-alive every 30 minutes
         MAX_RETRY_ATTEMPTS: 3,
-        RETRY_DELAY_MS: 1000
+        RETRY_DELAY_MS: 1000,
+        PERSISTENT_SESSION: true // Sessions persist until explicit logout
     };
 
     // State management
@@ -157,18 +158,29 @@
      * Start warning and logout timers
      */
     function startTimers() {
+        // For persistent sessions, we don't set automatic expiration timers
+        // Sessions will only expire when user explicitly logs out
+        if (CONFIG.PERSISTENT_SESSION) {
+            console.log('Persistent session mode - no automatic expiration');
+            return;
+        }
+
         const lifetimeMs = CONFIG.SESSION_LIFETIME_MINUTES * 60 * 1000;
         const warningThresholdMs = CONFIG.WARNING_THRESHOLD_MINUTES * 60 * 1000;
 
-        // Set warning timer
-        state.sessionWarningTimer = setTimeout(() => {
-            showSessionWarning();
-        }, lifetimeMs - warningThresholdMs);
+        // Set warning timer (only if not persistent)
+        if (warningThresholdMs > 0) {
+            state.sessionWarningTimer = setTimeout(() => {
+                showSessionWarning();
+            }, lifetimeMs - warningThresholdMs);
+        }
 
-        // Set logout timer
-        state.sessionLogoutTimer = setTimeout(() => {
-            handleSessionExpiration();
-        }, lifetimeMs);
+        // Set logout timer (only if not persistent)
+        if (lifetimeMs > 0) {
+            state.sessionLogoutTimer = setTimeout(() => {
+                handleSessionExpiration();
+            }, lifetimeMs);
+        }
     }
 
     /**
@@ -229,16 +241,20 @@
         })
         .then(response => {
             if (response.status === 401) {
-                handleSessionExpiration();
+                // Only handle 401 if not in persistent mode
+                if (!CONFIG.PERSISTENT_SESSION) {
+                    handleSessionExpiration();
+                }
                 return;
             }
             return response.json();
         })
         .then(data => {
-            if (data && data.expired) {
+            if (data && data.expired && !CONFIG.PERSISTENT_SESSION) {
                 handleSessionExpiration();
             } else if (data && data.status === 'authenticated') {
                 state.retryCount = 0; // Reset retry count on success
+                console.log('Session is active and persistent');
             }
         })
         .catch(error => {

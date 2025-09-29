@@ -26,44 +26,23 @@ class SessionExpirationMiddleware
                 $userId = Auth::id();
                 $sessionId = Session::getId();
                 
-                // Check if session has expired
-                if (Session::has('last_activity')) {
-                    $lastActivity = Session::get('last_activity');
-                    $sessionLifetime = config('session.lifetime', 60) * 60; // Convert to seconds
-                    
-                    if (time() - $lastActivity > $sessionLifetime) {
-                        // Session has expired
-                        Log::info('Session expired for user: ' . $userId . ' (Session: ' . $sessionId . ')');
-                        
-                        // Clear any cached user data
-                        $this->clearUserCache($userId);
-                        
-                        // Logout the user
-                        Auth::logout();
-                        Session::flush();
-                        
-                        // Clear any additional session data
-                        $request->session()->invalidate();
-                        $request->session()->regenerateToken();
-                        
-                        // Redirect to login with session expired message
-                        return redirect()->route('login')
-                            ->with('error', 'Your session has expired due to inactivity. Please log in again.')
-                            ->with('expired', true);
-                    }
-                }
+                // Only check for explicit logout - no automatic expiration
+                // Sessions will persist until user explicitly logs out
                 
                 // Check for concurrent sessions (optional security feature)
                 if (config('session.prevent_concurrent_sessions', false)) {
                     $this->checkConcurrentSessions($userId, $sessionId);
                 }
                 
-                // Update last activity timestamp
+                // Update last activity timestamp for monitoring purposes only
                 Session::put('last_activity', time());
                 
                 // Store session info for monitoring
                 Session::put('user_id', $userId);
                 Session::put('session_start', Session::get('session_start', time()));
+                
+                // Mark session as persistent (no expiration)
+                Session::put('persistent_session', true);
             }
             
             return $next($request);
