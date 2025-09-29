@@ -691,25 +691,22 @@
         </div>
 
         <div class="video-controls">
-            <button id="auto-call-toggle" class="video-btn secondary"
-                title="Toggle Auto-call" style="background: #10b981;">🔗 Auto-call ON</button>
+            <button id="auto-call-toggle" class="video-btn secondary" title="Toggle Auto-call"
+                style="background: #10b981;">🔗 Auto-call ON</button>
             <div id="presence-status"
                 style="color: #6b7280; font-size: 0.875rem; margin: 0 8px; display: flex; align-items: center;">🔴
                 Partner is offline</div>
-            <button id="start-call-btn" class="video-btn primary"
-                title="Start Call">📞</button>
-            <button id="end-call-btn" class="video-btn danger" style="display: none;"
-                title="End Call">📞</button>
+            <button id="start-call-btn" class="video-btn primary" title="Start Call">📞</button>
+            <button id="end-call-btn" class="video-btn danger" style="display: none;" title="End Call">📞</button>
             <button id="toggle-audio-btn" class="video-btn success" style="display: none;"
                 title="Mute/Unmute">🎤</button>
             <button id="toggle-video-btn" class="video-btn success" style="display: none;"
                 title="Turn Video On/Off">📹</button>
             <button id="mirror-video-btn" class="video-btn secondary" style="display: none;"
                 title="Mirror Video">🪞</button>
-            <button id="screen-share-btn" class="video-btn secondary"
-                style="display: none;" title="Share Screen">🖥️</button>
-            <button id="maximize-btn" class="video-btn maximize" style="display: none;"
-                title="Maximize">⛶</button>
+            <button id="screen-share-btn" class="video-btn secondary" style="display: none;"
+                title="Share Screen">🖥️</button>
+            <button id="maximize-btn" class="video-btn maximize" style="display: none;" title="Maximize">⛶</button>
             <button id="chat-toggle-btn" class="video-btn secondary" style="display: none;"
                 title="Toggle Chat">💬</button>
         </div>
@@ -757,7 +754,7 @@
                 <div style="display: flex; gap: 12px;">
                     <button id="video-call-btn"
                         style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">📷</button>
-                    
+
                     <!-- Ensure openVideoChat is defined immediately -->
                     <script>
                         // Initialize camera function

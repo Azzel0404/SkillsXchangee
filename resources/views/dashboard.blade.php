@@ -1,269 +1,177 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="py-4 py-md-5">
+<div class="py-4 py-md-5 dark-theme">
     <div class="container">
         <!-- Welcome Section -->
         <div class="mb-4 mb-md-5">
-            <h1 class="h2 fw-bold text-dark mb-2">Welcome back, {{ auth()->user()->firstname }}!</h1>
+            <h1 class="h2 fw-bold text-gradient mb-2">Welcome back, {{ auth()->user()->firstname }}!</h1>
             <p class="text-muted">Here's what's happening with your skill trades today.</p>
         </div>
 
         @if(auth()->user()->role === 'admin')
         <!-- Admin Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-users text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Total Users</p>
-                                <h3 class="fw-bold mb-0">{{ $stats['totalUsers'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+        <div class="stats-grid">
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--primary">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value">{{ isset($stats) ? $stats['totalUsers'] : 0 }}</div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-success rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-check-circle text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Verified Users</p>
-                                <h3 class="fw-bold mb-0">{{ $stats['verifiedUsers'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Verified Users</div>
+                    <div class="stat-value">{{ isset($stats) ? $stats['verifiedUsers'] : 0 }}</div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-warning rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-clock text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Pending Users</p>
-                                <h3 class="fw-bold mb-0">{{ $stats['pendingUsers'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Pending Users</div>
+                    <div class="stat-value">{{ isset($stats) ? $stats['pendingUsers'] : 0 }}</div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-info rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-exchange-alt text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Total Trades</p>
-                                <h3 class="fw-bold mb-0">{{ $stats['totalTrades'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--info">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Trades</div>
+                    <div class="stat-value">{{ isset($stats) ? $stats['totalTrades'] : 0 }}</div>
                 </div>
             </div>
         </div>
         @else
         <!-- User Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-success rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-check-circle text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Completed Sessions</p>
-                                <h3 class="fw-bold mb-0">{{ $userStats['completedSessions'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+        <div class="stats-grid">
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Completed Sessions</div>
+                    <div class="stat-value">{{ isset($userStats) ? $userStats['completedSessions'] : 0 }}</div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-clock text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Ongoing Sessions</p>
-                                <h3 class="fw-bold mb-0">{{ $userStats['ongoingSessions'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--primary">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Ongoing Sessions</div>
+                    <div class="stat-value">{{ isset($userStats) ? $userStats['ongoingSessions'] : 0 }}</div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-warning rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-hourglass-half text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Pending Requests</p>
-                                <h3 class="fw-bold mb-0">{{ $userStats['pendingRequests'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--warning">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Pending Requests</div>
+                    <div class="stat-value">{{ isset($userStats) ? $userStats['pendingRequests'] : 0 }}</div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-danger rounded-3 d-flex align-items-center justify-content-center"
-                                    style="width: 48px; height: 48px;">
-                                    <i class="fas fa-times-circle text-white"></i>
-                                </div>
-                            </div>
-                            <div class="ms-3">
-                                <p class="text-muted small mb-1">Declined Requests</p>
-                                <h3 class="fw-bold mb-0">{{ $userStats['declinedRequests'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card fade-in">
+                <div class="stat-icon stat-icon--danger">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Declined Requests</div>
+                    <div class="stat-value">{{ isset($userStats) ? $userStats['declinedRequests'] : 0 }}</div>
                 </div>
             </div>
         </div>
         @endif
 
         <!-- Expired Sessions -->
-        @if($expiredSessions->count() > 0)
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Expired Sessions ({{
-                    $expiredSessions->count() }})</h5>
+        @if(isset($expiredSessions) && $expiredSessions->count() > 0)
+        <div class="dashboard-card dashboard-card--warning slide-up">
+            <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-exclamation-triangle me-2" style="color: var(--accent-yellow);"></i>
+                <h5 class="mb-0 text-gradient">Expired Sessions ({{ $expiredSessions->count() }})</h5>
             </div>
-            <div class="card-body">
-                <div class="alert alert-warning" role="alert">
-                    <i class="fas fa-clock me-2"></i>
+            <div class="alert-responsive alert-responsive--warning">
+                <i class="fas fa-clock"></i>
+                <div>
                     <strong>Session Expired!</strong> The following sessions have passed their scheduled time and are
                     now marked as expired.
                 </div>
-                <div class="row g-3">
-                    @foreach($expiredSessions->take(3) as $session)
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card border-warning">
-                            <div class="card-body">
-                                <h6 class="card-title text-warning">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>
-                                    {{ $session->offeringSkill->name }} ↔ {{ $session->lookingSkill->name }}
-                                </h6>
-                                <p class="card-text small text-muted">
-                                    <strong>Ended:</strong> {{ $session->end_date ?
-                                    \Carbon\Carbon::parse($session->end_date)->format('M d, Y') : 'N/A' }}
-                                </p>
-                                <p class="card-text small text-muted">
-                                    <strong>Status:</strong> <span class="badge bg-warning">Expired</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-                @if($expiredSessions->count() > 3)
-                <div class="text-center mt-3">
-                    <small class="text-muted">And {{ $expiredSessions->count() - 3 }} more expired sessions...</small>
-                </div>
-                @endif
             </div>
+            <div class="responsive-container">
+                @foreach($expiredSessions->take(3) as $session)
+                <div class="responsive-item responsive-item--yellow">
+                    <div class="text-center">
+                        <h6 class="mb-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            {{ $session->offeringSkill->name }} ↔ {{ $session->lookingSkill->name }}
+                        </h6>
+                        <p class="small mb-1">
+                            <strong>Ended:</strong> {{ $session->end_date ?
+                            \Carbon\Carbon::parse($session->end_date)->format('M d, Y') : 'N/A' }}
+                        </p>
+                        <span class="badge"
+                            style="background: var(--accent-yellow); color: var(--bg-primary);">Expired</span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @if($expiredSessions->count() > 3)
+            <div class="text-center mt-3">
+                <small class="text-muted">And {{ $expiredSessions->count() - 3 }} more expired sessions...</small>
+            </div>
+            @endif
         </div>
         @endif
 
         <!-- Quick Actions -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <h2 class="h5 fw-bold text-dark mb-4">Quick Actions</h2>
-                <div class="row g-3">
-                    @if(auth()->user()->role !== 'admin')
-                    <div class="col-md-4">
-                        <a href="{{ route('trades.create') }}" class="text-decoration-none">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body text-center">
-                                    <div class="bg-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3"
-                                        style="width: 48px; height: 48px;">
-                                        <i class="fas fa-plus text-white"></i>
-                                    </div>
-                                    <h5 class="card-title text-dark">Post a Trade</h5>
-                                    <p class="card-text text-muted small">Create a new skill trade post</p>
-                                </div>
-                            </div>
-                        </a>
+        <div class="dashboard-card dashboard-card--stats slide-up">
+            <h2 class="h5 fw-bold text-gradient mb-4">Quick Actions</h2>
+            <div class="responsive-container">
+                @if(auth()->user()->role !== 'admin')
+                <a href="{{ route('trades.create') }}" class="text-decoration-none">
+                    <div class="responsive-item responsive-item--blue">
+                        <div class="text-center">
+                            <i class="fas fa-plus mb-2" style="font-size: 1.5rem;"></i>
+                            <h6 class="mb-1">Post a Trade</h6>
+                            <small>Create a new skill trade post</small>
+                        </div>
                     </div>
+                </a>
 
-                    <div class="col-md-4">
-                        <a href="{{ route('trades.matches') }}" class="text-decoration-none">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body text-center">
-                                    <div class="bg-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3"
-                                        style="width: 48px; height: 48px;">
-                                        <i class="fas fa-search text-white"></i>
-                                    </div>
-                                    <h5 class="card-title text-dark">Find Matches</h5>
-                                    <p class="card-text text-muted small">Browse available trades</p>
-                                </div>
-                            </div>
-                        </a>
+                <a href="{{ route('trades.matches') }}" class="text-decoration-none">
+                    <div class="responsive-item responsive-item--green">
+                        <div class="text-center">
+                            <i class="fas fa-search mb-2" style="font-size: 1.5rem;"></i>
+                            <h6 class="mb-1">Find Matches</h6>
+                            <small>Browse available trades</small>
+                        </div>
                     </div>
-                    @endif
+                </a>
+                @endif
 
-                    <div class="col-md-4">
-                        <a href="{{ route('profile.edit') }}" class="text-decoration-none">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body text-center">
-                                    <div class="bg-info rounded-3 d-inline-flex align-items-center justify-content-center mb-3"
-                                        style="width: 48px; height: 48px;">
-                                        <i class="fas fa-user-edit text-white"></i>
-                                    </div>
-                                    <h5 class="card-title text-dark">Update Profile</h5>
-                                    <p class="card-text text-muted small">Manage your skills and info</p>
-                                </div>
-                            </div>
-                        </a>
+                <a href="{{ route('profile.edit') }}" class="text-decoration-none">
+                    <div class="responsive-item responsive-item--purple">
+                        <div class="text-center">
+                            <i class="fas fa-user-edit mb-2" style="font-size: 1.5rem;"></i>
+                            <h6 class="mb-1">Update Profile</h6>
+                            <small>Manage your skills and info</small>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -271,7 +179,7 @@
         <!-- User Sessions and Requests -->
 
         <!-- Completed Sessions -->
-        @if($completedSessions->count() > 0)
+        @if(isset($completedSessions) && $completedSessions->count() > 0)
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
             <div class="p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Completed Sessions</h2>
@@ -309,7 +217,7 @@
         @endif
 
         <!-- Ongoing Sessions -->
-        @if($ongoingSessions->count() > 0)
+        @if(isset($ongoingSessions) && $ongoingSessions->count() > 0)
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
             <div class="p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Ongoing Sessions</h2>
@@ -353,7 +261,7 @@
         @endif
 
         <!-- Pending Requests -->
-        @if($pendingRequests->count() > 0)
+        @if(isset($pendingRequests) && $pendingRequests->count() > 0)
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
             <div class="p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Your Pending Requests</h2>
@@ -390,7 +298,7 @@
         @endif
 
         <!-- Declined Requests -->
-        @if($declinedRequests->count() > 0)
+        @if(isset($declinedRequests) && $declinedRequests->count() > 0)
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
             <div class="p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Declined Requests</h2>
@@ -424,7 +332,7 @@
         @endif
 
         <!-- Requests to Your Trades -->
-        @if($pendingRequestsToMe->count() > 0)
+        @if(isset($pendingRequestsToMe) && $pendingRequestsToMe->count() > 0)
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
             <div class="p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Requests to Your Trades</h2>
@@ -473,13 +381,14 @@
             <div class="p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Admin Panel</h2>
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-md font-medium text-gray-700">Pending Users ({{ $pendingUsers->count() }})</h3>
+                    <h3 class="text-md font-medium text-gray-700">Pending Users ({{ isset($pendingUsers) ?
+                        $pendingUsers->count() : 0 }})</h3>
                     <a href="{{ route('admin.skills.index') }}"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm">
                         Manage Skills
                     </a>
                 </div>
-                @if($pendingUsers->count() > 0)
+                @if(isset($pendingUsers) && $pendingUsers->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full bg-white border border-gray-200">
                         <thead class="bg-gray-50">

@@ -5,6 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Responsive Layout System */
+@import './responsive-layout.css';
+
 /* Modern SkillsXchange Landing Page Styles */
 :root {
   --primary: #6366f1;

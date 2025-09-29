@@ -77,6 +77,11 @@
 
     <!-- Always include Bootstrap JS for reliability -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Session Monitor -->
+    @auth
+    <script src="{{ asset('js/session-monitor.js') }}"></script>
+    @endauth
 </head>
 
 <body class="bg-light">
