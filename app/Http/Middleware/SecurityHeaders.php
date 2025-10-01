@@ -4,45 +4,59 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class SecurityHeaders
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
-        // Add security headers to help establish trust with security tools
+        // Security headers to prevent blocking by firewalls and anti-malware
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
         
-        // Permissions Policy - Allow camera and microphone for video calls
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()');
-        
-        // Content Security Policy - Allow necessary external resources and video call functionality
+        // Content Security Policy for enhanced security
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net https://js.pusher.com https://www.gstatic.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com; " .
-               "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://www.gstatic.com https://www.google.com https://apis.google.com; " .
+               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net https://cdn.jsdelivr.net; " .
+               "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net https://cdn.jsdelivr.net; " .
                "img-src 'self' data: https: blob:; " .
-               "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.bunny.net; " .
-               "connect-src 'self' wss: https: wss://*.pusher.com wss://*.pusherapp.com https://skillxchange.metered.live https://stun.l.google.com https://stun1.l.google.com https://stun.relay.metered.ca https://asia.relay.metered.ca https://*.firebaseio.com https://*.firebasedatabase.app; " .
+               "connect-src 'self' https: wss: ws:; " .
                "media-src 'self' blob:; " .
-               "frame-src 'self';";
+               "object-src 'none'; " .
+               "base-uri 'self'; " .
+               "form-action 'self' https:; " .
+               "frame-ancestors 'self';";
         
         $response->headers->set('Content-Security-Policy', $csp);
         
-        // Add a custom header to identify this as a legitimate application
-        $response->headers->set('X-Application-Name', 'SkillsXchangee - Skill Exchange Platform');
-        $response->headers->set('X-Application-Version', '1.0.0');
-        $response->headers->set('X-Application-Type', 'Educational Platform');
+        // Additional security headers
+        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+        
+        // Force HTTPS for all URLs
+        if (app()->environment('production')) {
+            $response->headers->set('Content-Security-Policy-Report-Only', "upgrade-insecure-requests");
+        }
+        
+        // Prevent MIME type sniffing
+        $response->headers->set('X-Download-Options', 'noopen');
+        $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
+        
+        // Hide server information
+        $response->headers->remove('Server');
+        $response->headers->remove('X-Powered-By');
 
         return $response;
     }

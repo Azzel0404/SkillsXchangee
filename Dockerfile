@@ -24,8 +24,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create basic .env file for build process
-RUN cp .env.example .env || echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false" > .env
+# Create basic .env file for build process with Railway database
+RUN echo "APP_NAME=SkillsXchangee\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=https://skillsxchangee-c2ml.onrender.com\nLOG_CHANNEL=stderr\nDB_CONNECTION=mysql\nDB_HOST=mysql.railway.internal\nDB_PORT=3306\nDB_DATABASE=railway\nDB_USERNAME=root\nDB_PASSWORD=WfrkcYjmqhlhiDAyWlp0xctxuZxYcZqY\nCACHE_DRIVER=file\nSESSION_DRIVER=file\nQUEUE_CONNECTION=sync\nBROADCAST_DRIVER=log\nFILESYSTEM_DISK=public" > .env
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction

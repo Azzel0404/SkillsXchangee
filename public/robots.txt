@@ -1,9 +1,10 @@
 User-agent: *
+Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /storage/
+Disallow: /vendor/
+Disallow: /test-*
 Disallow: /debug/
-Disallow: /test/
 
-# SkillsXchangee - Legitimate Skill Exchange Platform
-# This is an educational platform for skill sharing and learning
-# Contact: admin@skillsxchangee.com
+Sitemap: https://skillsxchangee-c2ml.onrender.com/sitemap.xml

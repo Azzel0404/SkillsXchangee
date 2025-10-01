@@ -22,7 +22,7 @@ use Illuminate\Http\Request;
 
 Route::get('/test', function () {
     return 'Test route working!';
-});
+})->middleware('rate.limit');
 
 Route::get('/legitimacy', function () {
     return response()->file(public_path('legitimacy.html'));
