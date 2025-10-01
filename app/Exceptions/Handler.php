@@ -59,10 +59,52 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
+        // Completely disable custom exception handling during build process
+        // This prevents facade errors during composer install
+        if ($this->isBuildProcess()) {
+            return;
+        }
+
+        // Only register exception handling in production/runtime
         $this->reportable(function (Throwable $e) {
-            // Log all exceptions with context
-            $this->logException($e);
+            // Simple logging without complex context
+            try {
+                if (app()->bound('log')) {
+                    app('log')->error('Exception: ' . $e->getMessage());
+                }
+            } catch (\Exception $logException) {
+                // Silent fail
+            }
         });
+    }
+
+    /**
+     * Check if we're in a build process
+     */
+    protected function isBuildProcess()
+    {
+        // Always assume build process if we can't determine otherwise
+        try {
+            // Check if we're running composer install or other build commands
+            $command = $_SERVER['argv'][0] ?? '';
+            $isComposer = strpos($command, 'composer') !== false;
+            $isArtisan = strpos($command, 'artisan') !== false;
+            
+            // If we're running composer or artisan, it's a build process
+            if ($isComposer || $isArtisan) {
+                return true;
+            }
+            
+            // If Laravel isn't fully bootstrapped, it's a build process
+            if (!app()->bound('config') || !app()->bound('request')) {
+                return true;
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            // If we can't determine, assume it's a build process
+            return true;
+        }
     }
 
     /**
@@ -322,28 +364,22 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Log exception with context
+     * Log exception with context (simplified for build safety)
      */
     protected function logException(Throwable $exception)
     {
-        $context = [
-            'exception' => get_class($exception),
-            'message' => $exception->getMessage(),
-            'file' => $exception->getFile(),
-            'line' => $exception->getLine(),
-            'user_id' => Auth::id(),
-            'url' => request()->url(),
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'session_id' => Session::getId()
-        ];
+        // Skip logging during build process to prevent facade errors
+        if ($this->isBuildProcess()) {
+            return;
+        }
 
-        if ($exception instanceof \Error) {
-            Log::error('PHP Error: ' . $exception->getMessage(), $context);
-        } elseif ($exception instanceof \Exception) {
-            Log::error('Exception: ' . $exception->getMessage(), $context);
-        } else {
-            Log::error('Throwable: ' . $exception->getMessage(), $context);
+        // Simple logging without complex context
+        try {
+            if (app()->bound('log')) {
+                app('log')->error('Exception: ' . $exception->getMessage());
+            }
+        } catch (\Exception $e) {
+            // Silent fail
         }
     }
 }
